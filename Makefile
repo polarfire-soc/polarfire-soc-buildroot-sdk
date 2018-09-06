@@ -80,6 +80,10 @@ $(toolchain_dest)/bin/$(target)-gcc: $(toolchain_srcdir)
 	$(MAKE) -C $(toolchain_wrkdir)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 263682/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
+
+$(buildroot_initramfs_wrkdir)/.config: $(buildroot_initramfs_config)
+$(buildroot_initramfs_wrkdir)/.config: $(buildroot_rootfs_config)
+$(buildroot_initramfs_wrkdir)/.config: $(confdir)/initramfs.txt
 $(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
@@ -149,14 +153,16 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
 	cp $(dir $<)/defconfig conf/linux_defconfig
 
-$(bbl): $(pk_srcdir) $(vmlinux_stripped)
+$(srcdir)/riscvpc.dtb: $(confdir)/riscvpc.dts
+	dtc -I dts $(confdir)/riscvpc.dts -O dtb -o $(srcdir)/riscvpc.dtb
+
+$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(srcdir)/riscvpc.dtb
 	rm -rf $(pk_wrkdir)
 	mkdir -p $(pk_wrkdir)
 	cd $(pk_wrkdir) && $</configure \
 		--host=$(target) \
 		--with-payload=$(vmlinux_stripped) \
-		--enable-logo \
-		--with-logo=$(abspath conf/sifive_logo.txt)
+		--enable-logo 
 	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) -C $(pk_wrkdir)
 
 $(bin): $(bbl)
@@ -227,23 +233,31 @@ FSBL  = 5B193300-FC78-40CD-8002-E86C45580B47
 .PHONY: format-boot-loader
 format-boot-loader: $(bin)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
-	sgdisk --clear                                                               \
-		--new=1:2048:67583  --change-name=1:bootloader --typecode=1:$(BBL)   \
-		--new=2:264192:     --change-name=2:root       --typecode=2:$(LINUX) \
+	sgdisk --clear                                                             \
+		--new=1:0:+32M   --change-name=1:bootloader --typecode=1:$(BBL)   \
+		--new=2:264192:0 --change-name=2:root       --typecode=2:$(LINUX) \
+		--new=3:0:+1M    --change-name=3:fsbl       --typecode=3:$(FSBL)  \
 		$(DISK)
 	@sleep 1
 ifeq ($(DISK)p1,$(wildcard $(DISK)p1))
 	@$(eval PART1 := $(DISK)p1)
 	@$(eval PART2 := $(DISK)p2)
+	@$(eval PART3 := $(DISK)p3)
 else ifeq ($(DISK)s1,$(wildcard $(DISK)s1))
 	@$(eval PART1 := $(DISK)s1)
 	@$(eval PART2 := $(DISK)s2)
+	@$(eval PART3 := $(DISK)s2)
 else ifeq ($(DISK)1,$(wildcard $(DISK)1))
 	@$(eval PART1 := $(DISK)1)
 	@$(eval PART2 := $(DISK)2)
+	@$(eval PART3 := $(DISK)2)
 else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
 	dd if=$< of=$(PART1) bs=4096
 	mke2fs -t ext3 $(PART2)
+	if [ -e fsbl.bin  ];  \
+	then \
+		dd if=fsbl.bin of=$(PART3) bs=512; \
+	fi
