@@ -10,6 +10,10 @@ srcdir := $(srcdir:/=)
 confdir := $(srcdir)/conf
 wrkdir := $(CURDIR)/work
 
+uboot_srcdir := $(srcdir)/HiFive_U-Boot
+uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
+uboot := $(uboot_wrkdir)/u-boot.bin
+
 flash_image := $(wrkdir)/hifive-unleashed-a00-YYYY-MM-DD.gpt
 uboot := $(wrkdir)/u-boot.bin
 bblbin := $(wrkdir)/bbl.bin
@@ -188,6 +192,13 @@ $(bin): $(bbl)
 
 $(hex):	$(bin)
 	xxd -c1 -p $< > $@
+	
+$(uboot): $(uboot_srcdir) $(target_gcc)
+	rm -rf $(uboot_wrkdir)
+	mkdir -p $(uboot_wrkdir)
+	mkdir -p $(dir $@)
+	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
+	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
 
 VFAT_START=2048
 VFAT_END=65502
@@ -295,7 +306,7 @@ else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
-	dd if=$(shell pwd)/work/u-boot.bin of=$(PART1) bs=4096
+	dd if=$(uboot) of=$(PART1) bs=4096
 
 	dd if=$(shell pwd)/work/bbl.bin of=$(PART2) bs=4096
 
