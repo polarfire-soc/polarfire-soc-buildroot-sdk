@@ -1,9 +1,33 @@
-# HiFive Unleashed Kit
+# MPFS-DEV-KIT User Guide
+
+## Overview
+The HiFive Unleashed Platform™ is purpose-built to emulate most of the functionality of the upcoming
+PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
+This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
+platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
+Design Suite. For more details on the design suite, see section FPGA Design in Libero.        
+
+### HiFive Unleashed Platform (MPFS-DEV-KIT)   
+The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
+Unleashed Expansion kit with their respective accessories. Microsemi's HiFive Unleashed Expansion
+board enables users to create a Linux system running on a RISC-V core complex, with a large FPGA fabric
+accessible through the memory map. The expansion board is shipped with a pre-configured bitstream
+enabling PCIe root port functionality.          
+
+## HiFive Unleashed Kit
+- One SiFive's HiFive Unleashed board
+- One power wall adapter 12 V
+- One USB-A to micro USB-B cable
+- HiFive Unleashed Expansion Kit
+- One Microsemi's HiFive Unleashed Expansion Board
+- One USB-A to micro USB-B cable
+- One 12 V, AC power adapter and cord
+- One FlashPro4/FlashPro5 programming dongle
+- Two Libero Platinum software licenses of duration one year ($995 value)
 
 SiFive’s HiFive Unleashed development kit is based on the Freedom U540-C000 chip, the first 4+1 multicore RISC-V Linux-capable SoC.
 
 ## SiFive Freedom U540 SoC
-
 - 8 GB DDR4 with ECC
 - Gigabit Ethernet port
 - 32 MB quad SPI flash from ISSI

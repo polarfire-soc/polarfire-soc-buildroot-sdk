@@ -4,6 +4,8 @@ This builds a complete RISC-V cross-compile toolchain for the Microsemi
 AloeVera Linux Software Development Kit. It also builds a `bbl` image for 
 booting the development board.
 
+The complete User Guide for the MPFS-DEV-KIT is available as a PDF in the `doc/` subdirectory.
+
 ## Tested Configurations
 
 ### Ubuntu 18.04 x86_64 host
