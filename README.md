@@ -1,10 +1,10 @@
-# Microsemi AloeVera Linux Software Development Kit
+# Microchip MPFS-DEV-KIT Linux Software Development Kit
 
-This builds a complete RISC-V cross-compile toolchain for the Microsemi 
-AloeVera Linux Software Development Kit. It also builds a `bbl` image for 
+This builds a complete RISC-V cross-compile toolchain for the Microchip 
+MPFS-DEV-KIT and LC-MPFS-DEV-KIT Linux Software Development Kit. It also builds a `bbl` image for 
 booting the development board.
 
-The complete User Guide for the MPFS-DEV-KIT is available as a PDF in the `doc/` subdirectory.
+The complete User Guides are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
 
 ## Tested Configurations
 
