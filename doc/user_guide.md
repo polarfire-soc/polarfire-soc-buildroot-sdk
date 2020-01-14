@@ -116,6 +116,7 @@ openssl-devel wget vim-common
 ### Firmware Versions
 The following table contains links to the Libero Project, .stp file, .job file, and the Linux SDK for each
 release.
+
 | Revision | Libero Project | .stp | .job | MPFS-Linux-SDK |
 | --- | --- | --- | --- | --- |
 | Initial release | [Libero Initial Release](https://my.microsemi.com/awelcome/filedownloadLogin.aspx?code=pvvuoqopwoxpqppppootur&src=ext&ver=0) | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [MPFS-Linux-SDK](ftp://ftpsoc.microsemi.com/outgoing/mpfs-linux-sdk-20180906.tar.gz) 
@@ -318,16 +319,17 @@ following table. The interrupt number 42 is used for all the peripherals.
 ### GPIO Implementation
 The GPIO implemented in the design is pinned out as a starting point for your custom design
 implementation. The details of the GPIO pinout is listed in the following table:
+
 | GPIO | Function |
 | --- | --- |
-| 0 | led4
-| 1 | led5
-| 2 | J2-pin13
-| 3 | J2-pin14
-| 4 | sw9
-| 5 | sw10
-| 6 | J2-pin9
-| 7 | USB1 reset
+| 0 | led4 |
+| 1 | led5 |
+| 2 | J2-pin13 |
+| 3 | J2-pin14 |
+| 4 | sw9 |
+| 5 | sw10 |
+| 6 | J2-pin9 |
+| 7 | USB1 reset |
 
 ## Reference
 Visit the following links for further reference reading materials.
