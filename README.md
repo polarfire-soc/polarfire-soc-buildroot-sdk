@@ -10,7 +10,7 @@ The complete User Guide for the MPFS-DEV-KIT is available as a PDF in the `doc/`
 
 ### Ubuntu 18.04 x86_64 host
 
-- Status: Working, but required deps are copied from 16.04 and not tested
+- Status: Not working, automake build fails.
 - Build dependencies: `build-essential git autotools texinfo bison flex
   libgmp-dev libmpfr-dev libmpc-dev gawk libz-dev libssl-dev`
 - Additional build deps for QEMU: `libglib2.0-dev libpixman-1-dev`
