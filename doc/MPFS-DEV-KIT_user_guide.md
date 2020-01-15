@@ -139,7 +139,7 @@ Ensure the fan is plugged in.
 mode 1111. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
 more information on MSEL.
 
-![DIP Switch Setting](images/HiFive_Unleashed_Board_ DIP-Switch_setting.png)
+![DIP Switch Setting](images/HiFive_Unleashed_Board_DIP-Switch_setting.png)
 
 3. Insert an SD-card programmed with the bootloader and Linux. See the Building the Linux Image section of this document for details on creating the content of this SD card.
 4. 
