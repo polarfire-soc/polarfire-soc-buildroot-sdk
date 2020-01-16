@@ -10,7 +10,7 @@ The complete User Guides are available in the `doc/` subdirectory, for the [MPFS
 
 ### Ubuntu 18.04 x86_64 host
 
-- Status: Not working, automake build fails.
+- Status: Working.
 - Build dependencies: `build-essential git autotools texinfo bison flex
   libgmp-dev libmpfr-dev libmpc-dev gawk libz-dev libssl-dev`
 - Additional build deps for QEMU: `libglib2.0-dev libpixman-1-dev`

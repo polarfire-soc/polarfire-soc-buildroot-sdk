@@ -28,14 +28,8 @@ Download the Libero SoC design suite v12.1 for Linux [here](https://www.microsem
 
 Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one platinum floating license for the Libero SoC Design Suite. Write to [mi-v-embeddedpartner@microchip.com](mi-v-embeddedpartner@microchip.com) with the subject “License Request <your organization name>” and include the 12-digit MAC ID of the two linux machines/PCs in your email.
 
-### Programming FlashPro Express
-The Microsemi FlashPro Express supports in-system programming (ISP) for all FPGA families. The FlashPro Express software is bundled with Libero SoC Design suite. Visit the [FlashPro section](https://www.microsemi.com/document-portal/doc_download/1244232-download-programming-and-debug-v11-9-sp4-for-linux) in the Microsemi website for more information.
-
 ### Solution Versions
-The following table contains links to the Libero Project .job file for each release.
-| Revision | Hardware | Libero Project | .stp | Software |
-| --- | --- | --- | --- | --- |
-| Rev 0 | LC-MPFS-DEV-KIT | [Vera_IOFPGA](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=qqoruqopxpposopsrpouxo&src=EXT&ver=0) | [.stp](https://dev.microsemi.com/document-portal/doc_download/1244490-lc-mpfs-dev-kit-bitstream) link | Libero SoC 12.1 |
+The latest revisions of the Libero project and bitstream files are available on the [Microsemi](https://www.microsemi.com/product-directory/soc-fpga/5498-polarfire-soc-fpga#downloads) Website.
 
 ## Board Setup
 The following instructions guide you to set up the LC-MPFS-DEV-KIT.
@@ -62,7 +56,7 @@ The following instructions guide you to set up the LC-MPFS-DEV-KIT.
 ![Power on the Device](images/Power_On.PNG)
 
 9. Configure the serial terminal in the Host PC for 115200 baud, 8 data bits, no stop bits, no parity, and no flow control. Push reset button (near the power button) on the LC-MPFS-DEV-KIT.
-10.The Linux boot process can be observed on a serial terminal as shown in the following image.
+10. The Linux boot process can be observed on a serial terminal as shown in the following image.
 
 ![Linux Booting Messages on the Terminal](images/Linux_Booting.PNG)
 
@@ -111,7 +105,7 @@ Note: The power supply switch must be switched off while making the jumper conne
 
 8. Click OK. The required programming file is selected and ready to be programmed in the
 9. The FlashPro Express window appears as shown in the following Confirm that a programmer number appears in the Programmer field. If it does not, confirm the board connections and click Refresh/Rescan Programmers.
-10 Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure. See Running the Demo, page 31 to run the demo.
+10. Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure. See Running the Demo, page 31 to run the demo.
 
 #### Linux Environment 
 
@@ -175,17 +169,39 @@ $ make
 
 Copy `uboot.bin` image to `mpfs-linux-sdk/work` directory.
 
-For solutions to errors encountered during the build process, see Appendix A.
-
 ### Preparing an SD Card and Programming an Image for the First Time
-Connect an SD card to your host system to load the boot image (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually. Check if your SD card is mounted and unmount it using the following commands, where XN are replaced with the SD card’s specific values found from the mount command.
+Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
+The following steps will allow you to check and unmount the card if required:
+
+After inserting your SD card, use dmesg to check what your card's identifier is.
 ```
-$ mount | grep sd
-$ sudo umount /dev/sdXN
+$ dmesg | egrep "sd|mmcblk"
 ```
-The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined. To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
+The output should contain a line similar to one of the below lines:
 ```
-$ sudo make DISK=/dev/path-to-sdcard-device format-boot-loader
+[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
+[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+```
+`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+For these examples the identifier `sdX` is used. 
+
+#### WARNING:
+        The drive with the identifier `sda` is the default location for your operating system.        
+        DO NOT pass this identifier to any of the commands listed here.       
+        Check that the size of the card matches the dmesg output before continuing.     
+
+Next check if this card is mounted:
+```
+$ mount | grep sdX
+```
+If any entries are present, then run the following. If not then skip this command:
+```
+$ sudo umount /dev/sdX
+```
+The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.        
+To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
+```
+$ sudo make DISK=/dev/sdX format-boot-loader
 ```
 Now, your system should be bootable using your new SD card. You can remove it from your PC and insert it into the SD card slot on the LC-MPFS-DEV-KIT.
 
@@ -237,29 +253,6 @@ Visit the following links for further reference reading materials.
 [Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
 [FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
 [FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
-[PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)
-[Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics)
-
-## Appendix A
-The following section describes solutions to two probable build errors that occur building on Ubuntu 18.04 LTS.
-#### Error 1:  Unescaped left brace in regex is illegal here in regex; marked by:
-
-![Error 1](images/Error_1.PNG)
-
-Workaround: Remove the extra bracket "{  }"
-
-![Error 1 Workaround](images/Error_1_Workaround.PNG)
-
-After the workaround, the code looks as follows:
-
-![Error 1 Post Workaround](images/Error_1_After_Workaround.PNG)
-
-#### Error 2: Conflicting types for ‘copy_file_range’
-
-![Error 2](images/Error_2.png)
-
-Workaround: Rename function 'copy_file_range'   to  'copy_file_chunk'
-```
-Vim  < path to  mpfs-linux-sdk/work/buildroot_initramfs/build/host-e2fsprogs-1.43.1/misc/create_inode.c
-```
-This workaround should be applied wherever the error is reported.
+[PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)         
+[Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics)   
+       

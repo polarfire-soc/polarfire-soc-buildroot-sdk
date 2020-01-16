@@ -247,22 +247,40 @@ The first time the build is run, it also builds the RISC-V cross compiler toolch
 The output file work/bbl.bin contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob.      
 
 #### Preparing an SD Card and Programming an Image for the First Time
-Add an SD card to boot your system (16 GB or 32 GB).
+Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
+The following steps will allow you to check and unmount the card if required:
 
-If the SD card is auto-mounted, first unmount it manually. Check if your SD card is mounted and unmount it using the following commands, where XN are replaced with the SD card’s specific values found from the mount command:
+After inserting your SD card, use dmesg to check what your card's identifier is.
 ```
-$ mount | grep sd
-$ sudo umount /dev/sdXN
+$ dmesg | egrep "sd|mmcblk"
 ```
-The SD card should have a GUID Partition Table (GPT) rather than Master Boot Record (MBR).           
-It must also have the following partitions on it:
-- The first partition should be for the kernel image. It will be 32 MB in size.
-- The second partition is reserved for a Linux root partition. It will fill most of the free space on the card.
-- The third partition should be for the HiFive First Stage Boot Loader (FSBL) binary. It will be 1 MB in size.
+The output should contain a line similar to one of the below lines:
+```
+[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
+[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+```
+`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+For these examples the identifier `sdX` is used. 
 
+#### WARNING:
+        The drive with the identifier `sda` is the default location for your operating system.        
+        DO NOT pass this identifier to any of the commands listed here.       
+        Check that the size of the card matches the dmesg output before continuing.
+
+Next check if this card is mounted:
+```
+$ mount | grep sdX
+```
+If any entries are present, then run the following. If not then skip this command:
+```
+$ sudo umount /dev/sdX
+```
+
+The SD card should have a GUID Partition Table (GPT) rather than Master Boot Record (MBR) without any partitions defined.
+ 
 To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
 ```
-$ sudo make DISK=/dev/path-to-sdcard-device format-boot-loader
+$ sudo make DISK=/dev/sdX format-boot-loader
 ```
 This populates the SD card with the required partition types, and it copies across the Linux kernel image
 to the appropriate partition. If an fsbl.bin file is present in the top-level directory, it copies this across to
@@ -278,12 +296,10 @@ To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
 $ rm work/linux/vmlinux
 $ make
 ```
-Copy this newly built image to the SD card using:
+Copy this newly built image to the SD card using the same method as before:
 ```
-$ sudo dd if=work/bbl.bin of=/dev/path-to-sdcard-device1
+sudo make DISK=/dev/sdX format-boot-loader
 ```
-
-Note the `1` at the end of the SD Card device path to signify the first partition.
 
 The source for the device tree for HiFive Unleashed Expansion board is in the `conf/riscvpc.dts` directory.           
 The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
