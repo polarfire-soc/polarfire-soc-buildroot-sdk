@@ -15,12 +15,15 @@ uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
 uboot := $(uboot_wrkdir)/u-boot.bin
 
 flash_image := $(wrkdir)/hifive-unleashed-a00-YYYY-MM-DD.gpt
-uboot := $(wrkdir)/u-boot.bin
 bblbin := $(wrkdir)/bbl.bin
 
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
+
+target := riscv64-unknown-linux-gnu
+
+CROSS_COMPILE := $(RISCV)/bin/$(target)-
 
 buildroot_srcdir := $(srcdir)/buildroot
 buildroot_initramfs_wrkdir := $(wrkdir)/buildroot_initramfs
@@ -59,7 +62,9 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
 rootfs := $(wrkdir)/rootfs.bin
 
-target := riscv64-unknown-linux-gnu
+MACHINE ?= MPFS
+device_tree := $(confdir)/$(MACHINE).dts
+device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 BBL		= 2E54B353-1271-4842-806F-E436D6AF6985
 VFAT	= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
@@ -71,14 +76,20 @@ UBOOTDTB	= 070dd1a8-cd64-11e8-aa3d-70b3d592f0fa
 UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 
 
+
 .PHONY: all
-all: $(hex)
+all: $(hex) $(flash_image)
 	@echo
-	@echo "This image has been generated for an ISA of $(ISA) and an ABI of $(ABI)"
-	@echo "Find the image in work/bbl.bin, which should be written to a boot partition"
+	@echo "Device tree: $(device_tree)"
+	@echo
+	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
+	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
+	@echo
+	@echo $(flash_image)
+	@echo
 	@echo
 	@echo "To completely erase, reformat, and program a disk sdX, run:"
-	@echo "  sudo make DISK=/dev/sdX format-boot-loader"
+	@echo "  make DISK=/dev/sdX format-boot-loader"
 	@echo "  ... you will need gdisk and e2fsprogs installed"
 	@echo
 
@@ -106,9 +117,9 @@ $(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_initramfs_config) $@
-	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=riscv64-unknown-linux-gnu-
+	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE)
 
-$(buildroot_initramfs_tar): $(buildroot_srcdir) $(buildroot_initramfs_wrkdir)/.config $(RISCV)/bin/$(target)-gcc $(buildroot_initramfs_config)
+$(buildroot_initramfs_tar): $(buildroot_srcdir) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
 	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir)
 
 .PHONY: buildroot_initramfs-menuconfig
@@ -123,7 +134,7 @@ $(buildroot_rootfs_wrkdir)/.config: $(buildroot_srcdir)
 	cp $(buildroot_rootfs_config) $@
 	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) olddefconfig
 
-$(buildroot_rootfs_ext): $(buildroot_srcdir) $(buildroot_rootfs_wrkdir)/.config $(RISCV)/bin/$(target)-gcc $(buildroot_rootfs_config)
+$(buildroot_rootfs_ext): $(buildroot_srcdir) $(buildroot_rootfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_rootfs_config)
 	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir)
 
 .PHONY: buildroot_rootfs-menuconfig
@@ -158,16 +169,12 @@ $(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroo
 		CONFIG_INITRAMFS_SOURCE="$(confdir)/initramfs.txt $(buildroot_initramfs_sysroot)" \
 		CONFIG_INITRAMFS_ROOT_UID=$(shell id -u) \
 		CONFIG_INITRAMFS_ROOT_GID=$(shell id -g) \
-		CROSS_COMPILE=riscv64-unknown-linux-gnu- \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
 		ARCH=riscv \
 		vmlinux
 
 $(vmlinux_stripped): $(vmlinux)
 	$(target)-strip -o $@ $<
-
-
-.PHONY: gpt
-	gpt: $(flash_image)
 
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
@@ -175,10 +182,10 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
 	cp $(dir $<)/defconfig conf/linux_defconfig
 
-$(srcdir)/riscvpc.dtb: $(confdir)/riscvpc.dts
-	dtc -I dts $(confdir)/riscvpc.dts -O dtb -o $(srcdir)/riscvpc.dtb
+$(device_tree_blob): $(device_tree)
+	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
 
-$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(srcdir)/riscvpc.dtb
+$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(wrkdir)/riscvpc.dtb
 	rm -rf $(pk_wrkdir)
 	mkdir -p $(pk_wrkdir)
 	cd $(pk_wrkdir) && $</configure \
@@ -193,7 +200,7 @@ $(bin): $(bbl)
 $(hex):	$(bin)
 	xxd -c1 -p $< > $@
 	
-$(uboot): $(uboot_srcdir) $(target_gcc)
+$(uboot): $(uboot_srcdir) $(target_gcc) $(hex)
 	rm -rf $(uboot_wrkdir)
 	mkdir -p $(uboot_wrkdir)
 	mkdir -p $(dir $@)
@@ -210,7 +217,7 @@ UENV_START=1024
 UENV_END=1099
 
 #pactron
-$(flash_image): $(uboot) $(bblbin) 
+$(flash_image): $(uboot) $(bblbin)
 	dd if=/dev/zero of=$(flash_image) bs=1M count=32
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"bbl"	--typecode=1:$(BBL)   \
@@ -257,10 +264,14 @@ $(qemu): $(qemu_srcdir)
 $(rootfs): $(buildroot_rootfs_ext)
 	cp $< $@
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl uboot
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
 bbl: $(bbl)
+uboot: $(uboot)
+
+.PHONY: flash_image
+flash_image: $(flash_image)
 
 .PHONY: clean
 clean:
