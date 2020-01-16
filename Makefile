@@ -62,7 +62,7 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
 rootfs := $(wrkdir)/rootfs.bin
 
-MACHINE ?= MPFS
+MACHINE ?= mpfs
 device_tree := $(confdir)/$(MACHINE).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 

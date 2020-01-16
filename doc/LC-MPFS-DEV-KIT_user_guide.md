@@ -144,30 +144,15 @@ The following commands build the system to a work/sub-directory.
 ```bash
 $ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
 $ cd mpfs-linux-sdk
-$ git checkout Aloevera_uBoot-support
+$ git checkout master
 $ git submodule update --init --recursive
 $ unset RISCV
-$ make all
+$ make all MACHINE=lc-mpfs
 ```
-Note: It can take awhile to build the first time.
+Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
-The first time the build is run, it also builds the RISC-V cross compiler toolchain. The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. Build and copy the uboot.bin image in the work/ directory by performing the following steps.
-
-#### Build U-Boot
-```bash
-$ cd < path to mpfs-linux-sdk /HiFive_U-Boot
-# Set the PATH
-$ export PATH=$PATH:/{path to mpfs-linux-sdk}/toolchain/bin/
-# Create U-Boot configuration based on architecture defaults
-$ make HiFive-U540_defconfig
-# Optionally edit the configuration via an ncurses interface
-$ make menuconfig
-# Build the U-Boot image
-$ make
-```
-#### Copy U-boot
-
-Copy `uboot.bin` image to `mpfs-linux-sdk/work` directory.
+The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
+The option `MACHINE=mpfs` selects the correct device tree for the board.   
 
 ### Preparing an SD Card and Programming an Image for the First Time
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -203,7 +188,34 @@ To automatically partition and format your SD card, in the top level of mpfs-lin
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
-Now, your system should be bootable using your new SD card. You can remove it from your PC and insert it into the SD card slot on the LC-MPFS-DEV-KIT.
+At this point, your system should be bootable using your new SD card. You can remove it from your PC
+and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the LC-MPFS-DEV-KIT.
+
+### Rebuilding the Linux Kernel
+To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
+```
+$ rm work/linux/vmlinux
+$ make
+```
+Copy this newly built image to the SD card using the same method as before:
+```
+sudo make DISK=/dev/sdX format-boot-loader
+```
+### Switching machines
+To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
+```
+$ rm work/riscvpc.dtb 
+$ make MACHINE=lc-mpfs
+```
+Copy this newly built image to the SD card using the same method as before:
+```
+sudo make DISK=/dev/sdX format-boot-loader
+
+The source for the device tree for HiFive Unleashed Expansion board is in `conf/lc-mpfs.dts`.           
+The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
+Currently, the Microsemi PolarFire Linux SDK for the HiFive Unleashed platform uses a modification to
+the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-pk/machine/mentry.S` for
+the modification.)
 
 ### FPGA Design in Libero
 The Libero project interfaces the PolarFire FPGA with the U540 SoC through the ChipLink interface. The FPGA fabric is instantiated with the ChipLink to AXI bridge, while peripherals — GPIO, MMUART, SPI, and I2C — are connected to it. The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz clock.
@@ -255,4 +267,3 @@ Visit the following links for further reference reading materials.
 [FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
 [PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)         
 [Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics)   
-       

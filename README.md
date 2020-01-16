@@ -34,7 +34,15 @@ Checkout this repository. Then you will need to checkout all of the linked submo
 
 This will take some time and require around 7GB of disk space. Some modules may fail because certain dependencies don't have the best git hosting. The only solution is to wait and try again later (or ask someone for a copy of that source repository).
 
-Once the submodules are initialized, run `make` and the complete toolchain and bbl image will be built. The completed build tree will consume about 14G of disk space.
+Once the submodules are initialized, run `make` and the complete toolchain and bbl image will be built.   
+The completed build tree will consume about 14G of disk space.      
+You can choose between LC-MPFS-DEV-KIT and MPFS-DEV-KIT by setting the `MACHINE` variable.
+```bash
+make MACHINE=mpfs
+# or
+make MACHINE=lc-mpfs
+```
+By default `mpfs` will be used.
 
 ## Upgrading the BBL for booting the Freedom Unleashed dev board
 

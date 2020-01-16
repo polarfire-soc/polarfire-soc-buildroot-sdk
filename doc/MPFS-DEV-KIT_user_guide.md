@@ -235,16 +235,19 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 |||||Close: 1K||100K pull down connected to TRSTB||
 
 ### Building and Loading the Linux Image
-To build and checkout the code, use the following set of commands.
-```
-$ tar -zxvf mpfs-linux-sdk-20180906.tar.gz
+The following commands build the system to a work/sub-directory.
+```bash
+$ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
 $ cd mpfs-linux-sdk
+$ git checkout master
+$ git submodule update --init --recursive
 $ unset RISCV
-$ make all
+$ make all MACHINE=mpfs
 ```
-This will build the system to a work/sub-directory. Note: It can take awhile to build the first time.     
-The first time the build is run, it also builds the RISC-V cross compiler toolchain.         
-The output file work/bbl.bin contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob.      
+Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
+
+The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
+The option `MACHINE=mpfs` selects the correct device tree for the board.         
 
 #### Preparing an SD Card and Programming an Image for the First Time
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -300,8 +303,18 @@ Copy this newly built image to the SD card using the same method as before:
 ```
 sudo make DISK=/dev/sdX format-boot-loader
 ```
+### Switching machines
+To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
+```
+$ rm work/riscvpc.dtb 
+$ make MACHINE=mpfs
+```
+Copy this newly built image to the SD card using the same method as before:
+```
+sudo make DISK=/dev/sdX format-boot-loader
 
-The source for the device tree for HiFive Unleashed Expansion board is in the `conf/riscvpc.dts` directory.           
+
+The source for the device tree for HiFive Unleashed Expansion board is in `conf/mpfs.dts`.           
 The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
 Currently, the Microsemi PolarFire Linux SDK for the HiFive Unleashed platform uses a modification to
 the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-pk/machine/mentry.S` for
