@@ -11,20 +11,16 @@ The complete User Guides are available in the `doc/` subdirectory, for the [MPFS
 ### Ubuntu 18.04 x86_64 host
 
 - Status: Working.
-- Build dependencies: `build-essential git autotools texinfo bison flex
-  libgmp-dev libmpfr-dev libmpc-dev gawk libz-dev libssl-dev`
+- Build dependencies: `autoconf automake autotools-dev bc bison build-essential curl flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev libblkid-dev device-tree-compiler`
 - Additional build deps for QEMU: `libglib2.0-dev libpixman-1-dev`
-- Additional build deps for Spike: `device-tree-compiler`
-- tools require for 'format-boot-loader' target: mtools
-- 
+- tools required for 'format-boot-loader' target: mtools
+
 ### Ubuntu 16.04 x86_64 host
 
 - Status: Needs to be tested
-- Build dependencies: `build-essential git autotools texinfo bison flex
-  libgmp-dev libmpfr-dev libmpc-dev gawk libz-dev libssl-dev`
+- Build dependencies: `autoconf automake autotools-dev bc bison build-essential curl flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev libblkid-dev device-tree-compiler`
 - Additional build deps for QEMU: `libglib2.0-dev libpixman-1-dev`
-- Additional build deps for Spike: `device-tree-compiler`
-- tools require for 'format-boot-loader' target: mtools
+- tools required for 'format-boot-loader' target: mtools
 
 ## Build Instructions
 

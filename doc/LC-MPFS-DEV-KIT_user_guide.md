@@ -131,17 +131,17 @@ This section describes the installation procedure to build the Linux boot image 
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04.3 LTS. It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
 
 #### Install Prerequisite Packages
-Before starting, use the `apt-get` command to install prerequisite packages:
+Before starting, use the `apt` command to install prerequisite packages:
 ```
-sudo apt-get install autoconf automake autotools-dev bc bison \
+sudo apt install autoconf automake autotools-dev bc bison \
 build-essential curl flex gawk gdisk git gperf libgmp-dev \
 libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
-patchutils python screen texinfo unzip zlib1g-dev \
+patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
 device-tree-compiler
 ```
 #### Build and Checkout Code
 The following commands build the system to a work/sub-directory.
-```bash
+```
 $ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
 $ cd mpfs-linux-sdk
 $ git checkout master

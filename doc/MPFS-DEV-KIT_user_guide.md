@@ -234,9 +234,19 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 |9| J22 |JTAG |Weak pull down to JTAG TRSTB|Open: 1K pull down connected to TRSTB| Open|
 |||||Close: 1K||100K pull down connected to TRSTB||
 
+#### Install Prerequisite Packages
+Before starting, use the `apt` command to install prerequisite packages:
+```
+sudo apt install autoconf automake autotools-dev bc bison \
+build-essential curl flex gawk gdisk git gperf libgmp-dev \
+libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
+patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
+device-tree-compiler
+```
+
 ### Building and Loading the Linux Image
 The following commands build the system to a work/sub-directory.
-```bash
+```
 $ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
 $ cd mpfs-linux-sdk
 $ git checkout master
