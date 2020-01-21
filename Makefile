@@ -1,9 +1,8 @@
-# RISCV should either be unset, or set to point to a directory that contains
-# a toolchain install tree that was built via other means.
 RISCV ?= $(CURDIR)/toolchain
 PATH := $(RISCV)/bin:$(PATH)
 ISA ?= rv64imafdc
 ABI ?= lp64d
+GITID := $(shell git describe --dirty --always)
 
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -16,19 +15,10 @@ DEVKIT ?= mpfs
 device_tree := $(confdir)/$(DEVKIT).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
-uboot_srcdir := $(srcdir)/HiFive_U-Boot
-uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
-uboot := $(uboot_wrkdir)/u-boot.bin
-
-flash_image := $(wrkdir)/hifive-unleashed-a00-YYYY-MM-DD.gpt
-bblbin := $(wrkdir)/bbl.bin
-
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
-
 target := riscv64-unknown-linux-gnu
-
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
 
 buildroot_srcdir := $(srcdir)/buildroot
@@ -47,12 +37,16 @@ linux_defconfig := $(confdir)/$(DEVKIT)_linux_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
+vmlinux_bin := $(wrkdir)/vmlinux.bin
+
+flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
+initramfs := $(wrkdir)/initramfs.cpio.gz
 
 pk_srcdir := $(srcdir)/riscv-pk
 pk_wrkdir := $(wrkdir)/riscv-pk
 bbl := $(pk_wrkdir)/bbl
-bin := $(wrkdir)/bbl.bin
-hex := $(wrkdir)/bbl.hex
+bbl_bin := $(wrkdir)/bbl.bin
+bbl_hex := $(wrkdir)/bbl.hex
 
 fesvr_srcdir := $(srcdir)/riscv-fesvr
 fesvr_wrkdir := $(wrkdir)/riscv-fesvr
@@ -66,21 +60,14 @@ qemu_srcdir := $(srcdir)/riscv-qemu
 qemu_wrkdir := $(wrkdir)/riscv-qemu
 qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
+uboot_srcdir := $(srcdir)/HiFive_U-Boot
+uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
+uboot := $(uboot_wrkdir)/u-boot.bin
+
 rootfs := $(wrkdir)/rootfs.bin
 
-BBL		= 2E54B353-1271-4842-806F-E436D6AF6985
-VFAT	= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
-LINUX	= 0FC63DAF-8483-4772-8E79-3D69D8477DE4
-FSBL	= 5B193300-FC78-40CD-8002-E86C45580B47
-UBOOT	= 5B193300-FC78-40CD-8002-E86C45580B47
-UBOOTENV	= a09354ac-cd63-11e8-9aff-70b3d592f0fa
-UBOOTDTB	= 070dd1a8-cd64-11e8-aa3d-70b3d592f0fa
-UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
-
-
-
 .PHONY: all
-all: $(hex) $(flash_image)
+all: $(bbl_hex) $(flash_image)
 	@echo
 	@echo "Linux defconfig: $(linux_defconfig)"
 	@echo "Device tree: $(device_tree)"
@@ -89,7 +76,6 @@ all: $(hex) $(flash_image)
 	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
 	@echo
 	@echo $(flash_image)
-	@echo
 	@echo
 	@echo "To completely erase, reformat, and program a disk sdX, run:"
 	@echo "  make DISK=/dev/sdX format-boot-loader"
@@ -113,10 +99,10 @@ $(toolchain_dest)/bin/$(target)-gcc: $(toolchain_srcdir)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 263682/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
 
-$(buildroot_initramfs_wrkdir)/.config: $(buildroot_initramfs_config)
-$(buildroot_initramfs_wrkdir)/.config: $(buildroot_rootfs_config)
-$(buildroot_initramfs_wrkdir)/.config: $(confdir)/initramfs.txt
-$(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir)
+# $(buildroot_initramfs_wrkdir)/.config: $(buildroot_initramfs_config)
+# $(buildroot_initramfs_wrkdir)/.config: $(buildroot_rootfs_config)
+# $(buildroot_initramfs_wrkdir)/.config: $(confdir)/initramfs.txt
+$(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_initramfs_config) $@
@@ -155,8 +141,6 @@ $(linux_wrkdir)/.config: $(linux_defconfig) $(linux_srcdir)
 	mkdir -p $(dir $@)
 	cp -p $< $@
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
-	echo $(ISA)
-	echo $(filter rv32%,$(ISA))
 ifeq (,$(filter rv%c,$(ISA)))
 	sed 's/^.*CONFIG_RISCV_ISA_C.*$$/CONFIG_RISCV_ISA_C=n/' -i $@
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
@@ -177,7 +161,7 @@ $(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroo
 		vmlinux
 
 $(vmlinux_stripped): $(vmlinux)
-	$(target)-strip -o $@ $<
+	PATH=$(PATH) $(target)-strip -o $@ $<
 
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
@@ -191,36 +175,20 @@ $(device_tree_blob): $(device_tree)
 $(bbl): $(pk_srcdir) $(vmlinux_stripped) $(wrkdir)/riscvpc.dtb
 	rm -rf $(pk_wrkdir)
 	mkdir -p $(pk_wrkdir)
-	cd $(pk_wrkdir) && $</configure \
+	cd $(pk_wrkdir) && PATH=$(PATH) $</configure \
 		--host=$(target) \
 		--with-payload=$(vmlinux_stripped) \
 		--enable-logo 
-	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) -C $(pk_wrkdir)
+	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_wrkdir)
 
-$(bin): $(bbl)
-	$(target)-objcopy -S -O binary --change-addresses -0x80000000 $< $@
+$(bbl_bin): $(bbl)
+	PATH=$(PATH) $(target)-objcopy -S -O binary --change-addresses -0x80000000 $< $@
 
-$(hex):	$(bin)
+$(bbl_hex):	$(bbl_bin)
 	xxd -c1 -p $< > $@
-	
-$(uboot): $(uboot_srcdir) $(target_gcc) $(hex)
-	rm -rf $(uboot_wrkdir)
-	mkdir -p $(uboot_wrkdir)
-	mkdir -p $(dir $@)
-	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
-	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
-
-VFAT_START=2048
-VFAT_END=65502
-VFAT_SIZE=63454
-UBOOT_START=1100
-UBOOT_END=2020
-UBOOT_SIZE=950
-UENV_START=1024
-UENV_END=1099
 
 #pactron
-$(flash_image): $(uboot) $(bblbin)
+$(flash_image): $(uboot) $(bbl_bin)
 	dd if=/dev/zero of=$(flash_image) bs=1M count=32
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"bbl"	--typecode=1:$(BBL)   \
@@ -228,7 +196,7 @@ $(flash_image): $(uboot) $(bblbin)
 		--new=4:$(UENV_START):$(UENV_END) --change-name=4:uboot-env --typecode=4:$(UBOOTENV) \
 		$(flash_image)
 	@sleep 1
-	dd conv=notrunc if=$(bblbin) of=$(flash_image) bs=512 seek=$(VFAT_START)
+	dd conv=notrunc if=$(bbl_bin) of=$(flash_image) bs=512 seek=$(VFAT_START)
 	dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
 
 
@@ -246,10 +214,10 @@ $(spike): $(spike_srcdir) $(libfesvr)
 	rm -rf $(spike_wrkdir)
 	mkdir -p $(spike_wrkdir)
 	mkdir -p $(dir $@)
-	cd $(spike_wrkdir) && $</configure \
+	cd $(spike_wrkdir) && PATH=$(PATH) $</configure \
 		--prefix=$(dir $(abspath $(dir $@))) \
 		--with-fesvr=$(dir $(abspath $(dir $(libfesvr))))
-	$(MAKE) -C $(spike_wrkdir)
+	$(MAKE) PATH=$(PATH) -C $(spike_wrkdir)
 	$(MAKE) -C $(spike_wrkdir) install
 	touch -c $@
 
@@ -263,17 +231,24 @@ $(qemu): $(qemu_srcdir)
 	$(MAKE) -C $(qemu_wrkdir)
 	$(MAKE) -C $(qemu_wrkdir) install
 	touch -c $@
+	
+$(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc $(bbl_hex)
+	rm -rf $(uboot_wrkdir)
+	mkdir -p $(uboot_wrkdir)
+	mkdir -p $(dir $@)
+	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
+	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
 
 $(rootfs): $(buildroot_rootfs_ext)
 	cp $< $@
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl uboot
+$(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
+
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl flash_image
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
 bbl: $(bbl)
 uboot: $(uboot)
-
-.PHONY: flash_image
 flash_image: $(flash_image)
 
 .PHONY: clean
@@ -290,10 +265,27 @@ qemu: $(qemu) $(bbl) $(rootfs)
 		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
 		-netdev user,id=net0 -device virtio-net-device,netdev=net0
 
-# Relevant partition type codes
-# BBL   = 2E54B353-1271-4842-806F-E436D6AF6985
-# LINUX = 0FC63DAF-8483-4772-8E79-3D69D8477DE4
-# FSBL  = 5B193300-FC78-40CD-8002-E86C45580B47
+
+
+# partition type codes
+BBL			= 2E54B353-1271-4842-806F-E436D6AF6985
+VFAT		= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
+LINUX		= 0FC63DAF-8483-4772-8E79-3D69D8477DE4
+FSBL		= 5B193300-FC78-40CD-8002-E86C45580B47
+UBOOT		= 5B193300-FC78-40CD-8002-E86C45580B47
+UBOOTENV	= a09354ac-cd63-11e8-9aff-70b3d592f0fa
+UBOOTDTB	= 070dd1a8-cd64-11e8-aa3d-70b3d592f0fa
+UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
+
+# partition addreses
+VFAT_START=2048
+VFAT_END=65502
+VFAT_SIZE=63454
+UBOOT_START=1100
+UBOOT_END=2020
+UBOOT_SIZE=950
+UENV_START=1024
+UENV_END=1099
 
 .PHONY: format-boot-loader
 format-boot-loader: $(bin)
