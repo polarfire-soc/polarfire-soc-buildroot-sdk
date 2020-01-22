@@ -47,6 +47,19 @@ Once the build of the SDK is complete, there will be a new bbl image under `work
 To completely erase, reformat, and program a disk, with the label `sdX`, run:
 `sudo make DISK=/dev/sdX format-boot-loader`. This depends on gdisk and e2fsprogs.
 
+The mode selection switches should be set as follows:
+
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|===+
+ |                | | | | | | |                 |      |   |
+ |                | | | | | | |                 |      |   |
+ |        HFXSEL->|X|X|X|X|X|X|                 |______|   |
+ |                +-+-+-+-+-+-+                            |
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     |
+ |                                                         |
+```
+
 ## Booting Linux on a simulator
 
 You can boot linux on qemu by running `make qemu`.

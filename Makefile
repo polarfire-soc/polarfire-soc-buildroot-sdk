@@ -5,10 +5,15 @@ PATH := $(RISCV)/bin:$(PATH)
 ISA ?= rv64imafdc
 ABI ?= lp64d
 
+
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
 confdir := $(srcdir)/conf
 wrkdir := $(CURDIR)/work
+
+MACHINE ?= mpfs
+device_tree := $(confdir)/$(MACHINE).dts
+device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 uboot_srcdir := $(srcdir)/HiFive_U-Boot
 uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
@@ -37,7 +42,7 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
-linux_defconfig := $(confdir)/linux_defconfig
+linux_defconfig := $(confdir)/$(MACHINE)_linux_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
@@ -62,10 +67,6 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
 rootfs := $(wrkdir)/rootfs.bin
 
-MACHINE ?= mpfs
-device_tree := $(confdir)/$(MACHINE).dts
-device_tree_blob := $(wrkdir)/riscvpc.dtb
-
 BBL		= 2E54B353-1271-4842-806F-E436D6AF6985
 VFAT	= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
 LINUX	= 0FC63DAF-8483-4772-8E79-3D69D8477DE4
@@ -80,6 +81,7 @@ UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 .PHONY: all
 all: $(hex) $(flash_image)
 	@echo
+	@echo "Linux defconfig: $(linux_defconfig)"
 	@echo "Device tree: $(device_tree)"
 	@echo
 	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
@@ -180,7 +182,7 @@ $(vmlinux_stripped): $(vmlinux)
 linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
-	cp $(dir $<)/defconfig conf/linux_defconfig
+	cp $(dir $<)/defconfig $(linux_defconfig)
 
 $(device_tree_blob): $(device_tree)
 	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
