@@ -391,7 +391,7 @@
 			interrupts = <31>;
 			reg = <0x0 0x100b0000 0x0 0x4000>;
 			reg-names = "control";
-		};F		
+		};		
 		L53: pinctrl@10080000 {
 			compatible = "sifive,pinctrl0";
 			reg = <0x0 0x10080000 0x0 0x1000>;
@@ -604,10 +604,10 @@
 			status = "okay";
 		};
  		L60: uio_axi_lsram@2030000000 {
-                       compatible = "generic-uio"
-                       reg = <0x20 0x30000000 0  0x4000 >;
-                       status = "okay";
-                };
+			compatible = "generic-uio"
+			reg = <0x20 0x30000000 0  0x4000 >;
+			status = "okay";
+		};
 		usb@2000200000 {
 			compatible = "microsemi,ms-pf-usb-host";
 			reg = <0x00000020 0x00200000 0x00000000 0x00001000>;
