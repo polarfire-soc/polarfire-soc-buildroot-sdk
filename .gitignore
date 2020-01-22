@@ -5,3 +5,4 @@ arch/
 include/
 scripts/
 .cache.mk
+/conf/old_configs

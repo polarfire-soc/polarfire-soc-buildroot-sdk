@@ -1,8 +1,5 @@
-RISCV ?= $(CURDIR)/toolchain
-PATH := $(RISCV)/bin:$(PATH)
 ISA ?= rv64imafdc
 ABI ?= lp64d
-GITID := $(shell git describe --dirty --always)
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
@@ -11,6 +8,9 @@ wrkdir := $(CURDIR)/work
 
 
 
+RISCV ?= $(CURDIR)/toolchain
+PATH := $(RISCV)/bin:$(PATH)
+GITID := $(shell git describe --dirty --always)
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
@@ -29,20 +29,23 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
-linux_defconfig := $(confdir)/linux_defconfig
+linux_defconfig := $(confdir)/linux_4-19_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
 vmlinux_bin := $(wrkdir)/vmlinux.bin
 
 flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
+vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
 
 pk_srcdir := $(srcdir)/riscv-pk
 pk_wrkdir := $(wrkdir)/riscv-pk
+pk_payload_wrkdir := $(wrkdir)/riscv-payload-pk
 bbl := $(pk_wrkdir)/bbl
+bbl_payload :=$(pk_payload_wrkdir)/bbl
 bbl_bin := $(wrkdir)/bbl.bin
-bbl_hex := $(wrkdir)/bbl.hex
+fit := $(wrkdir)/image-$(GITID).fit
 
 fesvr_srcdir := $(srcdir)/riscv-fesvr
 fesvr_wrkdir := $(wrkdir)/riscv-fesvr
@@ -67,26 +70,30 @@ device_tree := $(confdir)/$(MACHINE).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 .PHONY: all
-all: $(bbl_hex) $(flash_image)
+all: $(fit) $(flash_image)
 	@echo
 	@echo "Device tree: $(device_tree)"
 	@echo
 	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
 	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
 	@echo
+	@echo $(fit)
 	@echo $(flash_image)
 	@echo
 	@echo "To completely erase, reformat, and program a disk sdX, run:"
 	@echo "  make DISK=/dev/sdX format-boot-loader"
 	@echo "  ... you will need gdisk and e2fsprogs installed"
+	@echo "  Please note this will not currently format the SDcard ext4 partition"
+	@echo "  This can be done manually if needed"
 	@echo
 
 ifneq ($(RISCV),$(toolchain_dest))
-$(RISCV)/bin/$(target)-gcc:
-	$(error The RISCV environment variable was set, but is not pointing at a toolchain install tree)
+$(CROSS_COMPILE)-gcc:
+	ifeq (,$(CROSS_COMPILE)-gcc --version 2>/dev/null)
+		$(error The RISCV environment variable was set, but is not pointing at a toolchain install tree)
 endif
 
-$(toolchain_dest)/bin/$(target)-gcc: $(toolchain_srcdir)
+$(CROSS_COMPILE)-gcc: $(toolchain_srcdir)
 	mkdir -p $(toolchain_wrkdir)
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv INSTALL_HDR_PATH=$(abspath $(toolchain_srcdir)/linux-headers) headers_install
 	cd $(toolchain_wrkdir); $(toolchain_srcdir)/configure \
@@ -97,10 +104,6 @@ $(toolchain_dest)/bin/$(target)-gcc: $(toolchain_srcdir)
 	$(MAKE) -C $(toolchain_wrkdir)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 263682/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
-
-# $(buildroot_initramfs_wrkdir)/.config: $(buildroot_initramfs_config)
-# $(buildroot_initramfs_wrkdir)/.config: $(buildroot_rootfs_config)
-# $(buildroot_initramfs_wrkdir)/.config: $(confdir)/initramfs.txt
 $(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
@@ -150,18 +153,29 @@ ifeq ($(ISA),$(filter rv32%,$(ISA)))
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
 endif
 
-$(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp)
+$(initramfs).d: $(buildroot_initramfs_sysroot)
+	$(linux_srcdir)/usr/gen_initramfs_list.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
+
+$(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux)
+	cd $(linux_wrkdir) && \
+		$(linux_srcdir)/usr/gen_initramfs_list.sh \
+		-o $@ -u $(shell id -u) -g $(shell id -g) \
+		$(confdir)/initramfs.txt \
+		$(buildroot_initramfs_sysroot)
+
+$(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
 	$(MAKE) -C $< O=$(linux_wrkdir) \
-		CONFIG_INITRAMFS_SOURCE="$(confdir)/initramfs.txt $(buildroot_initramfs_sysroot)" \
-		CONFIG_INITRAMFS_ROOT_UID=$(shell id -u) \
-		CONFIG_INITRAMFS_ROOT_GID=$(shell id -g) \
-		CROSS_COMPILE=$(CROSS_COMPILE) \
 		ARCH=riscv \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		PATH=$(PATH) \
 		vmlinux
 
 $(vmlinux_stripped): $(vmlinux)
 	PATH=$(PATH) $(target)-strip -o $@ $<
 
+$(vmlinux_bin): $(vmlinux)
+	PATH=$(PATH) $(CROSS_COMPILE)objcopy -O binary $< $@
+	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig
@@ -176,28 +190,26 @@ $(bbl): $(pk_srcdir) $(vmlinux_stripped) $(wrkdir)/riscvpc.dtb
 	mkdir -p $(pk_wrkdir)
 	cd $(pk_wrkdir) && PATH=$(PATH) $</configure \
 		--host=$(target) \
-		--with-payload=$(vmlinux_stripped) \
 		--enable-logo 
 	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_wrkdir)
 
+# Workaround for SPIKE until it can support loading bbl and
+# kernel as separate images like qemu and uboot. Unfortuately
+# at this point this means no easy way to have an initrd for spike
+$(bbl_payload): $(pk_srcdir) $(vmlinux_stripped)
+	rm -rf $(pk_payload_wrkdir)
+	mkdir -p $(pk_payload_wrkdir)
+	cd $(pk_payload_wrkdir) && PATH=$(PATH) $</configure \
+		--host=$(target) \
+		--enable-logo \
+		--with-payload=$(vmlinux_stripped) \
+	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_payload_wrkdir)
+
 $(bbl_bin): $(bbl)
-	PATH=$(PATH) $(target)-objcopy -S -O binary --change-addresses -0x80000000 $< $@
+	PATH=$(PATH) $(CROSS_COMPILE)objcopy -S -O binary --change-addresses -0x80000000 $< $@
 
-$(bbl_hex):	$(bbl_bin)
-	xxd -c1 -p $< > $@
-
-#pactron
-$(flash_image): $(uboot) $(bbl_bin)
-	dd if=/dev/zero of=$(flash_image) bs=1M count=32
-	/sbin/sgdisk --clear  \
-		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"bbl"	--typecode=1:$(BBL)   \
-		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(FSBL) \
-		--new=4:$(UENV_START):$(UENV_END) --change-name=4:uboot-env --typecode=4:$(UBOOTENV) \
-		$(flash_image)
-	@sleep 1
-	dd conv=notrunc if=$(bbl_bin) of=$(flash_image) bs=512 seek=$(VFAT_START)
-	dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
-
+$(fit): $(bbl_bin) $(vmlinux_bin) $(uboot) $(initramfs) $(confdir)/uboot-fit-image.its
+	$(uboot_wrkdir)/tools/mkimage -f $(confdir)/uboot-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
 	rm -rf $(fesvr_wrkdir)
@@ -231,7 +243,7 @@ $(qemu): $(qemu_srcdir)
 	$(MAKE) -C $(qemu_wrkdir) install
 	touch -c $@
 	
-$(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc $(bbl_hex)
+$(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc
 	rm -rf $(uboot_wrkdir)
 	mkdir -p $(uboot_wrkdir)
 	mkdir -p $(dir $@)
@@ -243,27 +255,34 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl flash_image
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl flash_image initrd
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
 bbl: $(bbl)
+fit: $(fit)
 uboot: $(uboot)
 flash_image: $(flash_image)
+initrd: $(initramfs)
 
 .PHONY: clean
 clean:
-	rm -rf -- $(wrkdir) $(toolchain_dest)
+	rm -rf -- $(wrkdir
+# $(toolchain_dest)
 
 .PHONY: sim
-sim: $(spike) $(bbl)
+sim: $(spike) $(bbl_payload)
 	$(spike) --isa=$(ISA) -p4 $(bbl)
 
 .PHONY: qemu
-qemu: $(qemu) $(bbl) $(rootfs)
-	$(qemu) -nographic -machine virt -kernel $(bbl) \
-		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
+qemu: $(qemu) $(bbl_bin) $(vmlinux) $(initramfs)
+	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
 		-netdev user,id=net0 -device virtio-net-device,netdev=net0
 
+.PHONY: qemu-rootfs
+qemu-rootfs: $(qemu) $(bbl_bin) $(vmlinux) $(initramfs) $(rootfs)
+	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
+		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
+		-netdev user,id=net0 -device virtio-net-device,netdev=net0
 
 
 # partition type codes
@@ -285,34 +304,59 @@ UBOOT_END=2020
 UBOOT_SIZE=950
 UENV_START=1024
 UENV_END=1099
+RESERVED_SIZE=2000
+
+$(vfat_image): $(fit) $(confdir)/uEnv.txt
+	@if [ `du --apparent-size --block-size=512 $(uboot) | cut -f 1` -ge $(UBOOT_SIZE) ]; then \
+		echo "Uboot is too large for partition!!\nReduce uboot or increase partition size"; \
+		rm $(flash_image); exit 1; fi
+	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
+	/sbin/mkfs.vfat $(vfat_image)
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::hifiveu.fit
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv.txt ::uEnv.txt
+
+$(flash_image): $(uboot) $(fit) $(vfat_image)
+	dd if=/dev/zero of=$(flash_image) bs=1M count=32
+	/sbin/sgdisk --clear  \
+		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
+		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
+		--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
+		$(flash_image)
+	dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
+	dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
 
 .PHONY: format-boot-loader
-format-boot-loader: $(bin)
+format-boot-loader: $(bbl_bin) $(uboot) $(fit) $(vfat_image)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
-	sgdisk --clear                                                               \
-		--new=1:2048:4095   --change-name=1:uboot      --typecode=1:$(FSBL)   \
-		--new=2:4096:69631  --change-name=2:bootloader --typecode=2:$(BBL)   \
-		--new=3:264192:     --change-name=3:root       --typecode=3:$(LINUX) \
+	$(eval DEVICE_NAME := $(shell basename $(DISK)))
+	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
+	$(eval ROOT_SIZE := $(shell expr $(SD_SIZE) \- $(RESERVED_SIZE)))
+	/sbin/sgdisk --clear  \
+		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
+		--new=2:264192:$(ROOT_SIZE) --change-name=2:root	--typecode=2:$(LINUX) \
+		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
+		--new=4:$(UENV_START):$(UENV_END)  --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
 		$(DISK)
+	-/sbin/partprobe
 	@sleep 1
 ifeq ($(DISK)p1,$(wildcard $(DISK)p1))
 	@$(eval PART1 := $(DISK)p1)
 	@$(eval PART2 := $(DISK)p2)
 	@$(eval PART3 := $(DISK)p3)
+	@$(eval PART4 := $(DISK)p4)
 else ifeq ($(DISK)s1,$(wildcard $(DISK)s1))
 	@$(eval PART1 := $(DISK)s1)
 	@$(eval PART2 := $(DISK)s2)
 	@$(eval PART3 := $(DISK)s3)
+	@$(eval PART4 := $(DISK)s4)
 else ifeq ($(DISK)1,$(wildcard $(DISK)1))
 	@$(eval PART1 := $(DISK)1)
 	@$(eval PART2 := $(DISK)2)
 	@$(eval PART3 := $(DISK)3)
+	@$(eval PART4 := $(DISK)4)
 else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
-	dd if=$(uboot) of=$(PART1) bs=4096
-
-	dd if=$(shell pwd)/work/bbl.bin of=$(PART2) bs=4096
-
-	mke2fs -t ext3 $(PART3)
+	dd if=$(uboot) of=$(PART3) bs=4096
+	dd if=$(vfat_image) of=$(PART1) bs=4096
