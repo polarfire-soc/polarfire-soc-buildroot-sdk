@@ -17,7 +17,7 @@ The complete User Guides are available in the `doc/` subdirectory, for the [MPFS
 
 ### Ubuntu 16.04 x86_64 host
 
-- Status: Needs to be tested
+- Status: Building.
 - Build dependencies: `autoconf automake autotools-dev bc bison build-essential curl flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev libblkid-dev device-tree-compiler`
 - Additional build deps for QEMU: `libglib2.0-dev libpixman-1-dev`
 - tools required for 'format-boot-loader' target: mtools
@@ -61,6 +61,8 @@ The mode selection switches should be set as follows:
 ```
 
 ## Booting Linux on a simulator
+
+*** spike and qemu are currently not working due to how we load the device tree in bbl ***
 
 You can boot linux on qemu by running `make qemu`.
 
