@@ -604,7 +604,7 @@
 			status = "okay";
 		};
  		L60: uio_axi_lsram@2030000000 {
-			compatible = "generic-uio"
+			compatible = "generic-uio";
 			reg = <0x20 0x30000000 0  0x4000 >;
 			status = "okay";
 		};
