@@ -185,7 +185,7 @@ linux-menuconfig: $(linux_wrkdir)/.config
 $(device_tree_blob): $(device_tree)
 	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
 
-$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(wrkdir)/riscvpc.dtb
+$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(device_tree_blob)
 	rm -rf $(pk_wrkdir)
 	mkdir -p $(pk_wrkdir)
 	cd $(pk_wrkdir) && PATH=$(PATH) $</configure \
@@ -202,7 +202,7 @@ $(bbl_payload): $(pk_srcdir) $(vmlinux_stripped)
 	cd $(pk_payload_wrkdir) && PATH=$(PATH) $</configure \
 		--host=$(target) \
 		--enable-logo \
-		--with-payload=$(vmlinux_stripped) \
+		--with-payload=$(vmlinux_stripped)
 	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_payload_wrkdir)
 
 $(bbl_bin): $(bbl)
@@ -271,15 +271,15 @@ clean:
 
 .PHONY: sim
 sim: $(spike) $(bbl_payload)
-	$(spike) --isa=$(ISA) -p4 $(bbl)
+	$(spike) --isa=$(ISA) -p4 $(bbl_payload)
 
 .PHONY: qemu
-qemu: $(qemu) $(bbl_bin) $(vmlinux) $(initramfs)
+qemu: $(qemu) $(bbl) $(vmlinux) $(initramfs)
 	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
 		-netdev user,id=net0 -device virtio-net-device,netdev=net0
 
 .PHONY: qemu-rootfs
-qemu-rootfs: $(qemu) $(bbl_bin) $(vmlinux) $(initramfs) $(rootfs)
+qemu-rootfs: $(qemu) $(bbl) $(vmlinux) $(initramfs) $(rootfs)
 	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
 		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
 		-netdev user,id=net0 -device virtio-net-device,netdev=net0
