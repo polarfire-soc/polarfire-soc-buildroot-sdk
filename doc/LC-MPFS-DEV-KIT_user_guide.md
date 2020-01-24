@@ -194,7 +194,7 @@ and insert it into the SD card slot on the HiFive Unleashed board, and then powe
 ### Rebuilding the Linux Kernel
 To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
 ```
-$ rm work/linux/vmlinux
+$ rm -rf work/linux/
 $ make
 ```
 Copy this newly built image to the SD card using the same method as before:
@@ -204,7 +204,7 @@ sudo make DISK=/dev/sdX format-boot-loader
 ### Switching machines
 To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
 ```
-$ rm work/riscvpc.dtb 
+$ rm -rf work/linux/ work/riscvpc.dtb
 $ make MACHINE=lc-mpfs
 ```
 Copy this newly built image to the SD card using the same method as before:

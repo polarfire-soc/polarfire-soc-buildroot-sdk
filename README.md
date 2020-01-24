@@ -47,7 +47,7 @@ Once the build of the SDK is complete, there will be a new bbl image under `work
 To completely erase, reformat, and program a disk, with the label `sdX`, run:
 `sudo make DISK=/dev/sdX format-boot-loader`. This depends on gdisk and e2fsprogs.
 
-The mode selection switches should be set as follows:
+The mode selection switches should be set as follows for the MPFS, which will boot into linux automatically:
 
 ```
       USB   LED    Mode Select                  Ethernet
@@ -59,6 +59,18 @@ The mode selection switches should be set as follows:
  |        RTCSEL-----/ 0 1 2 3 <--MSEL                     |
  |                                                         |
 ```
+
+And as follows for the LC-MPFS. Instructions for booting linux can be found in the user guide for the [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md), in the section *Board Setup*.
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|====
+ |                | | | | |X| |                 |      |   
+ |                | | | | | | |                 |      |   
+ |        HFXSEL->|X|X|X|X| |X|                 |______|   
+ |                +-+-+-+-+-+-+                            
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     
+ |                                                         
+``` 
 
 ## Booting Linux on a simulator
 
