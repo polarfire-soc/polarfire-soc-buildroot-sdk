@@ -322,7 +322,7 @@ $ make MACHINE=mpfs
 Copy this newly built image to the SD card using the same method as before:
 ```
 sudo make DISK=/dev/sdX format-boot-loader
-
+```
 
 The source for the device tree for HiFive Unleashed Expansion board is in `conf/mpfs.dts`.           
 The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
