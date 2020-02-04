@@ -15,11 +15,16 @@ device_tree_blob := $(wrkdir)/riscvpc.dtb
 RISCV ?= $(CURDIR)/toolchain
 PATH := $(RISCV)/bin:$(PATH)
 GITID := $(shell git describe --dirty --always)
+
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
 target := riscv64-unknown-linux-gnu
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
+
+MACHINE ?= mpfs
+device_tree := $(confdir)/$(MACHINE).dts
+device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 buildroot_srcdir := $(srcdir)/buildroot
 buildroot_initramfs_wrkdir := $(wrkdir)/buildroot_initramfs
@@ -267,8 +272,7 @@ initrd: $(initramfs)
 
 .PHONY: clean
 clean:
-	rm -rf -- $(wrkdir
-# $(toolchain_dest)
+	rm -rf -- $(wrkdir) $(toolchain_dest)
 
 .PHONY: sim
 sim: $(spike) $(bbl_payload)
