@@ -99,7 +99,7 @@ $(CROSS_COMPILE)-gcc:
 		$(error The RISCV environment variable was set, but is not pointing at a toolchain install tree)
 endif
 
-$(CROSS_COMPILE)-gcc: $(toolchain_srcdir)
+$(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	mkdir -p $(toolchain_wrkdir)
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv INSTALL_HDR_PATH=$(abspath $(toolchain_srcdir)/linux-headers) headers_install
 	cd $(toolchain_wrkdir); $(toolchain_srcdir)/configure \
