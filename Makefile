@@ -11,8 +11,9 @@ srcdir := $(srcdir:/=)
 confdir := $(srcdir)/conf
 wrkdir := $(CURDIR)/work
 
-MACHINE ?= mpfs
-device_tree := $(confdir)/$(MACHINE).dts
+# target mpfs by default
+DEVKIT ?= mpfs
+device_tree := $(confdir)/$(DEVKIT).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 uboot_srcdir := $(srcdir)/HiFive_U-Boot
@@ -42,7 +43,7 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
-linux_defconfig := $(confdir)/$(MACHINE)_linux_defconfig
+linux_defconfig := $(confdir)/$(DEVKIT)_linux_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped

@@ -147,12 +147,12 @@ $ cd mpfs-linux-sdk
 $ git checkout master
 $ git submodule update --init --recursive
 $ unset RISCV
-$ make all MACHINE=lc-mpfs
+$ make all DEVKIT=lc-mpfs
 ```
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
 The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
-The option `MACHINE=mpfs` selects the correct device tree for the board.   
+The option `DEVKIT=lc-mpfs` selects the correct device tree for the board.   
 
 ### Preparing an SD Card and Programming an Image for the First Time
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -205,7 +205,7 @@ sudo make DISK=/dev/sdX format-boot-loader
 To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
 ```
 $ rm -rf work/linux/ work/riscvpc.dtb
-$ make MACHINE=lc-mpfs
+$ make DEVKIT=lc-mpfs
 ```
 Copy this newly built image to the SD card using the same method as before:
 ```

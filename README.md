@@ -32,11 +32,11 @@ This will take some time and require around 7GB of disk space. Some modules may 
 
 Once the submodules are initialized, run `make` and the complete toolchain and bbl image will be built.   
 The completed build tree will consume about 14G of disk space.      
-You can choose between LC-MPFS-DEV-KIT and MPFS-DEV-KIT by setting the `MACHINE` variable.
+You can choose between LC-MPFS-DEV-KIT and MPFS-DEV-KIT by setting the `DEVKIT` variable.
 ```bash
-make MACHINE=mpfs
+make DEVKIT=mpfs
 # or
-make MACHINE=lc-mpfs
+make DEVKIT=lc-mpfs
 ```
 By default `mpfs` will be used.
 
