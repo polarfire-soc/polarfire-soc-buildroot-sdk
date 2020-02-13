@@ -5,9 +5,9 @@
         #address-cells = <2>;
 
         images {
-                bbl {
+                osbi {
                         description = "BBL/SBI/riscv-pk";
-                        data = /incbin/("../work/bbl.bin");
+                        data = /incbin/("../work/fw_payload.bin");
                         type = "kernel";
                         arch = "riscv";
                         os = "linux";
@@ -21,7 +21,7 @@
 
                 kernel {
                         description = "Linux kernel";
-                        data = /incbin/("../work/vmlinux.bin");
+                        data = /incbin/("../work/uImage");
                         type = "kernel";
                         arch = "riscv";
                         os = "linux";
@@ -61,8 +61,8 @@
                 default = "config-1";
 
                 config-1 {
-                        description = "HiFive Unleashed with BBL";
-                        kernel = "bbl";
+                        description = "HiFive Unleashed with OpenSBI";
+                        kernel = "osbi";
                         fdt = "fdt";
                         loadables = "kernel", "ramdisk";
                 };

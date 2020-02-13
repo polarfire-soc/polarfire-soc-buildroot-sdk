@@ -3,19 +3,25 @@ ABI ?= lp64d
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
+patchdir := $(CURDIR)/patches
 confdir := $(srcdir)/conf
 wrkdir := $(CURDIR)/work
-
-
 
 RISCV ?= $(CURDIR)/toolchain
 PATH := $(RISCV)/bin:$(PATH)
 GITID := $(shell git describe --dirty --always)
+
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
+
 target := riscv64-unknown-linux-gnu
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
+target_gdb := $(CROSS_COMPILE)gdb
+
+DEVKIT ?= mpfs
+device_tree := $(confdir)/$(DEVKIT).dts
+device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 buildroot_srcdir := $(srcdir)/buildroot
 buildroot_initramfs_wrkdir := $(wrkdir)/buildroot_initramfs
@@ -29,11 +35,13 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
-linux_defconfig := $(confdir)/linux_4-19_defconfig
+linux_patchdir := $(patchdir)/linux/
+linux_defconfig := $(confdir)/$(DEVKIT)_linux_53_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
 vmlinux_bin := $(wrkdir)/vmlinux.bin
+uImage := $(wrkdir)/uImage
 
 flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
 vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
@@ -62,12 +70,24 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 uboot_srcdir := $(srcdir)/HiFive_U-Boot
 uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
 uboot := $(uboot_wrkdir)/u-boot.bin
+uboot_m_cfg := $(confdir)/$(DEVKIT)_mmode_defconfig
+
+uboot_s_srcdir := $(srcdir)/u-boot
+uboot_s_wrkdir := $(wrkdir)/u-boot-smode
+uboot_s := $(wrkdir)/u-boot-s.bin
+uboot_s_cfg := $(confdir)/smode_defconfig
+
+opensbi_srcdir := $(srcdir)/opensbi
+opensbi_wrkdir := $(wrkdir)/opensbi
+opensbi := $(wrkdir)/fw_payload.bin
+
+openocd_srcdir := $(srcdir)/riscv-openocd
+openocd_wrkdir := $(wrkdir)/riscv-openocd
+openocd := $(openocd_wrkdir)/src/openocd
 
 rootfs := $(wrkdir)/rootfs.bin
 
-MACHINE ?= mpfs
-device_tree := $(confdir)/$(MACHINE).dts
-device_tree_blob := $(wrkdir)/riscvpc.dtb
+uboot_fsbl_script = $(confdir)/uEnv_m-mode.txt
 
 .PHONY: all
 all: $(fit) $(flash_image)
@@ -88,12 +108,12 @@ all: $(fit) $(flash_image)
 	@echo
 
 ifneq ($(RISCV),$(toolchain_dest))
-$(CROSS_COMPILE)-gcc:
-	ifeq (,$(CROSS_COMPILE)-gcc --version 2>/dev/null)
+$(CROSS_COMPILE)gcc:
+	ifeq (,$(CROSS_COMPILE)gcc --version 2>/dev/null)
 		$(error The RISCV environment variable was set, but is not pointing at a toolchain install tree)
 endif
 
-$(CROSS_COMPILE)-gcc: $(toolchain_srcdir)
+$(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	mkdir -p $(toolchain_wrkdir)
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv INSTALL_HDR_PATH=$(abspath $(toolchain_srcdir)/linux-headers) headers_install
 	cd $(toolchain_wrkdir); $(toolchain_srcdir)/configure \
@@ -164,6 +184,7 @@ $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux)
 		$(buildroot_initramfs_sysroot)
 
 $(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
+	- cd $(linux_srcdir) && git apply $(linux_patchdir)/*.patch
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -176,6 +197,9 @@ $(vmlinux_stripped): $(vmlinux)
 $(vmlinux_bin): $(vmlinux)
 	PATH=$(PATH) $(CROSS_COMPILE)objcopy -O binary $< $@
 	
+$(uImage): $(vmlinux_bin)
+	$(uboot_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
+	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig
@@ -185,31 +209,8 @@ linux-menuconfig: $(linux_wrkdir)/.config
 $(device_tree_blob): $(device_tree)
 	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
 
-$(bbl): $(pk_srcdir) $(vmlinux_stripped) $(device_tree_blob)
-	rm -rf $(pk_wrkdir)
-	mkdir -p $(pk_wrkdir)
-	cd $(pk_wrkdir) && PATH=$(PATH) $</configure \
-		--host=$(target) \
-		--enable-logo 
-	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_wrkdir)
-
-# Workaround for SPIKE until it can support loading bbl and
-# kernel as separate images like qemu and uboot. Unfortuately
-# at this point this means no easy way to have an initrd for spike
-$(bbl_payload): $(pk_srcdir) $(vmlinux_stripped)
-	rm -rf $(pk_payload_wrkdir)
-	mkdir -p $(pk_payload_wrkdir)
-	cd $(pk_payload_wrkdir) && PATH=$(PATH) $</configure \
-		--host=$(target) \
-		--enable-logo \
-		--with-payload=$(vmlinux_stripped)
-	CFLAGS="-mabi=$(ABI) -march=$(ISA)" $(MAKE) PATH=$(PATH) -C $(pk_payload_wrkdir)
-
-$(bbl_bin): $(bbl)
-	PATH=$(PATH) $(CROSS_COMPILE)objcopy -S -O binary --change-addresses -0x80000000 $< $@
-
-$(fit): $(bbl_bin) $(vmlinux_bin) $(uboot) $(initramfs) $(confdir)/uboot-fit-image.its
-	$(uboot_wrkdir)/tools/mkimage -f $(confdir)/uboot-fit-image.its -A riscv -O linux -T flat_dt $@
+$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(uboot) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
+	$(uboot_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
 	rm -rf $(fesvr_wrkdir)
@@ -247,27 +248,53 @@ $(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc
 	rm -rf $(uboot_wrkdir)
 	mkdir -p $(uboot_wrkdir)
 	mkdir -p $(dir $@)
-	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
+	cp $(uboot_m_cfg) $(uboot_wrkdir)/.config
+	# cp $(confdir)/MM-BL $(uboot_wrkdir)/.config
+	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) olddefconfig
+	# $(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
 	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
+
+$(uboot_s): $(uboot_s_srcdir) $(CROSS_COMPILE)gcc
+	rm -rf $(uboot_s_wrkdir)
+	mkdir -p $(uboot_s_wrkdir)
+	mkdir -p $(dir $@)
+	# cp $(confdir)/uboot-smode-citest_defconfig $(uboot_s_wrkdir)/.config
+	cp  $(uboot_s_cfg) $(uboot_s_wrkdir)/.config
+	$(MAKE) -C $(uboot_s_srcdir) O=$(uboot_s_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(uboot_s_srcdir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE)
+	cp -v $(uboot_s_wrkdir)/u-boot.bin $(uboot_s)
+
+$(opensbi): $(uboot) $(uboot_s) $(CROSS_COMPILE)gcc 
+	rm -rf $(opensbi_wrkdir)
+	mkdir -p $(opensbi_wrkdir)
+	mkdir -p $(dir $@)
+	$(MAKE) -C $(opensbi_srcdir) O=$(opensbi_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) \
+		PLATFORM=sifive/fu540 FW_PAYLOAD_PATH=$(uboot_s)
+	cp $(opensbi_wrkdir)/platform/sifive/fu540/firmware/fw_payload.bin $@
 
 $(rootfs): $(buildroot_rootfs_ext)
 	cp $< $@
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl flash_image initrd
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
-bbl: $(bbl)
 fit: $(fit)
-uboot: $(uboot)
+initrd: $(initramfs)
+u-boot: $(uboot) $(uboot_s)
 flash_image: $(flash_image)
 initrd: $(initramfs)
+opensbi: $(opensbi)
 
 .PHONY: clean
 clean:
-	rm -rf -- $(wrkdir
-# $(toolchain_dest)
+	-rm -rf -- $(wrkdir)
+
+.PHONY: distclean
+distclean:
+# removing the toolchain with clean is an annoyance, so do it here instead.
+	-rm -rf -- $(wrkdir) $(toolchain_dest) arch/ include/ scripts/ .cache.mk
 
 .PHONY: sim
 sim: $(spike) $(bbl_payload)
@@ -284,6 +311,20 @@ qemu-rootfs: $(qemu) $(bbl) $(vmlinux) $(initramfs) $(rootfs)
 		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
 		-netdev user,id=net0 -device virtio-net-device,netdev=net0
 
+.PHONY: openocd
+openocd: $(openocd)
+	$(openocd) -f $(confdir)/u540-openocd.cfg
+
+$(openocd): $(openocd_srcdir)
+	rm -rf $(openocd_wrkdir)
+	mkdir -p $(openocd_wrkdir)
+	mkdir -p $(dir $@)
+	cd $(openocd_srcdir) && ./bootstrap
+	cd $(openocd_wrkdir) && $</configure --enable-maintainer-mode --disable-werror --enable-ft2232_libftdi
+	$(MAKE) -C $(openocd_wrkdir)
+
+.PHONY: gdb gdb-u-boot
+gdb: $(target_gdb)
 
 # partition type codes
 BBL			= 2E54B353-1271-4842-806F-E436D6AF6985
@@ -299,21 +340,22 @@ UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 VFAT_START=2048
 VFAT_END=65502
 VFAT_SIZE=63454
-UBOOT_START=1100
-UBOOT_END=2020
-UBOOT_SIZE=950
-UENV_START=1024
-UENV_END=1099
+UBOOT_START=1024
+UBOOT_END=2047
+UBOOT_SIZE=1023
+UENV_START=900
+UENV_END=1000
 RESERVED_SIZE=2000
 
-$(vfat_image): $(fit) $(confdir)/uEnv.txt
+$(vfat_image): $(fit) $(uboot_fsbl_script)
 	@if [ `du --apparent-size --block-size=512 $(uboot) | cut -f 1` -ge $(UBOOT_SIZE) ]; then \
 		echo "Uboot is too large for partition!!\nReduce uboot or increase partition size"; \
 		rm $(flash_image); exit 1; fi
 	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
 	/sbin/mkfs.vfat $(vfat_image)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::hifiveu.fit
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv.txt ::uEnv.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_fsbl_script) ::uEnv.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv2.txt
 
 $(flash_image): $(uboot) $(fit) $(vfat_image)
 	dd if=/dev/zero of=$(flash_image) bs=1M count=32
@@ -325,8 +367,12 @@ $(flash_image): $(uboot) $(fit) $(vfat_image)
 	dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
 	dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
 
+.PHONY:clean-image
+clean-image:
+	rm -rf -- $(flash_image) $(vfat_image) $(fit) $(opensbi) $(uboot_s) $(uboot) $(opensbi_wrkdir) $(uboot_s_wrkdir) $(uboot_wrkdir) $(uImage)
+
 .PHONY: format-boot-loader
-format-boot-loader: $(bbl_bin) $(uboot) $(fit) $(vfat_image)
+format-boot-loader: $(fit) $(vfat_image)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
