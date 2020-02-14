@@ -1,0 +1,11 @@
+CONFIG_RISCV=y
+CONFIG_NR_DRAM_BANKS=1
+CONFIG_TARGET_SIFIVE_FU540=y
+CONFIG_ARCH_RV64I=y
+CONFIG_RISCV_SMODE=y
+CONFIG_DISTRO_DEFAULTS=y
+CONFIG_FIT=y
+CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; fatload mmc 0:1 ${fileaddr} uEnv2.txt; env import -t ${fileaddr} ${filesize}; echo 'Running boot cmd...'; run boot3"
+CONFIG_DISPLAY_BOARDINFO=y
+CONFIG_MISC_INIT_R=y
+CONFIG_OF_PRIOR_STAGE=y

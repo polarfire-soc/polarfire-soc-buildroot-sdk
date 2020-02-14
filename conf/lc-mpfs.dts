@@ -251,11 +251,6 @@
 			reg = <0x0 0x1000000 0x0 0x2000>;
 			reg-names = "mem";
 		};
-		L44: ememoryotp@10070000 {
-			compatible = "sifive,ememoryotp0";
-			reg = <0x0 0x10070000 0x0 0x1000>;
-			reg-names = "control";
-		};
 		L24: error-device@18000000 {
 			compatible = "sifive,error0";
 			reg = <0x0 0x18000000 0x0 0x8000000>;
