@@ -60,19 +60,7 @@ The following instructions guide you to set up the LC-MPFS-DEV-KIT.
 
 ![Linux Booting Messages on the Terminal](images/Linux_Booting.PNG)
 
-Enter the following commands on the serial terminal.
-```
-mmc_spi 1 20000000 0
-mmc read 0x80000000 0x1000 0x10000
-```
-
-![Serial Terminal](images/Serial_Command.PNG)
-
-12. Now, boot linux with the the following command:
-```
-go 0x80000000
-```
-13. You should see linux boot. Enter the following login credentials.
+11. You should see linux boot. Enter the following login credentials.
 ```
 Buildroot login: root
 
@@ -82,7 +70,7 @@ The console should now look as shown in the following figure.
 
 ![Linux Booting Credentials](images/Booting_Credentials.PNG)
 
-14. You should now see an LED flashing alongside PWM0_0 on the evaluation board.
+12. You should now see an LED flashing alongside PWM0_0 on the evaluation board.
 
 ![LED Flash On](images/LED.PNG)
 
@@ -137,7 +125,7 @@ sudo apt install autoconf automake autotools-dev bc bison \
 build-essential curl flex gawk gdisk git gperf libgmp-dev \
 libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
 patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
-device-tree-compiler
+device-tree-compiler mtools
 ```
 #### Build and Checkout Code
 The following commands build the system to a work/sub-directory.
@@ -151,8 +139,8 @@ $ make all DEVKIT=lc-mpfs
 ```
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
-The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
-The option `DEVKIT=lc-mpfs` selects the correct device tree for the board.   
+The output file contain the first stage bootloader (U-Boot), the root file system and a VFAT image containing the linux kernel, device tree blob & second stage bootloader. 
+This can then be copied to an SD card. The option `DEVKIT=lc-mpfs` selects the correct device tree for the board.   
 
 ### Preparing an SD Card and Programming an Image for the First Time
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -172,7 +160,7 @@ For these examples the identifier `sdX` is used.
 
 #### WARNING:
         The drive with the identifier `sda` is the default location for your operating system.        
-        DO NOT pass this identifier to any of the commands listed here.       
+        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.       
         Check that the size of the card matches the dmesg output before continuing.     
 
 Next check if this card is mounted:
@@ -194,8 +182,8 @@ and insert it into the SD card slot on the HiFive Unleashed board, and then powe
 ### Rebuilding the Linux Kernel
 To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
 ```
-$ rm -rf work/linux/
-$ make
+$ make clean-linux
+$ make DEVKIT=lc-mpfs
 ```
 Copy this newly built image to the SD card using the same method as before:
 ```
@@ -204,7 +192,7 @@ sudo make DISK=/dev/sdX format-boot-loader
 ### Switching machines
 To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
 ```
-$ rm -rf work/linux/ work/riscvpc.dtb
+$ make clean-image
 $ make DEVKIT=lc-mpfs
 ```
 Copy this newly built image to the SD card using the same method as before:
@@ -213,10 +201,7 @@ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
 The source for the device tree for HiFive Unleashed Expansion board is in `conf/lc-mpfs.dts`.           
-The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
-Currently, the Microsemi PolarFire Linux SDK for the HiFive Unleashed platform uses a modification to
-the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-pk/machine/mentry.S` for
-the modification.)
+The configuration options used for the Linux kernel are in `conf/lc-mpfs_linux_##_defconfig`, where the ## represents the kernel version number.
 
 ### FPGA Design in Libero
 The Libero project interfaces the PolarFire FPGA with the U540 SoC through the ChipLink interface. The FPGA fabric is instantiated with the ChipLink to AXI bridge, while peripherals — GPIO, MMUART, SPI, and I2C — are connected to it. The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz clock.
