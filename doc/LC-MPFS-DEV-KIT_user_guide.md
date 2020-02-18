@@ -11,10 +11,6 @@ Visit the following links for further reference reading materials.
 [SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
 [TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
 [HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)   
-[Yocto Project Reference Manual 2.7.1](https://www.yoctoproject.org/docs/2.7.1/ref-manual/ref-manual.html)     
-[• Yocto Project Complete Documentation (MegaManual) Set 2.7.1](https://www.yoctoproject.org/docs/2.7.1/mega-manual/mega-manual.html)     
-[• BitBake User Manual 2.7.1](https://www.yoctoproject.org/docs/2.7.1/bitbake-user-manual/bitbake-user-manual.html)     
-[A Practical Guide to BitBake by Harald Achitz](https://a4z.bitbucket.io/docs/BitBake/guide.html)     
 
 ### Reference
 [PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
@@ -144,8 +140,10 @@ Note: The power supply switch must be switched off while making the jumper conne
 See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire) for more information.
 
 ### Building and Loading the Linux Image
+[folder](.)
+see Building a Yocto Image] or [Building an image using Buildroot]()
 This section describes the procedure to build the Linux boot image and loading it into an SD card using
-Buildroot and Yocto.
+Buildroot.
 
 #### Buildroot
 
