@@ -58,11 +58,11 @@ For these examples the identifier `sdX` is used.
 
 Next check if this card is mounted:
 ```
-mount | grep sdX
+$ mount | grep sdX
 ```
 If any entries are present, then run the following. If not then skip this command:
 ```
-sudo umount /dev/sdX
+$ sudo umount /dev/sdX
 ```
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
@@ -72,27 +72,27 @@ To automatically partition and format your SD card, in the top level of mpfs-lin
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 At this point, your system should be bootable using your new SD card. You can remove it from your PC
-and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the LC-MPFS-DEV-KIT.
+and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
 
 ### Rebuilding the Linux Kernel with Buildroot
 To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
 ```
-rm -rf work/linux/
-make DEVKIT=<board>
+$ rm -rf work/linux/
+$ make DEVKIT=<board>
 ```
 Copy this newly built image to the SD card using the same method as before:
 ```
-sudo make DISK=/dev/sdX format-boot-loader
+$ sudo make DISK=/dev/sdX format-boot-loader
 ```
 ### Switching machines with Buildroot
 To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
 ```
-rm -rf work/linux/ work/riscvpc.dtb
-make DEVKIT=<board>
+$ rm -rf work/linux/ work/riscvpc.dtb
+$ make DEVKIT=<board>
 ```
 Copy this newly built image to the SD card using the same method as before:
 ```
-sudo make DISK=/dev/sdX format-boot-loader
+$ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
 The source for the device tree for HiFive Unleashed Expansion board is in `conf/<DEVKIT>.dts`.           
