@@ -18,7 +18,7 @@ device-tree-compiler mtools
 The following commands build the system to a work/sub-directory.
 #### Note:                
         Set DEVKIT to whichever board you are using.
-        If you have the MPFS-DEV-KIT, use `make all DEVKIT=lc-mpfs`
+        If you have the MPFS-DEV-KIT, use `DEVKIT=lc-mpfs`
         And for the LC-MPFS-DEV-KIT, use `DEVKIT=mpfs`
         By default `mpfs` will be used.
 ```
