@@ -5,7 +5,21 @@ The HiFive Unleashed Platform™ is purpose-built to emulate most of the functio
 PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
 This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
 platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
-Design Suite. For more details on the design suite, see section FPGA Design in Libero.        
+Design Suite. For more details on the design suite, see section FPGA Design in Libero.   
+
+## Reference
+Visit the following links for further reference reading materials.
+### Recommended Reading
+[RISC-V User-level ISA Specification](https://riscv.org/specifications/)     
+[RISC-V Draft Privileged ISA Specification](https://riscv.org/specifications/privileged-isa/)     
+[SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
+[TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
+[HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)     
+### Reference
+[PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
+[Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
+[FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
+[FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
 
 ### HiFive Unleashed Platform (MPFS-DEV-KIT)   
 The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
@@ -67,7 +81,7 @@ simulation with best-in-class constraints management, Debug Tools capabilities, 
 Programming support.
 
 Download Libero SoC PolarFire v2.2 for Windows environment 
-[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).
+[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).          
 Download Libero SoC PolarFire v2.2 for Linux environment 
 [here](https://www.microsemi.com/document-portal/doc_download/1243421-download-libero-soc-polarfire-v2-2-for-linux).
 
@@ -92,32 +106,7 @@ to download the standalone programmer (if needed).
 ### Microsemi PolarFire Linux SDK for the HiFive Unleashed Expansion Board
 The Microsemi PolarFire Linux SDK is based on the SiFive freedom-u-sdk with modifications to the
 device tree to support the HiFive Unleashed Expansion board. It also includes drivers for Microsemi
-PCIe, I C, SPI, MMUART, and GPIO peripherals. See to download the 2 Firmware Versions (see page 7)
-Microsemi PolarFire Linux SDK.
-The build procedure follows that of the freedom-u-sdk as described in [HiFive Unleashed Getting Started
-Guide](https://www.sifive.com/documentation/boards/hifive-unleashed/hifive-unleashed-getting-started-guide/).
-Before building the Linux image, the following packages must be installed depending on the Linux
-distribution in your machine.
-
-#### Ubuntu
-(tested on Ubuntu 16.04)
-```
-apt-get update
-sudo apt-get install autoconf automake autotools-dev bc bison build-essential curl
-flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libssl-dev
-libtool patchutils python screen texinfo unzip zlib1g-dev patch device-tree-compiler
-openssl-devel wget
-```
-
-#### Centos
-(tested on Centos7)
-```
-yum update
-sudo yum install autoconf automake autotools-dev bc bison build-essential gcc-c++
-curl flex gawk gdisk git gperf gmp-devel libmpc-dev libmpfr-dev ncurses-devel libssldev
-libtool patchutils python screen texinfo unzip zlib1g-dev zlib-devel patch dtc
-openssl-devel wget vim-common
-```
+PCIe, I C, SPI, MMUART, and GPIO peripherals.         
 
 ### Firmware Versions
 The following table contains links to the Libero Project, .stp file, .job file, and the Linux SDK for each
@@ -135,9 +124,19 @@ Ensure the fan is plugged in.
 
 ![Power Button and Fan Connection](images/HiFive_Unleashed_board_Power_Button_and_Fan_Connection.JPG)
 
-2. Set all pins in the DIP-switch block to the LEFT. The ON position=0; therefore, this sets MSEL to
-mode 1111. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
+2. Set the pins in the DIP-switch block to the as shown in the diagram below. The ON position=0; therefore, this sets MSEL to
+mode 1011, which will boot Linux automatically. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
 more information on MSEL.
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|====
+ |                | | | | |X| |                 |      |   
+ |                | | | | | | |                 |      |   
+ |        HFXSEL->|X|X|X|X| |X|                 |______|   
+ |                +-+-+-+-+-+-+                            
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     
+ |                                                         
+``` 
 
 ![DIP Switch Setting](images/HiFive_Unleashed_Board_DIP-Switch_setting.png)
 
@@ -298,17 +297,3 @@ implementation. The details of the GPIO pinout is listed in the following table:
 | 5 | sw10 |
 | 6 | J2-pin9 |
 | 7 | USB1 reset |
-
-## Reference
-Visit the following links for further reference reading materials.
-### Recommended Reading
-[RISC-V User-level ISA Specification](https://riscv.org/specifications/)     
-[RISC-V Draft Privileged ISA Specification](https://riscv.org/specifications/privileged-isa/)     
-[SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
-[TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
-[HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)     
-### Reference
-[PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
-[Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
-[FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
-[FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     

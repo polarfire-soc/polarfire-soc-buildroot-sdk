@@ -47,13 +47,23 @@ Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one p
 The latest revisions of the Libero project and bitstream files are available on the [Microsemi](http://soc.microsemi.com/download/rsc/?f=Libero_Project_LC-MPFS-DEV-KIT) Website.
 
 ## Board Setup
-The following instructions guide you to set up the LC-MPFS-DEV-KIT.
+The following instructions guide you through settting up the LC-MPFS-DEV-KIT.
 
 1. Switch off the power button on the LC-MPFS-DEV-KIT.
 
 ![Power Button](images/Power_On.PNG)
 
 2. Set the pins in the DIP switch to select MSEL of 1011 (MSEL2 = 0).
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|====
+ |                | | | | |X| |                 |      |   
+ |                | | | | | | |                 |      |   
+ |        HFXSEL->|X|X|X|X| |X|                 |______|   
+ |                +-+-+-+-+-+-+                            
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     
+ |                                                         
+``` 
 
 ![DIP Switch Setting](images/DIP_Switch.PNG)
 

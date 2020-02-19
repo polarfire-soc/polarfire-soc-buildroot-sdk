@@ -38,7 +38,7 @@ This can then be copied to an SD card. The option `DEVKIT=<devkit>` selects the 
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
-After inserting your SD card, use dmesg to check what your card's identifier is.
+After inserting your SD card, use `dmesg` to check what your card's identifier is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -93,4 +93,4 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
 The source for the device tree for HiFive Unleashed Expansion board is in `conf/<devkit>.dts`.           
-The configuration options used for the Linux kernel are in `conf/<devkit>-mpfs_linux_<kernel-version>_defconfig`.
+The configuration options used for the Linux kernel are in `conf/<devkit>_linux_<kernel-version>_defconfig`.
