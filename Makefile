@@ -371,9 +371,11 @@ VFAT_SIZE=63454
 UBOOT_START=1024
 UBOOT_END=2047
 UBOOT_SIZE=1023
-UENV_START=900
-UENV_END=1000
+UENV_START=100
+UENV_END=1023
 RESERVED_SIZE=2000
+OSBI_START=65536
+OSBI_END=95536
 
 $(vfat_image): $(fit) $(uboot_fsbl_script)
 	@if [ `du --apparent-size --block-size=512 $(uboot) | cut -f 1` -ge $(UBOOT_SIZE) ]; then \
@@ -386,14 +388,15 @@ $(vfat_image): $(fit) $(uboot_fsbl_script)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv2.txt
 
 $(flash_image): $(uboot) $(fit) $(vfat_image) $(fsbl)
-	dd if=/dev/zero of=$(flash_image) bs=1M count=32
-	/sbin/sgdisk --clear  \
-		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
-		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
-		--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
-		$(flash_image)
-	dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
-	dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
+	echo "nop"
+	# dd if=/dev/zero of=$(flash_image) bs=1M count=32
+	# /sbin/sgdisk --clear  \
+	# 	--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
+	# 	--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
+	# 	--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
+	# 	$(flash_image)
+	# dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
+	# dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
 
 .PHONY: format-boot-loader
 format-boot-loader: $(fit) $(vfat_image)
@@ -404,8 +407,8 @@ format-boot-loader: $(fit) $(vfat_image)
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
 		--new=2:264192:$(ROOT_SIZE) --change-name=2:root	--typecode=2:$(LINUX) \
-		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
-		--new=4:$(UENV_START):$(UENV_END)  --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
+		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
+		--new=4:$(OSBI_START):$(OSBI_END)  --change-name=4:osbi	--typecode=4:$(BBL) \
 		$(DISK)
 	-/sbin/partprobe
 	@sleep 1
@@ -429,4 +432,5 @@ else
 	@exit 1
 endif
 	dd if=$(fsbl) of=$(PART3) bs=4096
+	dd if=$(opensbi) of=$(PART4) bs=4096
 	dd if=$(vfat_image) of=$(PART1) bs=4096

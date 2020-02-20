@@ -12,4 +12,4 @@ CONFIG_DISPLAY_BOARDINFO=y
 CONFIG_DEFAULT_DEVICE_TREE="hifive-unleashed-a00"
 CONFIG_SYS_RELOC_GD_ENV_ADDR=y
 CONFIG_DM_MTD=y
-CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; fatload mmc 0:1 ${fileaddr} uEnv2.txt; env import -t ${fileaddr} ${filesize}; echo 'Running boot cmd...'; run boot3"
+CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; fatload mmc 0:1 ${fileaddr} uEnv.txt; env import -t ${fileaddr} ${filesize}; echo 'Running boot cmd...'; run boot3"
