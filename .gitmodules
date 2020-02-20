@@ -30,7 +30,7 @@
 	url = https://github.com/u-boot/u-boot.git
 [submodule "riscv-openocd"]
 	path = riscv-openocd
-	url = https://github.com/riscv/riscv-openocd
+	url = https://github.com/riscv/riscv-openocd.git
 [submodule "fsbl"]
 	path = fsbl
-	url = ./fsbl/
+	url = https://github.com/sifive/freedom-u540-c000-bootloader.git
