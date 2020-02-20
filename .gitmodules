@@ -31,3 +31,6 @@
 [submodule "riscv-openocd"]
 	path = riscv-openocd
 	url = https://github.com/riscv/riscv-openocd
+[submodule "fsbl"]
+	path = fsbl
+	url = ./fsbl/

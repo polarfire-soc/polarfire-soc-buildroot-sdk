@@ -41,7 +41,7 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
-linux_defconfig := $(confdir)/$(DEVKIT)_linux_53_defconfig
+linux_defconfig := $(confdir)/$(DEVKIT)_linux_54_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
@@ -76,6 +76,11 @@ uboot_srcdir := $(srcdir)/HiFive_U-Boot
 uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
 uboot := $(uboot_wrkdir)/u-boot.bin
 uboot_m_cfg := $(confdir)/$(DEVKIT)_mmode_defconfig
+
+fsbl_srcdir := $(srcdir)/fsbl
+fsbl_wrkdir := $(wrkdir)/fsbl
+fsbl_patchdir := $(patchdir)/fsbl/
+fsbl := $(wrkdir)/fsbl.bin
 
 uboot_s_srcdir := $(srcdir)/u-boot
 uboot_s_wrkdir := $(wrkdir)/u-boot-smode
@@ -250,6 +255,17 @@ $(qemu): $(qemu_srcdir)
 	$(MAKE) -C $(qemu_wrkdir)
 	$(MAKE) -C $(qemu_wrkdir) install
 	touch -c $@
+
+.PHONY: fsbl
+fsbl: $(fsbl)
+$(fsbl): $(fsbl_srcdir)
+	rm -rf $(fsbl_wrkdir)
+	rsync $(fsbl_srcdir)/ $(fsbl_wrkdir) -r
+	- cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
+	rm -f $(fsbl_wrkdir)/ux00_fsbl.dts
+	cp -f $(confdir)/$(DEVKIT).dts $(fsbl_wrkdir)/ux00_fsbl.dtb
+	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
+	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
 $(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc
 	rm -rf $(uboot_wrkdir)
@@ -369,7 +385,7 @@ $(vfat_image): $(fit) $(uboot_fsbl_script)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_fsbl_script) ::uEnv.txt
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv2.txt
 
-$(flash_image): $(uboot) $(fit) $(vfat_image)
+$(flash_image): $(uboot) $(fit) $(vfat_image) $(fsbl)
 	dd if=/dev/zero of=$(flash_image) bs=1M count=32
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
@@ -412,5 +428,5 @@ else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
-	dd if=$(uboot) of=$(PART3) bs=4096
+	dd if=$(fsbl) of=$(PART3) bs=4096
 	dd if=$(vfat_image) of=$(PART1) bs=4096
