@@ -72,11 +72,6 @@ qemu_srcdir := $(srcdir)/riscv-qemu
 qemu_wrkdir := $(wrkdir)/riscv-qemu
 qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
-uboot_srcdir := $(srcdir)/HiFive_U-Boot
-uboot_wrkdir := $(wrkdir)/HiFive_U-Boot
-uboot := $(uboot_wrkdir)/u-boot.bin
-uboot_m_cfg := $(confdir)/$(DEVKIT)_mmode_defconfig
-
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
 fsbl_patchdir := $(patchdir)/fsbl/
@@ -96,8 +91,6 @@ openocd_wrkdir := $(wrkdir)/riscv-openocd
 openocd := $(openocd_wrkdir)/src/openocd
 
 rootfs := $(wrkdir)/rootfs.bin
-
-uboot_fsbl_script = $(confdir)/uEnv_m-mode.txt
 
 .PHONY: all
 all: $(fit) $(flash_image)
@@ -210,7 +203,7 @@ $(vmlinux_bin): $(vmlinux)
 	PATH=$(PATH) $(CROSS_COMPILE)objcopy -O binary $< $@
 	
 $(uImage): $(vmlinux_bin)
-	$(uboot_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
+	$(uboot_s_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
 	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
@@ -221,8 +214,8 @@ linux-menuconfig: $(linux_wrkdir)/.config
 $(device_tree_blob): $(device_tree)
 	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
 
-$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(uboot) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
-	$(uboot_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
+$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
+	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
 	rm -rf $(fesvr_wrkdir)
@@ -267,16 +260,6 @@ $(fsbl): $(fsbl_srcdir)
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
-$(uboot): $(uboot_srcdir) $(CROSS_COMPILE)gcc
-	rm -rf $(uboot_wrkdir)
-	mkdir -p $(uboot_wrkdir)
-	mkdir -p $(dir $@)
-	cp $(uboot_m_cfg) $(uboot_wrkdir)/.config
-	# cp $(confdir)/MM-BL $(uboot_wrkdir)/.config
-	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) olddefconfig
-	# $(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) HiFive-U540_defconfig
-	$(MAKE) -C $(uboot_srcdir) O=$(uboot_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
-
 $(uboot_s): $(uboot_s_srcdir) $(CROSS_COMPILE)gcc
 	rm -rf $(uboot_s_wrkdir)
 	mkdir -p $(uboot_s_wrkdir)
@@ -305,7 +288,7 @@ buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
 fit: $(fit)
 initrd: $(initramfs)
-u-boot: $(uboot) $(uboot_s)
+u-boot: $(uboot_s)
 flash_image: $(flash_image)
 initrd: $(initramfs)
 opensbi: $(opensbi)
@@ -319,7 +302,7 @@ distclean:
 	-rm -rf -- $(wrkdir) $(toolchain_dest) arch/ include/ scripts/ .cache.mk
 
 clean-image:
-	-rm -rf -- $(flash_image) $(vfat_image) $(fit) $(opensbi) $(opensbi_wrkdir) $(uboot_s) $(uboot_s_wrkdir) $(uboot) $(uboot_wrkdir) $(uImage)
+	-rm -rf -- $(flash_image) $(vfat_image) $(fit) $(opensbi) $(opensbi_wrkdir) $(uboot_s) $(uboot_s_wrkdir) $(uImage)
 
 clean-linux: clean-image
 	-rm -rf -- $(vmlinux) $(vmlinux_bin) $(vmlinux_stripped) $(linux_wrkdir)
@@ -368,38 +351,36 @@ UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 VFAT_START=2048
 VFAT_END=65502
 VFAT_SIZE=63454
-UBOOT_START=1024
-UBOOT_END=2047
-UBOOT_SIZE=1023
+FSBL_START=1024
+FSBL_END=2047
+FSBL_SIZE=1023
 UENV_START=100
 UENV_END=1023
 RESERVED_SIZE=2000
 OSBI_START=65536
 OSBI_END=95536
 
-$(vfat_image): $(fit) $(uboot_fsbl_script)
-	@if [ `du --apparent-size --block-size=512 $(uboot) | cut -f 1` -ge $(UBOOT_SIZE) ]; then \
-		echo "Uboot is too large for partition!!\nReduce uboot or increase partition size"; \
+$(vfat_image): $(fit) $(fsbl)
+	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
+		echo "FSBL is too large for partition!!\nReduce fsbl or increase partition size"; \
 		rm $(flash_image); exit 1; fi
 	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
 	/sbin/mkfs.vfat $(vfat_image)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::hifiveu.fit
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_fsbl_script) ::uEnv.txt
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv2.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv.txt
 
-$(flash_image): $(uboot) $(fit) $(vfat_image) $(fsbl)
-	echo "nop"
-	# dd if=/dev/zero of=$(flash_image) bs=1M count=32
-	# /sbin/sgdisk --clear  \
-	# 	--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
-	# 	--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:uboot	--typecode=3:$(UBOOT) \
-	# 	--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
-	# 	$(flash_image)
-	# dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
-	# dd conv=notrunc if=$(uboot) of=$(flash_image) bs=512 seek=$(UBOOT_START) count=$(UBOOT_SIZE)
+$(flash_image): $(fit) $(vfat_image) $(fsbl)
+	dd if=/dev/zero of=$(flash_image) bs=1M count=32
+	/sbin/sgdisk --clear  \
+		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
+		--new=3:$(FSBL_START):$(FSBL_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
+		--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
+		$(flash_image)
+	dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
+	dd conv=notrunc if=$(fsbl) of=$(flash_image) bs=512 seek=$(FSBL_START) count=$(FSBL_SIZE)
 
 .PHONY: format-boot-loader
-format-boot-loader: $(fit) $(vfat_image)
+format-boot-loader: $(fit) $(vfat_image) $(fsbl)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
@@ -407,7 +388,7 @@ format-boot-loader: $(fit) $(vfat_image)
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
 		--new=2:264192:$(ROOT_SIZE) --change-name=2:root	--typecode=2:$(LINUX) \
-		--new=3:$(UBOOT_START):$(UBOOT_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
+		--new=3:$(FSBL_START):$(FSBL_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
 		--new=4:$(OSBI_START):$(OSBI_END)  --change-name=4:osbi	--typecode=4:$(BBL) \
 		$(DISK)
 	-/sbin/partprobe
