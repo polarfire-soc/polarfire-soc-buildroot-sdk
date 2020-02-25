@@ -96,7 +96,7 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
 The source for the device tree for HiFive Unleashed Expansion board is in `conf/<DEVKIT>.dts`.           
-The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
+The configuration options used for the Linux kernel are in `conf/<DEVKIT>linux_defconfig`.
 Currently, the Microsemi PolarFire Linux SDK for the HiFive Unleashed platform uses a modification to
 the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-pk/machine/mentry.S` for
 the modification.)
