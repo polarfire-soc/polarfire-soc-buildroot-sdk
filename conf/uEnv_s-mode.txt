@@ -37,14 +37,15 @@
 
 # This is the sample uEnv.txt file for HiFive Unleashed U-boot
 
-bootargs=debug console=tty0 console=ttySIF0 root=/dev/mmcblk0p2 rootwait
+bootargs=earlycon=sbi debug console=tty0 console=ttySIF0 root=/dev/mmcblk0p2 rootwait
 
 fitfile=hifiveu.fit
 
 vmladdr=80200000
+irdaddr=82000000
 newfdt=f0000000
 
 bootwait=setenv _delay ${bootdelay}; echo ${_delay}; while test ${_delay} > 0; do sleep 1; setexpr _delay ${_delay} - 1; echo ${_delay}; done
 
 # this assumes ${fileaddr} is already set!!
-boot3=load mmc 0:1 ${fileaddr} ${fitfile}; bootm start ${fileaddr}; bootm ${vmladdr} - ${newfdt}
+boot3=load mmc 0:1 ${fileaddr} ${fitfile}; bootm start ${fileaddr}; bootm ${vmladdr} ${irdaddr} ${newfdt}

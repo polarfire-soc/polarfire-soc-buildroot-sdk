@@ -34,12 +34,12 @@
 
                 ramdisk {
                         description = "buildroot initramfs";
-                        data = /incbin/("../work/initramfs.cpio.gz");
+                        data = /incbin/("../work/initramfs.ub");
                         type = "ramdisk";
                         arch = "riscv";
                         os = "linux";
                         load = <0x82000000>;
-                        compression = "gzip";
+                        compression = "none";
                         hash-1 {
                                 algo = "sha256";
                         };

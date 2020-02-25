@@ -41,12 +41,13 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
-linux_defconfig := $(confdir)/$(DEVKIT)_linux_53_defconfig
+linux_defconfig := $(confdir)/$(DEVKIT)_linux_54_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
 vmlinux_bin := $(wrkdir)/vmlinux.bin
 uImage := $(wrkdir)/uImage
+uInitramfs := $(wrkdir)/initramfs.ub
 
 flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
 vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
@@ -206,7 +207,10 @@ $(vmlinux_bin): $(vmlinux)
 	
 $(uImage): $(vmlinux_bin)
 	$(uboot_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
-	
+
+$(uInitramfs): $(initramfs)
+	$(uboot_wrkdir)/tools/mkimage -n 'Ramdisk Image' -A riscv -O linux -T ramdisk -C gzip -d $(initramfs) $(uInitramfs)
+
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig
@@ -216,7 +220,7 @@ linux-menuconfig: $(linux_wrkdir)/.config
 $(device_tree_blob): $(device_tree)
 	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
 
-$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(uboot) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
+$(fit): $(opensbi) $(uboot_s) $(uImage) $(uboot) $(uInitramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
 	$(uboot_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
