@@ -140,7 +140,7 @@ Note: The power supply switch must be switched off while making the jumper conne
 See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire) for more information.
 
 ## Building and Loading the Linux Image
-For instructions on how to build and load a Linux image, see the Linux build instructions in [the docs/ directory](.).
+For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
 
 ### FPGA Design in Libero
 The Libero project interfaces the PolarFire FPGA with the U540 SoC through the ChipLink interface. The FPGA fabric is instantiated with the ChipLink to AXI bridge, while peripherals — GPIO, MMUART, SPI, and I2C — are connected to it. The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz clock.

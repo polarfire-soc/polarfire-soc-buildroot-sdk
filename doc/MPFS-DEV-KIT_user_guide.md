@@ -235,7 +235,7 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 |||||Close: 1K||100K pull down connected to TRSTB||
 
 ## Building and Loading the Linux Image
-For instructions on how to build and load a Linux image, see the Linux build instructions in [the docs/ directory](.).
+For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
 
 #### Linux Boot and Login Credentials
 The Linux boot process can be observed by connecting a serial terminal to the USB port on the HiFive
