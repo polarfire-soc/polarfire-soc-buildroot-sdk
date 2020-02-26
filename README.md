@@ -22,6 +22,7 @@ Ubuntu 16.04 x86_64 host - Working.
 ### Supported Build Targets
 The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
 The following table details the available targets:
+
 | `DEVKIT` | Board Name |
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
