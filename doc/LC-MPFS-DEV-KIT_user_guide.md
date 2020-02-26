@@ -3,23 +3,6 @@
 ## Overview
 The LC-MPFS-DEV-KIT consists of SiFive's U540 processor and Microchip’s PolarFire FPGA on a single board. The LC-MPFS-DEV-KIT is a reduced version of the HiFive Unleashed platform. The LC-MPFS-DEV-KIT enables users to create a Linux system running on the RISC-V core complex, with a large FPGA fabric accessible through the memory map. The PolarFire FPGA is shipped with a pre-configured bitstream which enables peripherals such as GPIO, UART, SPI, and I2C on the PolarFire FPGA fabric.
 
-## Reference
-Visit the following links for further reference reading materials.
-### Recommended Reading
-[RISC-V User-level ISA Specification](https://riscv.org/specifications/)     
-[RISC-V Draft Privileged ISA Specification](https://riscv.org/specifications/privileged-isa/)     
-[SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
-[TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
-[HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)   
-
-### Reference
-[PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
-[Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
-[FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
-[FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
-[PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)         
-[Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics) 
-
 ## Hardware Features
 This section describes the features of the LC-MPFS-DEV-KIT hardware with the block diagram. 
 
@@ -44,7 +27,7 @@ Download the Libero SoC design suite v12.3 for Linux [here](https://www.microsem
 Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one platinum floating license for the Libero SoC Design Suite. Write to [mi-v-embeddedpartner@microchip.com](mi-v-embeddedpartner@microchip.com) with the subject “License Request <your organization name>” and include the 12-digit MAC ID of the two linux machines/PCs in your email.
 
 ### Solution Versions
-The latest revisions of the Libero project and bitstream files are available on the [Microsemi](http://soc.microsemi.com/download/rsc/?f=Libero_Project_LC-MPFS-DEV-KIT) Website.
+The latest revisions of the Libero project and bitstream files are available on the [Microsemi website](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga#getting-started).
 
 ## Board Setup
 The following instructions guide you to set up the LC-MPFS-DEV-KIT.
@@ -179,7 +162,22 @@ The GPIO implemented in the design is pinned out as a starting point for your cu
 | 6 | Not connected |
 | 7 | USB1 reset |
 
-## Technical Support
+## Reference
+Visit the following links for further reference reading materials.
+### Recommended Reading
+[RISC-V User-level ISA Specification](https://riscv.org/specifications/)     
+[RISC-V Draft Privileged ISA Specification](https://riscv.org/specifications/privileged-isa/)     
+[SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
+[TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
+[HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)   
 
-For technical queries, email [mi-v-embeddedpartner@microchip.com](mi-v-embeddedpartner@microchip.com). Microsemi’s technical support team will create a ticket, address the query, and track it to completion.
-  
+### Reference
+[PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
+[Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
+[FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
+[FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
+[PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)         
+[Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics) 
+
+## Technical Support
+For technical queries, visit the [Microsemi SoC Customer Portal](https://soc.microsemi.com/Portal/Default.aspx), select “PolarFire SoC” under Product Family, “MPFSXXXX” under Device Family and type in the query. Microchip’s technical support team will create a ticket, address the query and track it to completion

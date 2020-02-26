@@ -67,7 +67,7 @@ simulation with best-in-class constraints management, Debug Tools capabilities, 
 Programming support.
 
 Download Libero SoC PolarFire v2.2 for Windows environment 
-[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).
+[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).         
 Download Libero SoC PolarFire v2.2 for Linux environment 
 [here](https://www.microsemi.com/document-portal/doc_download/1243421-download-libero-soc-polarfire-v2-2-for-linux).
 
@@ -89,11 +89,11 @@ to download the standalone programmer (if needed).
 | FP Express | Software for Windows and Linux | FlashPro5 | Hardware programmer for Windows and Linux |
 | FlashPro | Software for Windows | FlashPro4 | Hardware programmer for Windows |
 
-### Microsemi PolarFire Linux SDK for the HiFive Unleashed Expansion Board
-The Microsemi PolarFire Linux SDK is based on the SiFive freedom-u-sdk with modifications to the
+### Polarfire SoC Buildroot SDK for the HiFive Unleashed Expansion Board
+The Polarfire SoC Buildroot SDK is based on the SiFive freedom-u-sdk with modifications to the
 device tree to support the HiFive Unleashed Expansion board. It also includes drivers for Microsemi
 PCIe, I C, SPI, MMUART, and GPIO peripherals. See to download the 2 Firmware Versions (see page 7)
-Microsemi PolarFire Linux SDK.
+Polarfire SoC Buildroot SDK.
 The build procedure follows that of the freedom-u-sdk as described in [HiFive Unleashed Getting Started
 Guide](https://www.sifive.com/documentation/boards/hifive-unleashed/hifive-unleashed-getting-started-guide/).
 Before building the Linux image, the following packages must be installed depending on the Linux
@@ -123,10 +123,10 @@ openssl-devel wget vim-common
 The following table contains links to the Libero Project, .stp file, .job file, and the Linux SDK for each
 release.
 
-| Revision | Libero Project | .stp | .job | MPFS-Linux-SDK |
-| --- | --- | --- | --- | --- |
-| Initial release | [Libero Initial Release](https://my.microsemi.com/awelcome/filedownloadLogin.aspx?code=pvvuoqopwoxpqppppootur&src=ext&ver=0) | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [MPFS-Linux-SDK](ftp://ftpsoc.microsemi.com/outgoing/mpfs-linux-sdk-20180906.tar.gz) 
-For more documentation, visit the [extranet](https://my.microsemi.com/tools/search/SitePages/mainsearch.aspx?k=Mi-V%20Embedded%20Experts%20Program&dh=1.) page.
+| Revision | .stp | .job | MPFS-Linux-SDK |
+| --- | --- | --- | --- |
+| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk) 
+
 
 ## Board Setup
 Follow the instructions to set up the HiFive Unleashed board.
@@ -312,3 +312,6 @@ Visit the following links for further reference reading materials.
 [Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
 [FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
 [FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
+
+## Technical Support
+For technical queries, visit the [Microsemi SoC Customer Portal](https://soc.microsemi.com/Portal/Default.aspx), select “PolarFire SoC” under Product Family, “MPFSXXXX” under Device Family and type in the query. Microchip’s technical support team will create a ticket, address the query and track it to completion
