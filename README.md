@@ -6,18 +6,27 @@ booting the development board.
 
 The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
 
-## Tested Build Hosts:
-
-##### Ubuntu 18.04 x86_64 host - Working.
-
-##### Ubuntu 16.04 x86_64 host - Working.
-
 ## Building Linux Using Buildroot
 This section describes the procedure to build the Linux boot image and loading it into an SD card using
 Buildroot.
 
-### Supported Platforms
+### Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS. It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
+
+#### Tested Build Hosts:
+
+Ubuntu 18.04 x86_64 host - Working.
+
+Ubuntu 16.04 x86_64 host - Working.
+
+### Supported Build Targets
+The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
+The following table details the available targets:
+| `DEVKIT` | Board Name |
+| --- | --- |
+| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
+| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
+
 
 ### Install Prerequisite Packages
 Before starting, use the `apt` command to install prerequisite packages:
@@ -33,7 +42,7 @@ The following commands build the system to a work/sub-directory.
 #### Note:                
         Set DEVKIT to whichever board you are using.
         If you have the MPFS-DEV-KIT, use `make all DEVKIT=lc-mpfs`
-        And for the LC-MPFS-DEV-KIT, use `DEVKIT=mpfs`
+        And for the LC-MPFS-DEV-KIT, use `make all DEVKIT=mpfs`
         By default `mpfs` will be used.
 
 ```
@@ -47,7 +56,7 @@ make all DEVKIT=lc-mpfs
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
 The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
-The option `DEVKIT=<board>` selects the correct device tree for the board.   
+The option `DEVKIT=<target>` selects the correct device tree for the target board.   
 
 ### Preparing an SD Card 
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               

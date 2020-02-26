@@ -105,22 +105,25 @@ The console should now look as shown in the following figure.
 The following sections explain the step-by-step procedure to download the FPGA bitstream onto the PolarFire FPGA. 
 ### Programming the FPGA using FlashPro
 #### Windows Environment 
-To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps. The link to the .job file is given in Software Versions.
-
-1. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
+To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps. The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
 Note: The power supply switch must be switched off while making the jumper connections.
-2. Connect the power supply cable to the J3 connector on the board.
-3. Connect the FlashPro4 to a PC USB port and to the connector J24 (FP4 header) of the LC-MPFS-DEV-KIT hardware.
-4. Power on the board using the SW3 slide switch.
-5. On the host PC, launch the FlashPro Express software.
-6. Click New or select New Job Project from FlashPro Express Job from Project menu to create a new job project, as shown in the following figure.
-7. Enter the following in the New Job Project from FlashPro Express Job dialog box:
-   - Programming job file: Click Browse, and navigate to the location where the .job file is located and select the file. The default location is `<download_folder>\mpf_ac466_eval\splash_df\Programming_Job`.
-   - FlashPro Express job project location: Click Browse and navigate to the location where you want to save the project.
 
-8. Click OK. The required programming file is selected and ready to be programmed in the
-9. The FlashPro Express window appears as shown in the following Confirm that a programmer number appears in the Programmer field. If it does not, confirm the board connections and click Refresh/Rescan Programmers.
-10. Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure. See Running the Demo, page 31 to run the demo.
+1. Connect the power supply cable to the J3 connector on the board.
+2. Connect the FlashPro4 to a PC USB port and to the connector J24 (FP4 header) of the LC-MPFS-DEV-KIT hardware.
+3. Power on the board using the SW3 slide switch.
+4. On the host PC, launch the FlashPro Express software.
+5. Click New or select New Job Project from FlashPro Express Job from Project menu to create a new job project, as shown in the following figure.       
+![New Flash Pro Project](images/fp-new.png)
+6. Enter the following in the New Job Project from FlashPro Express Job dialog box:
+   - Programming job file: Click Browse, and navigate to the location where the .job file is located and select the file. The default location is `<download_folder>\mpf_ac466_eval\splash_df\Programming_Job`.
+   - FlashPro Express job project location: Click Browse and navigate to the location where you want to save the project.        
+![New Flash Pro Project](images/fp-prompt.png)
+
+7. Click OK. The required programming file is selected and ready to be programmed in the
+8. The FlashPro Express window appears as shown in the following Confirm that a programmer number appears in the Programmer field. If it does not, confirm the board connections and click Refresh/Rescan Programmers.           
+![Scanning and Running the Programmer](images/fp-program.png)
+9. Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure. See Running the Demo, page 31 to run the demo.       
+![Scanning and Running the Programmer](images/fp-programmed.png)
 
 #### Linux Environment 
 
