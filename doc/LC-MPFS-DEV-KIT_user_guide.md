@@ -129,10 +129,16 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
 
 ### FPGA Design in Libero
-The Libero project interfaces the PolarFire FPGA with the U540 SoC through the ChipLink interface. The FPGA fabric is instantiated with the ChipLink to AXI bridge, while peripherals — GPIO, MMUART, SPI, and I2C — are connected to it. The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz clock.
-The high-level block diagram of the Libero project implemented on the PolarFire FPGA is as shown in the following figure.
-
-![LC-MPFS-DEV-KIT Board Block Diagram](images/LC_Block_Diagram.png)
+The Libero project creates a Processor Subsystem in the FPGA fabric for the U540 processor.The Processor Subsystem supports the following features.
+- Chiplink interface to communicate with U540SoC
+- SRAM memory of size 64KB
+- Peripheral controllers: SPI, MMUART, I2C and GPIO
+- AXI4 slave interface to connect user AXI4 complaint slaves
+In this Libero design, AXI slaves are connected to the Processor Subsystem using core AXI4 Interconnect.   
+      
+For example, 8 LSRAM blocks (each of size 64KB) are connected as AXIs laves through the core AXI4 Interconnect.The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz.         
+The following figure shows the high-level block diagram of the Libero project implemented on the PolarFire FPGA.     
+![LC-MPFS-DEV-KIT Board Block Diagram](images/updated-lc-libero-design.png)
 
 #### Memory Map and GPIO Pinout
 
