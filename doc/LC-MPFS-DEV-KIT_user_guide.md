@@ -27,7 +27,7 @@ Download the Libero SoC design suite v12.3 for Linux [here](https://www.microsem
 Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one platinum floating license for the Libero SoC Design Suite. Write to [mi-v-embeddedpartner@microchip.com](mi-v-embeddedpartner@microchip.com) with the subject “License Request <your organization name>” and include the 12-digit MAC ID of the two linux machines/PCs in your email.
 
 ### Solution Versions
-The latest revisions of the Libero project and bitstream files are available on the [Microsemi website](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga#getting-started).
+The latest revisions of the Libero project and bitstream files are available [here](http://soc.microsemi.com/download/rsc/?f=Libero_Project_LC-MPFS-DEV-KIT).
 
 ## Board Setup
 The following instructions guide you to set up the LC-MPFS-DEV-KIT.
@@ -135,12 +135,12 @@ The Libero project creates a Processor Subsystem in the FPGA fabric for the U540
 - Peripheral controllers: SPI, MMUART, I2C and GPIO
 - AXI4 slave interface to connect user AXI4 complaint slaves
 In this Libero design, AXI slaves are connected to the Processor Subsystem using core AXI4 Interconnect.   
-      
+
 For example, 8 LSRAM blocks (each of size 64KB) are connected as AXIs laves through the core AXI4 Interconnect.The ChipLink interface uses 125 MHz clock and the AXI interface uses 75 MHz.         
 The following figure shows the high-level block diagram of the Libero project implemented on the PolarFire FPGA.     
 ![LC-MPFS-DEV-KIT Board Block Diagram](images/updated-lc-libero-design.png)
 
-#### Memory Map and GPIO Pinout
+#### Memory Map
 
 The IP cores on the LC-MPFS-DEV-KIT are accessible from the RISC-V U540 memory map as listed in the following table. 
 
@@ -151,10 +151,10 @@ The IP cores on the LC-MPFS-DEV-KIT are accessible from the RISC-V U540 memory m
 | I2C_0 | 0x2000100000 | 0x2000101000 | 35 |
 | MMUART_0 | 0x2000104000 | 0x2000105000 | |
 | SRAM | 0x2030000000 | 0x203FFFFFFF | |
-| AXI_MS0 | 0x2030000000 | | |
+| AXI_MS0 | 0x2030000000 | 0x203FFFFFFF | |
 | AXI_MS1 | 0x2600000000 | 0x263FFFFFFF | |
 
-#### Memory Map
+#### GPIO Pinout
 The GPIO implemented in the design is pinned out as a starting point for your custom design implementation. The details of the GPIO is listed in GPIO Pinout.
 
 | GPIO | Function |
@@ -166,7 +166,6 @@ The GPIO implemented in the design is pinned out as a starting point for your cu
 | 4 | SWITCH 9 |
 | 5 | SWITCH 10 |
 | 6 | Not connected |
-| 7 | USB1 reset |
 
 ## Reference
 Visit the following links for further reference reading materials.
