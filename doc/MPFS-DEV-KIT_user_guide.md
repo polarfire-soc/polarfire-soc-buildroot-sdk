@@ -5,7 +5,7 @@ The HiFive Unleashed Platform™ is purpose-built to emulate most of the functio
 PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
 This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
 platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
-Design Suite. For more details on the design suite, see section FPGA Design in Libero.        
+Design Suite. For more details on the design suite, see section FPGA Design in Libero.   
 
 ### HiFive Unleashed Platform (MPFS-DEV-KIT)   
 The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
@@ -67,7 +67,7 @@ simulation with best-in-class constraints management, Debug Tools capabilities, 
 Programming support.
 
 Download Libero SoC PolarFire v2.2 for Windows environment 
-[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).
+[here](https://www.microsemi.com/document-portal/doc_download/1243420-download-libero-soc-polarfire-v2-2-for-windows).         
 Download Libero SoC PolarFire v2.2 for Linux environment 
 [here](https://www.microsemi.com/document-portal/doc_download/1243421-download-libero-soc-polarfire-v2-2-for-linux).
 
@@ -89,44 +89,19 @@ to download the standalone programmer (if needed).
 | FP Express | Software for Windows and Linux | FlashPro5 | Hardware programmer for Windows and Linux |
 | FlashPro | Software for Windows | FlashPro4 | Hardware programmer for Windows |
 
-### Microsemi PolarFire Linux SDK for the HiFive Unleashed Expansion Board
-The Microsemi PolarFire Linux SDK is based on the SiFive freedom-u-sdk with modifications to the
+### Polarfire SoC Buildroot SDK for the HiFive Unleashed Expansion Board
+The Polarfire SoC Buildroot SDK is based on the SiFive freedom-u-sdk with modifications to the
 device tree to support the HiFive Unleashed Expansion board. It also includes drivers for Microsemi
-PCIe, I C, SPI, MMUART, and GPIO peripherals. See to download the 2 Firmware Versions (see page 7)
-Microsemi PolarFire Linux SDK.
-The build procedure follows that of the freedom-u-sdk as described in [HiFive Unleashed Getting Started
-Guide](https://www.sifive.com/documentation/boards/hifive-unleashed/hifive-unleashed-getting-started-guide/).
-Before building the Linux image, the following packages must be installed depending on the Linux
-distribution in your machine.
-
-#### Ubuntu
-(tested on Ubuntu 16.04)
-```
-apt-get update
-sudo apt-get install autoconf automake autotools-dev bc bison build-essential curl
-flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libssl-dev
-libtool patchutils python screen texinfo unzip zlib1g-dev patch device-tree-compiler
-openssl-devel wget
-```
-
-#### Centos
-(tested on Centos7)
-```
-yum update
-sudo yum install autoconf automake autotools-dev bc bison build-essential gcc-c++
-curl flex gawk gdisk git gperf gmp-devel libmpc-dev libmpfr-dev ncurses-devel libssldev
-libtool patchutils python screen texinfo unzip zlib1g-dev zlib-devel patch dtc
-openssl-devel wget vim-common
-```
+PCIe, I2C, SPI, MMUART, and GPIO peripherals.         
 
 ### Firmware Versions
 The following table contains links to the Libero Project, .stp file, .job file, and the Linux SDK for each
 release.
 
-| Revision | Libero Project | .stp | .job | MPFS-Linux-SDK |
-| --- | --- | --- | --- | --- |
-| Initial release | [Libero Initial Release](https://my.microsemi.com/awelcome/filedownloadLogin.aspx?code=pvvuoqopwoxpqppppootur&src=ext&ver=0) | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [MPFS-Linux-SDK](ftp://ftpsoc.microsemi.com/outgoing/mpfs-linux-sdk-20180906.tar.gz) 
-For more documentation, visit the [extranet](https://my.microsemi.com/tools/search/SitePages/mainsearch.aspx?k=Mi-V%20Embedded%20Experts%20Program&dh=1.) page.
+| Revision | .stp | .job | MPFS-Linux-SDK |
+| --- | --- | --- | --- |
+| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk) 
+
 
 ## Board Setup
 Follow the instructions to set up the HiFive Unleashed board.
@@ -135,9 +110,19 @@ Ensure the fan is plugged in.
 
 ![Power Button and Fan Connection](images/HiFive_Unleashed_board_Power_Button_and_Fan_Connection.JPG)
 
-2. Set all pins in the DIP-switch block to the LEFT. The ON position=0; therefore, this sets MSEL to
-mode 1111. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
+2. Set the pins in the DIP-switch block to the as shown in the diagram below. The ON position=0; therefore, this sets MSEL to
+mode 1011, which will boot Linux automatically. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
 more information on MSEL.
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|====
+ |                | | | | |X| |                 |      |   
+ |                | | | | | | |                 |      |   
+ |        HFXSEL->|X|X|X|X| |X|                 |______|   
+ |                +-+-+-+-+-+-+                            
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     
+ |                                                         
+``` 
 
 ![DIP Switch Setting](images/HiFive_Unleashed_Board_DIP-Switch_setting.png)
 
@@ -234,101 +219,8 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 |9| J22 |JTAG |Weak pull down to JTAG TRSTB|Open: 1K pull down connected to TRSTB| Open|
 |||||Close: 1K||100K pull down connected to TRSTB||
 
-#### Install Prerequisite Packages
-Before starting, use the `apt` command to install prerequisite packages:
-```
-sudo apt install autoconf automake autotools-dev bc bison \
-build-essential curl flex gawk gdisk git gperf libgmp-dev \
-libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
-patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
-device-tree-compiler
-```
-
-### Building and Loading the Linux Image
-The following commands build the system to a work/sub-directory.
-```
-$ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
-$ cd mpfs-linux-sdk
-$ git checkout master
-$ git submodule update --init --recursive
-$ unset RISCV
-$ make all DEVKIT=mpfs
-```
-Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
-
-The output file `work/bbl.bin` contains the bootloader (RISC-V pk/bbl), the Linux kernel, and the device tree blob. A GPT image is also created, with U-Boot as the first stage boot loader that can be copied to an SD card. 
-The option `DEVKIT=mpfs` selects the correct device tree for the board.         
-
-#### Preparing an SD Card and Programming an Image for the First Time
-Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
-The following steps will allow you to check and unmount the card if required:
-
-After inserting your SD card, use dmesg to check what your card's identifier is.
-```
-$ dmesg | egrep "sd|mmcblk"
-```
-The output should contain a line similar to one of the below lines:
-```
-[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
-```
-`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
-For these examples the identifier `sdX` is used. 
-
-#### WARNING:
-        The drive with the identifier `sda` is the default location for your operating system.        
-        DO NOT pass this identifier to any of the commands listed here.       
-        Check that the size of the card matches the dmesg output before continuing.
-
-Next check if this card is mounted:
-```
-$ mount | grep sdX
-```
-If any entries are present, then run the following. If not then skip this command:
-```
-$ sudo umount /dev/sdX
-```
-
-The SD card should have a GUID Partition Table (GPT) rather than Master Boot Record (MBR) without any partitions defined.
- 
-To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
-```
-$ sudo make DISK=/dev/sdX format-boot-loader
-```
-This populates the SD card with the required partition types, and it copies across the Linux kernel image
-to the appropriate partition. If an fsbl.bin file is present in the top-level directory, it copies this across to
-the correct partition.            
-This command may fail with slower USB SD card devices but should succeed if repeated.                
-At this point, your system should be bootable using your new SD card. You can remove it from your PC
-and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the HiFive
-Unleashed Expansion board.           
-
-#### Rebuilding the Linux Kernel
-To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
-```
-$ rm -rf work/linux/
-$ make
-```
-Copy this newly built image to the SD card using the same method as before:
-```
-sudo make DISK=/dev/sdX format-boot-loader
-```
-### Switching machines
-To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
-```
-$ rm -rf work/linux/ work/riscvpc.dtb 
-$ make DEVKIT=mpfs
-```
-Copy this newly built image to the SD card using the same method as before:
-```
-sudo make DISK=/dev/sdX format-boot-loader
-```
-
-The source for the device tree for HiFive Unleashed Expansion board is in `conf/mpfs.dts`.           
-The configuration options used for the Linux kernel are in `conf/linux_defconfig`.
-Currently, the Microsemi PolarFire Linux SDK for the HiFive Unleashed platform uses a modification to
-the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-pk/machine/mentry.S` for
-the modification.)
+## Building and Loading the Linux Image
+For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
 
 #### Linux Boot and Login Credentials
 The Linux boot process can be observed by connecting a serial terminal to the USB port on the HiFive
@@ -405,3 +297,6 @@ Visit the following links for further reference reading materials.
 [Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
 [FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
 [FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
+
+## Technical Support
+For technical queries, visit the [Microsemi SoC Customer Portal](https://soc.microsemi.com/Portal/Default.aspx), select “PolarFire SoC” under Product Family, “MPFSXXXX” under Device Family and type in the query. Microchip’s technical support team will create a ticket, address the query and track it to completion
