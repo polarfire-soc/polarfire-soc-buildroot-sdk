@@ -47,17 +47,12 @@ vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
 vmlinux_bin := $(wrkdir)/vmlinux.bin
 uImage := $(wrkdir)/uImage
+uInitramfs := $(wrkdir)/initramfs.ub
 
 flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
 vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
-
-pk_srcdir := $(srcdir)/riscv-pk
-pk_wrkdir := $(wrkdir)/riscv-pk
-pk_payload_wrkdir := $(wrkdir)/riscv-payload-pk
-bbl := $(pk_wrkdir)/bbl
-bbl_payload :=$(pk_payload_wrkdir)/bbl
-bbl_bin := $(wrkdir)/bbl.bin
+rootfs := $(wrkdir)/rootfs.bin
 fit := $(wrkdir)/image-$(GITID).fit
 
 fesvr_srcdir := $(srcdir)/riscv-fesvr
@@ -90,7 +85,6 @@ openocd_srcdir := $(srcdir)/riscv-openocd
 openocd_wrkdir := $(wrkdir)/riscv-openocd
 openocd := $(openocd_wrkdir)/src/openocd
 
-rootfs := $(wrkdir)/rootfs.bin
 
 .PHONY: all
 all: $(fit) $(flash_image)

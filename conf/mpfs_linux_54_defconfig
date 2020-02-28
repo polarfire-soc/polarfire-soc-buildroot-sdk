@@ -101,7 +101,7 @@ CONFIG_CRYPTO_USER_API_HASH=y
 CONFIG_CRYPTO_DEV_VIRTIO=y
 CONFIG_PRINTK_TIME=y
 # CONFIG_RCU_TRACE is not set
-CONFIG_CMDLINE="earlycon=sbi earlycon=sbi root=/dev/mmcblk0p3 rootwait console=ttySIF0 console=tty0"
+CONFIG_CMDLINE="earlycon=sbi debug console=tty0 console=ttySIF0 root=/dev/mmcblk0p2 rootwait"
 CONFIG_BLK_DEV_ZONED=y
 CONFIG_PCI_DEBUG=y
 CONFIG_PCIE_MICROSEMI=y
