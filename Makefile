@@ -25,7 +25,7 @@ CROSS_COMPILE := $(RISCV)/bin/$(target)-
 target_gdb := $(CROSS_COMPILE)gdb
 
 DEVKIT ?= mpfs
-device_tree := $(confdir)/$(DEVKIT).dts
+device_tree := $(DEVKIT).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 buildroot_srcdir := $(srcdir)/buildroot
@@ -205,8 +205,14 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
-$(device_tree_blob): $(device_tree)
-	dtc -I dts $(device_tree) -O dtb -o $(device_tree_blob)
+$(device_tree_blob): $(confdir)/dts/$(device_tree)
+	rm -rf $(wrkdir)/dts
+	mkdir $(wrkdir)/dts
+	cp $(confdir)/dts/* $(wrkdir)/dts
+	(cat $(wrkdir)/dts/$(device_tree); ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
+	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
+	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
+	rm $(wrkdir)/dts/.*.tmp
 
 $(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
@@ -296,7 +302,7 @@ distclean:
 	-rm -rf -- $(wrkdir) $(toolchain_dest) arch/ include/ scripts/ .cache.mk
 
 clean-image:
-	-rm -rf -- $(flash_image) $(vfat_image) $(fit) $(opensbi) $(opensbi_wrkdir) $(uboot_s) $(uboot_s_wrkdir) $(uImage)
+	-rm -rf -- $(flash_image) $(vfat_image) $(fit) $(opensbi) $(opensbi_wrkdir) $(uboot_s) $(uboot_s_wrkdir) $(uImage) $(wrkdir)/dts
 
 clean-linux: clean-image
 	-rm -rf -- $(vmlinux) $(vmlinux_bin) $(vmlinux_stripped) $(linux_wrkdir)
