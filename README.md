@@ -1,8 +1,7 @@
 # Microchip MPFS-DEV-KIT Linux Software Development Kit
 
 This builds a complete RISC-V cross-compile toolchain for the Microchip 
-MPFS-DEV-KIT and LC-MPFS-DEV-KIT Linux Software Development Kit. It also builds a `bbl` image for 
-booting the development board.
+MPFS-DEV-KIT and LC-MPFS-DEV-KIT Linux Software Development Kits.
 
 The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
 
