@@ -47,8 +47,8 @@ The following commands build the system to a work/sub-directory.
         By default `mpfs` will be used.
 
 ```
-git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
-cd mpfs-linux-sdk
+git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
+cd polarfire-soc-buildroot-sdk
 git checkout master
 git submodule update --init --recursive
 unset RISCV
