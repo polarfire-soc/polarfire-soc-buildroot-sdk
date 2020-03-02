@@ -20,7 +20,7 @@
                 };
                 fdt@riscvpc.dtb {
                         description = "Flattened Device Tree blob";
-                        data = /incbin/("../new.dtb");
+                        data = /incbin/("../work/riscvpc.dtb");
                         type = "flat_dt";
                         arch = "riscv";
                         compression = "none";
