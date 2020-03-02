@@ -125,7 +125,7 @@ release.
 
 | Revision | .stp | .job | MPFS-Linux-SDK |
 | --- | --- | --- | --- |
-| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk) 
+| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk) 
 
 
 ## Board Setup
