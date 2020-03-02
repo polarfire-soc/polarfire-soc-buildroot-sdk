@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 8c4699f..299bb86 100644
+--- a/Makefile
++++ b/Makefile
+@@ -73,7 +73,7 @@ fsbl.elf: $(LIB_FS1_O) fsbl/main.o $(LIB_FS2_O) ux00_fsbl.lds
+ board_setup.elf: $(LIB_FS1_O) $(LIB_FS2_O) ux00_fsbl.lds fsbl/main-board_setup.o
+ 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(filter %.o,$^) -T$(filter %.lds,$^)
+ 
+-fsbl/dtb.o: fsbl/ux00_fsbl.dtb
++# fsbl/dtb.o: fsbl/ux00_fsbl.dtb
+ 
+ zsbl/start.o: zsbl/ux00_zsbl.dtb
+ 

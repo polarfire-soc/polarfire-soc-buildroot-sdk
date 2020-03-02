@@ -251,12 +251,12 @@ $(qemu): $(qemu_srcdir)
 
 .PHONY: fsbl
 fsbl: $(fsbl)
-$(fsbl): $(fsbl_srcdir)
+$(fsbl): $(fsbl_srcdir) $(device_tree_blob)
 	rm -rf $(fsbl_wrkdir)
 	rsync $(fsbl_srcdir)/ $(fsbl_wrkdir) -r
 	- cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
-	rm -f $(fsbl_wrkdir)/ux00_fsbl.dts
-	cp -f $(confdir)/$(DEVKIT).dts $(fsbl_wrkdir)/ux00_fsbl.dtb
+	rm -f $(fsbl_wrkdir)/fsbl/ux00_fsbl.dts
+	cp -f $(wrkdir)/riscvpc.dtb $(fsbl_wrkdir)/fsbl/ux00_fsbl.dtb
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
