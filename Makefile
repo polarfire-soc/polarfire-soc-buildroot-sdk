@@ -70,6 +70,7 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
 fsbl_patchdir := $(patchdir)/fsbl/
+libversion := $(fsbl_srcdir)/lib/version.c
 fsbl := $(wrkdir)/fsbl.bin
 
 uboot_s_srcdir := $(srcdir)/u-boot
@@ -250,11 +251,17 @@ $(qemu): $(qemu_srcdir)
 	touch -c $@
 
 .PHONY: fsbl
-fsbl: $(fsbl)
-$(fsbl): $(fsbl_srcdir) $(device_tree_blob)
+$(libversion):
+	- rm -rf $(libversion)
+	echo "const char *gitid = \"$(shell git describe --always --dirty)\";" > $(libversion)
+	echo "const char *gitdate = \"$(shell git log -n 1 --date=short --format=format:"%ad.%h" HEAD)\";" >> $(libversion)
+	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" >> $(libversion)
+
+fsbl: $(fsbl) 
+$(fsbl): $(fsbl_srcdir) $(device_tree_blob) $(libversion)
 	rm -rf $(fsbl_wrkdir)
+	- cd $(fsbl_srcdir) && git apply $(fsbl_patchdir)/*.patch;
 	rsync $(fsbl_srcdir)/ $(fsbl_wrkdir) -r
-	- cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
 	rm -f $(fsbl_wrkdir)/fsbl/ux00_fsbl.dts
 	cp -f $(wrkdir)/riscvpc.dtb $(fsbl_wrkdir)/fsbl/ux00_fsbl.dtb
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
