@@ -159,6 +159,7 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	touch $@
 
 $(linux_wrkdir)/.config: $(linux_defconfig) $(linux_srcdir)
+	- cd $(linux_srcdir) && git apply $(linux_patchdir)/*.patch;
 	mkdir -p $(dir $@)
 	cp -p $< $@
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
@@ -183,8 +184,6 @@ $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux)
 		$(buildroot_initramfs_sysroot)
 
 $(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
-	- cd $(linux_srcdir) && git apply $(linux_patchdir)/*.patch;
-	# touch $(linux_defconfig)
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
