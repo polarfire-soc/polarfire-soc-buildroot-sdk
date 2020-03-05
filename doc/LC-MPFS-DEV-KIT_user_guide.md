@@ -3,23 +3,6 @@
 ## Overview
 The LC-MPFS-DEV-KIT consists of SiFive's U540 processor and Microchip’s PolarFire FPGA on a single board. The LC-MPFS-DEV-KIT is a reduced version of the HiFive Unleashed platform. The LC-MPFS-DEV-KIT enables users to create a Linux system running on the RISC-V core complex, with a large FPGA fabric accessible through the memory map. The PolarFire FPGA is shipped with a pre-configured bitstream which enables peripherals such as GPIO, UART, SPI, and I2C on the PolarFire FPGA fabric.
 
-## Reference
-Visit the following links for further reference reading materials.
-### Recommended Reading
-[RISC-V User-level ISA Specification](https://riscv.org/specifications/)     
-[RISC-V Draft Privileged ISA Specification](https://riscv.org/specifications/privileged-isa/)     
-[SiFive FU540-C000 User Manual](https://www.sifive.com/documentation/chips/freedom-u540-c000-manual/)     
-[TU0844 Libero SoC PolarFire v2.2 Design Flow Tutorial](https://www.microsemi.com/document-portal/doc_download/1243632-tu0844-libero-soc-polarfire-v2-2-design-flow-tutorial)     
-[HiFive Unleashed Getting Started Guide](https://www.microsemi.com/document-portal/doc_download/1243284-hifive-unleashed-getting-started-guide)   
-
-### Reference
-[PolarFire FPGA Documentation](https://www.microsemi.com/product-directory/fpgas/3854-polarfire-fpgas#documentation)     
-[Libero SoC PolarFire Documentation](https://www.microsemi.com/product-directory/design-resources/3863-libero-soc-polarfire#documents)     
-[FlashPro User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137626-flashpro-user-guide-for-polarfire)     
-[FlashPro Express User Guide for PolarFire](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire)     
-[PolarFire SoC Information](https://www.microsemi.com/product-directory/soc-fpgas/5498-polarfire-soc-fpga)         
-[Schematics of LC-MPFS-DEV-KIT](https://www.microsemi.com/document-portal/doc_download/1244485-lc-mpfs-dev-kit-schematics) 
-
 ## Hardware Features
 This section describes the features of the LC-MPFS-DEV-KIT hardware with the block diagram. 
 
@@ -47,7 +30,7 @@ Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one p
 The latest revisions of the Libero project and bitstream files are available [here](http://soc.microsemi.com/download/rsc/?f=Libero_Project_LC-MPFS-DEV-KIT).
 
 ## Board Setup
-The following instructions guide you through settting up the LC-MPFS-DEV-KIT.
+The following instructions guide you through setting up the LC-MPFS-DEV-KIT.
 
 1. Switch off the power button on the LC-MPFS-DEV-KIT.
 
@@ -103,7 +86,8 @@ The console should now look as shown in the following figure.
 The following sections explain the step-by-step procedure to download the FPGA bitstream onto the PolarFire FPGA. 
 ### Programming the FPGA using FlashPro
 #### Windows Environment 
-To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps. The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
+To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps.       
+The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
 Note: The power supply switch must be switched off while making the jumper connections.
 
 1. Connect the power supply cable to the J3 connector on the board.

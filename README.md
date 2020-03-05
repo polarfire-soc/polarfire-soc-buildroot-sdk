@@ -6,11 +6,11 @@ MPFS-DEV-KIT and LC-MPFS-DEV-KIT Linux Software Development Kits.
 The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
 
 ## Building Linux Using Buildroot
-This section describes the procedure to build the Linux boot image and loading it into an SD card using
-Buildroot.
+This section describes the procedure to build the Linux boot image and loading it into an SD card using Buildroot.
 
 ### Supported Build Hosts
-This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS. It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
+This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS.    
+It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
 
 #### Tested Build Hosts:
 
@@ -45,16 +45,16 @@ The following commands build the system to a work/sub-directory.
         And for the LC-MPFS-DEV-KIT, use `DEVKIT=mpfs`
         By default `mpfs` will be used.
 ```
-$ git clone https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk.git
-$ cd mpfs-linux-sdk
-$ git checkout master
-$ git submodule update --init --recursive
-$ unset RISCV
-$ make all DEVKIT=lc-mpfs
+git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
+cd polarfire-soc-buildroot-sdk
+git checkout master
+git submodule update --init --recursive
+unset RISCV
+make all DEVKIT=lc-mpfs
 ```
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
-The output file contain the first stage bootloader (U-Boot), the root file system and a VFAT image containing the linux kernel, device tree blob & second stage bootloader. 
+The output file contains the first stage bootloader, the root file system and a VFAT image containing the linux kernel, device tree blob & second stage bootloader. 
 This can then be copied to an SD card. The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
 
 ### Preparing an SD Card 
@@ -95,19 +95,9 @@ At this point, your system should be bootable using your new SD card. You can re
 and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
 
 ### Rebuilding the Linux Kernel
-To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
+To rebuild your kernel or to change the machine being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
 ```
-$ make clean-linux
-$ make DEVKIT=<devkit>
-```
-Copy this newly built image to the SD card using the same method as before:
-```
-$ sudo make DISK=/dev/sdX format-boot-loader
-```
-### Switching machines
-To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
-```
-$ make clean-image
+$ make clean
 $ make DEVKIT=<devkit>
 ```
 Copy this newly built image to the SD card using the same method as before:
@@ -115,10 +105,5 @@ Copy this newly built image to the SD card using the same method as before:
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
-The source for the device tree for HiFive Unleashed Expansion board is in `conf/<devkit>.dts`.           
+The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
 The configuration options used for the Linux kernel are in `conf/<devkit>_linux_<kernel-version>_defconfig`.
-
-
-## Booting Linux on a simulator
-
-*** spike and qemu are currently not working due to how the device tree is loaded in bbl ***

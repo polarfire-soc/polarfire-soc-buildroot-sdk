@@ -100,7 +100,7 @@ release.
 
 | Revision | .stp | .job | MPFS-Linux-SDK |
 | --- | --- | --- | --- |
-| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/Microsemi-SoC-IP/mpfs-linux-sdk) 
+| Initial release | [.stp Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvtxqopwoxpqpposttrpv&src=EXT&ver=0) | [.job Initial Release](https://my.microsemi.com/AWelcome/FileDownload.aspx?code=pvvsoqopwoxpqoxruqoqpo&src=EXT&ver=0) | [Polarfire SoC Buildroot SDK](https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk) |
 
 
 ## Board Setup
@@ -111,7 +111,8 @@ Ensure the fan is plugged in.
 ![Power Button and Fan Connection](images/HiFive_Unleashed_board_Power_Button_and_Fan_Connection.JPG)
 
 2. Set the pins in the DIP-switch block to the as shown in the diagram below. The ON position=0; therefore, this sets MSEL to
-mode 1011, which will boot Linux automatically. See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
+mode 1011, which will boot Linux automatically.              
+See the boot modes table in Section 4 of the [HiFive Unleashed Getting Started Guide](https://sifive.cdn.prismic.io/sifive%2Ffa3a584a-a02f-4fda-b758-a2def05f49f9_hifive-unleashed-getting-started-guide-v1p1.pdf) for
 more information on MSEL.
 ```
       USB   LED    Mode Select                  Ethernet
@@ -127,7 +128,7 @@ more information on MSEL.
 ![DIP Switch Setting](images/HiFive_Unleashed_Board_DIP-Switch_setting.png)
 
 3. Insert an SD-card programmed with the bootloader and Linux. See the Building the Linux Image section of this document for details on creating the content of this SD card.
-4. 
+
 ![SD Card](images/HiFive_Unleashed_Board_SD_Card.png)
 
 4. If available, connect the board to a network switch. The board will run DHCP on boot and start an
@@ -224,7 +225,8 @@ For instructions on how to build and load a Linux image, see the Linux build ins
 
 #### Linux Boot and Login Credentials
 The Linux boot process can be observed by connecting a serial terminal to the USB port on the HiFive
-Unleashed board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.
+Unleashed board.         
+Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.
 The root password is “microchip”. The console should look similar to the following figure.
 
 ![Console Image for Boot](images/Console_Image_for_Boot.png)
