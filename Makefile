@@ -114,7 +114,8 @@ endif
 
 $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	mkdir -p $(toolchain_wrkdir)
-	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv INSTALL_HDR_PATH=$(abspath $(toolchain_srcdir)/linux-headers) headers_install
+	mkdir -p $(toolchain_wrkdir)/header_workdir
+	$(MAKE) -C $(linux_srcdir) O=$(toolchain_wrkdir)/header_workdir ARCH=riscv INSTALL_HDR_PATH=$(abspath $(toolchain_srcdir)/linux-headers) headers_install
 	cd $(toolchain_wrkdir); $(toolchain_srcdir)/configure \
 		--prefix=$(toolchain_dest) \
 		--with-arch=$(ISA) \
@@ -174,7 +175,7 @@ ifeq ($(ISA),$(filter rv32%,$(ISA)))
 endif
 
 $(initramfs).d: $(buildroot_initramfs_sysroot)
-	$(linux_srcdir)/usr/gen_initramfs_list.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
+	cd $(wrkdir) && $(linux_srcdir)/usr/gen_initramfs_list.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
 
 $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux)
 	cd $(linux_wrkdir) && \
