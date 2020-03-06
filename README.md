@@ -98,21 +98,11 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 At this point, your system should be bootable using your new SD card. You can remove it from your PC
 and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
 
-### Rebuilding the Linux Kernel with Buildroot
-To rebuild your kernel, type the following from the top level of mpfs-linux-sdk:
+### Rebuilding the Linux Kernel
+To rebuild your kernel or to change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
 ```
-$ rm -rf work/linux/
-$ make DEVKIT=<board>
-```
-Copy this newly built image to the SD card using the same method as before:
-```
-$ sudo make DISK=/dev/sdX format-boot-loader
-```
-### Switching machines with Buildroot
-To change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
-```
-$ rm -rf work/linux/ work/riscvpc.dtb
-$ make DEVKIT=<board>
+$ make clean
+$ make DEVKIT=<devkit>
 ```
 Copy this newly built image to the SD card using the same method as before:
 ```

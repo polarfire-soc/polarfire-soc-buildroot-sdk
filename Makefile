@@ -276,9 +276,12 @@ uboot: $(uboot)
 .PHONY: flash_image
 flash_image: $(flash_image)
 
-.PHONY: clean
+.PHONY: clean distclean
 clean:
-	rm -rf -- $(wrkdir) $(toolchain_dest)
+	rm -rf -- $(wrkdir)
+
+distclean:
+	rm -rf -- $(wrkdir) $(toolchain_dest) arch/ include/ scripts/ .cache.mk
 
 .PHONY: sim
 sim: $(spike) $(bbl)
