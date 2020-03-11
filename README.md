@@ -1,8 +1,6 @@
-# Microchip MPFS-DEV-KIT Linux Software Development Kit
-
-This builds a complete RISC-V cross-compile toolchain for the Microchip 
-MPFS-DEV-KIT and LC-MPFS-DEV-KIT Linux Software Development Kit. It also builds a `bbl` image for 
-booting the development board.
+# Microchip PolarFire SoC Linux Software Development Kit
+This repository builds a command line only RISC-V Linux image for the Microchip PolarFire SoC Linux Software Development Kits.
+It first builds a cross-compilation toolchain which is used to build the Linux image, including the kernel, a Busybox based root file system and the necessary bootloaders for each board.
 
 The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
 
@@ -11,25 +9,9 @@ This section describes the procedure to build the Linux boot image and loading i
 Buildroot.
 
 ### Supported Build Hosts
-This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS. It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
+This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS & Ubuntu 16.04 LTS. It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
 
-#### Tested Build Hosts:
-
-Ubuntu 18.04 x86_64 host - Working.
-
-Ubuntu 16.04 x86_64 host - Working.
-
-### Supported Build Targets
-The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
-The following table details the available targets:
-
-| `DEVKIT` | Board Name |
-| --- | --- |
-| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
-| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
-
-
-### Install Prerequisite Packages
+#### Prerequisite Packages
 Before starting, use the `apt` command to install prerequisite packages:
 ```
 sudo apt install autoconf automake autotools-dev bc bison \
@@ -38,19 +20,29 @@ libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
 patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
 device-tree-compiler mtools
 ```
-### Build and Checkout Code
-The following commands build the system to a work/sub-directory.
-#### Note:                
-        Set DEVKIT to whichever board you are using.
-        If you have the MPFS-DEV-KIT, use `make all DEVKIT=mpfs`
-        And for the LC-MPFS-DEV-KIT, use `make all DEVKIT=lc-mpfs`
-        By default `mpfs` will be used.
+### Checkout Code & Build
 
+##### Supported Build Targets
+The `DEVKIT` option can be used to set the target board for which Linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
+The following table details the available targets:
+
+| `DEVKIT` | Board Name |
+| --- | --- |
+| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
+| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
+
+The following commands checkout SDK in a new directory:
 ```
 git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
 cd polarfire-soc-buildroot-sdk
 git checkout master
+```
+Before building for the first time, it is required to acquire the contents of the sub-components:
+```
 git submodule update --init --recursive
+```
+Then the Linux image can be built in the `work` sub-directory:
+```
 unset RISCV
 make all DEVKIT=lc-mpfs
 ```
@@ -90,7 +82,7 @@ $ sudo umount /dev/sdX
 ```
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
-### Programming an Image for the First Time with Buildroot
+### Programming an Image for the First Time
 To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
@@ -116,5 +108,11 @@ the RISC-V Bootloader startup code to pass in the device tree blob (see `riscv-p
 the modification.)
 
 ## Booting Linux on a simulator
+Currently spike spike and qemu do not work, due to how the device tree for the expansion board is loaded in bbl.
 
-*** spike and qemu are currently not working due to how the device tree is loaded in bbl ***
+## Additional Reading
+[Buildroot User Manual](https://buildroot.org/docs.html)    
+[PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)    
+[MPFS-DEV-KIT User Guide](doc/MPFS-DEV-KIT_user_guide.md)    
+[LC-MPFS-DEV-KIT User Guide](doc/LC-MPFS-DEV-KIT_user_guide.md) 
+[Kernel Documentation for v4.15](https://www.kernel.org/doc/html/v4.15/)
