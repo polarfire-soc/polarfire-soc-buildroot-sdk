@@ -49,6 +49,9 @@ vmlinux_bin := $(wrkdir)/vmlinux.bin
 uImage := $(wrkdir)/uImage
 uInitramfs := $(wrkdir)/initramfs.ub
 
+kernel-modules-stamp := $(wrkdir)/.modules_stamp
+kernel-modules-install-stamp := $(wrkdir)/.modules_install_stamp
+
 flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
 vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
@@ -174,10 +177,10 @@ ifeq ($(ISA),$(filter rv32%,$(ISA)))
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
 endif
 
-$(initramfs).d: $(buildroot_initramfs_sysroot)
+$(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
 	cd $(wrkdir) && $(linux_srcdir)/usr/gen_initramfs_list.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
 
-$(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux)
+$(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install-stamp)
 	cd $(linux_wrkdir) && \
 		$(linux_srcdir)/usr/gen_initramfs_list.sh \
 		-o $@ -u $(shell id -u) -g $(shell id -g) \
@@ -199,6 +202,25 @@ $(vmlinux_bin): $(vmlinux)
 	
 $(uImage): $(vmlinux_bin)
 	$(uboot_s_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
+
+.PHONY: kernel-modules kernel-modules-install
+$(kernel-modules-stamp): $(linux_srcdir) $(vmlinux)
+	$(MAKE) -C $< O=$(linux_wrkdir) \
+		ARCH=riscv \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		PATH=$(PATH) \
+		modules
+	touch $@
+
+$(kernel-modules-install-stamp): $(linux_srcdir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
+	rm -rf $(buildroot_initramfs_sysroot)/lib/modules/
+	$(MAKE) -C $< O=$(linux_wrkdir) \
+		ARCH=riscv \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		PATH=$(PATH) \
+		modules_install \
+		INSTALL_MOD_PATH=$(buildroot_initramfs_sysroot)
+	touch $@
 	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
@@ -215,7 +237,7 @@ $(device_tree_blob): $(confdir)/dts/$(device_tree)
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
-$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its
+$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
