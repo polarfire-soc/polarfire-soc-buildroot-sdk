@@ -1,8 +1,12 @@
 # Microchip PolarFire SoC Linux Software Development Kit
 This repository builds a command line only RISC-V Linux image for the Microchip PolarFire SoC Linux Software Development Kits.
-It first builds a cross-compilation toolchain which is used to build the Linux image, including the kernel, a Busybox based root file system and the necessary bootloaders for each board.
+It first builds a cross-compilation toolchain which is used to build the Linux image, including the kernel, a Busybox based root file system and the necessary bootloaders for each development kit.
 
-The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md).
+Currently the following two kits are supported:
+- MPFS-DEV-KIT (HiFive Unleashed Expansion Board)
+- LC-MPFS-DEV_KIT
+
+The complete User Guides, containing board and boot instructions, are available in the `doc/` subdirectory, for the [MPFS-DEV-KIT](doc/MPFS-DEV-KIT_user_guide.md) and [LC-MPFS-DEV-KIT](doc/LC-MPFS-DEV-KIT_user_guide.md). 
 
 ## Building Linux Using Buildroot
 This section describes the procedure to build the Linux boot image and loading it into an SD card using
