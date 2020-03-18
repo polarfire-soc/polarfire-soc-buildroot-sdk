@@ -35,7 +35,7 @@ sudo apt install autoconf automake autotools-dev bc bison \
 build-essential curl flex gawk gdisk git gperf libgmp-dev \
 libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
 patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
-device-tree-compiler mtools
+device-tree-compiler mtools libexpat1-dev
 ```
 ### Build and Checkout Code
 The following commands build the system to a work/sub-directory.
