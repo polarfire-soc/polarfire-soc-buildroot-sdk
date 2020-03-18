@@ -5,7 +5,7 @@ The HiFive Unleashed Platform™ is purpose-built to emulate most of the functio
 PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
 This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
 platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
-Design Suite. For more details on the design suite, see section FPGA Design in Libero.        
+Design Suite. For more details on the design suite, see the section [FPGA Design in Libero](#fpga-design-in-libero).        
 
 ### HiFive Unleashed Platform (MPFS-DEV-KIT)   
 The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
@@ -75,10 +75,8 @@ to download the standalone programmer (if needed).
 ### Polarfire SoC Buildroot SDK for the HiFive Unleashed Expansion Board
 The Polarfire SoC Buildroot SDK is based on the SiFive freedom-u-sdk with modifications to the
 device tree to support the HiFive Unleashed Expansion board. It also includes drivers for Microsemi
-PCIe, I C, SPI, MMUART, and GPIO peripherals. See to download the 2 Firmware Versions (see page 7)
-Polarfire SoC Buildroot SDK.
-The build procedure follows that of the freedom-u-sdk as described in [HiFive Unleashed Getting Started
-Guide](https://www.sifive.com/documentation/boards/hifive-unleashed/hifive-unleashed-getting-started-guide/).
+PCIe, I2C, SPI, MMUART, and GPIO peripherals. See the [Firmware Versions section](#firmware-versions) to download the Polarfire SoC Buildroot SDK. The build procedure is described in the [top level README](../README.md).
+
 Before building the Linux image, the following packages must be installed depending on the Linux
 distribution in your machine.
 
@@ -124,7 +122,7 @@ more information on MSEL.
 
 ![DIP Switch Setting](images/HiFive_Unleashed_Board_DIP-Switch_setting.png)
 
-3. Insert an SD-card programmed with the bootloader and Linux. See the Building the Linux Image section of this document for details on creating the content of this SD card.
+3. Insert an SD-card programmed with the bootloader and Linux. See the Linux build instructions in the [top level README](../README.md) for details on creating the content of this SD card.
 4. 
 ![SD Card](images/HiFive_Unleashed_Board_SD_Card.png)
 
@@ -139,9 +137,9 @@ address are 0:3f.
 interfaces: the first contains the Linux console running at 115200 baud and the second provides
 JTAG suitable for use with OpenOCD.
 6. On the HiFive Unleashed Expansion board, update the PolarFire FPGA with the FPGA bitstream
-provided. See section Software Installation and Configuration  for steps to program
+provided. See the [Software Installation and Configuration section](#software-installation-and-configuration) for steps to program
 the FPGA.
-7. The HiFive Unleashed platform is now configured as seen in the FPGA Design in Libero section.
+7. The HiFive Unleashed platform is now configured as seen in the [FPGA Design in Libero section](#fpga-design-in-libero).
 8. Plug-in the HiFive Unleashed board to the HiFive Unleashed Expansion board on the FMC connector.
 Push the power button ON on the HiFive Unleashed board.
 Note: Do not connect the power supply to the HiFive Unleashed board.
@@ -218,7 +216,7 @@ See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/
 |||||Close: 1K||100K pull down connected to TRSTB||
 
 ## Building and Loading the Linux Image
-For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
+For instructions on how to build and load a Linux image, see the Linux build instructions in the [top level README](../README.md).
 
 #### Linux Boot and Login Credentials
 The Linux boot process can be observed by connecting a serial terminal to the USB port on the HiFive

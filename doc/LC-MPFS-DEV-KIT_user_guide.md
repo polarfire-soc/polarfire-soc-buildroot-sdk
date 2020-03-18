@@ -40,14 +40,14 @@ The following instructions guide you to set up the LC-MPFS-DEV-KIT.
 
 ![DIP Switch Setting](images/DIP_Switch.PNG)
 
-3. To prepare the SD-card programmed with the bootloader and Linux images, see Building and Loading the Linux Image.
+3. To prepare the SD-card programmed with the bootloader and Linux images, see the Linux build instructions in the [top level README](../README.md).
 
 4. Insert the SD card into the SD card slot J10.
 5. Connect the micro USB cable from J7 to the Host PC. The USB connector has two serial interfaces: the higher index serial port is used for the Linux serial console and the lower index serial port is used for JTAG debug.
 
 ![USB Connector](images/USB_Connector.PNG)
 
-6. Update the PolarFire FPGA with the FPGA bitstream provided in Software Versions. See Programming the FPGA Using FlashPro for steps to program the FPGA.
+6. Update the PolarFire FPGA with the FPGA bitstream provided in Software Versions. See [Programming the FPGA Using FlashPro](#programming-the-fpga-using-flashpro) for steps to program the FPGA.
 7. The LC-MPFS-DEV-KIT is now configured as seen in Libero Block Diagram.
 8. Ensure the push-button is switched on, connect the power supply to the board, and slide the power switch SW3 as shown in the following figure.
 
@@ -105,7 +105,7 @@ Note: The power supply switch must be switched off while making the jumper conne
 7. Click OK. The required programming file is selected and ready to be programmed in the
 8. The FlashPro Express window appears as shown in the following Confirm that a programmer number appears in the Programmer field. If it does not, confirm the board connections and click Refresh/Rescan Programmers.           
 ![Scanning and Running the Programmer](images/fp-program.png)
-9. Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure. See Running the Demo, page 31 to run the demo.       
+1. Click RUN. When the device is programmed successfully, a RUN PASSED status is displayed as shown in the following figure.        
 ![Scanning and Running the Programmer](images/fp-programmed.png)
 
 #### Linux Environment 
@@ -126,10 +126,10 @@ Note: The power supply switch must be switched off while making the jumper conne
 See the [FlashPro Express User Guide](https://www.microsemi.com/document-portal/doc_download/137627-flashpro-express-user-guide-for-polarfire) for more information.
 
 ## Building and Loading the Linux Image
-For instructions on how to build and load a Linux image, see the Linux build instructions in [top level readme](../README.md).
+For instructions on how to build and load a Linux image, see the Linux build instructions in the [top level readme](../README.md).
 
 ### FPGA Design in Libero
-The Libero project creates a Processor Subsystem in the FPGA fabric for the U540 processor.The Processor Subsystem supports the following features.
+The Libero project creates a Processor Subsystem in the FPGA fabric for the U540 processor. The Processor Subsystem supports the following features.
 - Chiplink interface to communicate with U540SoC
 - SRAM memory of size 64KB
 - Peripheral controllers: SPI, MMUART, I2C and GPIO
