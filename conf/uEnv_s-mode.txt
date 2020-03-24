@@ -1,6 +1,4 @@
 # This is the s-mode U-Boot script for the {,lc-}mpfs development kits.
 
-bootargs=debug console=tty0 console=ttySIF0 rootwait root=/dev/mmcblk0p2 
-
 # this assumes ${fileaddr} is already set!!
 boot3=load mmc 0:1 ${fileaddr} fitImage; bootm ${fileaddr}

@@ -41,6 +41,7 @@ buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
+linux_builddir := $(wrkdir)/linux_build
 linux_defconfig := $(confdir)/$(DEVKIT)_linux_54_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
@@ -73,7 +74,7 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
 fsbl_patchdir := $(patchdir)/fsbl/
-libversion := $(fsbl_srcdir)/lib/version.c
+libversion := $(fsbl_wrkdir)/lib/version.c
 fsbl := $(wrkdir)/fsbl.bin
 
 uboot_s_srcdir := $(srcdir)/u-boot
@@ -94,7 +95,7 @@ openocd := $(openocd_wrkdir)/src/openocd
 all: $(fit) $(flash_image)
 	@echo
 	@echo "Linux defconfig: $(linux_defconfig)"
-	@echo "Device tree: $(device_tree)"
+	@echo "Device tree: $(confdir)/dts/$(device_tree)"
 	@echo
 	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
 	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
@@ -162,19 +163,23 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	tar -xpf $< -C $(buildroot_initramfs_sysroot) --exclude ./dev --exclude ./usr/share/locale
 	touch $@
 
-$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_srcdir)
-	- cd $(linux_srcdir) && git apply $(linux_patchdir)/*.patch;
+$(linux_builddir): $(linux_srcdir)
+	- rm -rf $(linux_builddir)
+	mkdir $(linux_builddir) && cd $(linux_builddir) && git clone $(linux_srcdir) .
+	cd $(linux_builddir) && git apply $(linux_patchdir)/*.patch;
+
+$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir)
 	mkdir -p $(dir $@)
 	cp -p $< $@
-	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
 ifeq (,$(filter rv%c,$(ISA)))
 	sed 's/^.*CONFIG_RISCV_ISA_C.*$$/CONFIG_RISCV_ISA_C=n/' -i $@
-	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
 endif
 ifeq ($(ISA),$(filter rv32%,$(ISA)))
 	sed 's/^.*CONFIG_ARCH_RV32I.*$$/CONFIG_ARCH_RV32I=y/' -i $@
 	sed 's/^.*CONFIG_ARCH_RV64I.*$$/CONFIG_ARCH_RV64I=n/' -i $@
-	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
 endif
 
 $(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
@@ -187,7 +192,7 @@ $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
 
-$(vmlinux): $(linux_srcdir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
+$(vmlinux): $(linux_builddir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -273,17 +278,19 @@ $(qemu): $(qemu_srcdir)
 	touch -c $@
 
 .PHONY: fsbl
-$(libversion):
+$(libversion): $(fsbl_wrkdir)
 	- rm -rf $(libversion)
 	echo "const char *gitid = \"$(shell git describe --always --dirty)\";" > $(libversion)
 	echo "const char *gitdate = \"$(shell git log -n 1 --date=short --format=format:"%ad.%h" HEAD)\";" >> $(libversion)
 	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" >> $(libversion)
 
 fsbl: $(fsbl) 
-$(fsbl): $(fsbl_srcdir) $(device_tree_blob) $(libversion)
-	rm -rf $(fsbl_wrkdir)
-	- cd $(fsbl_srcdir) && git apply $(fsbl_patchdir)/*.patch;
-	rsync $(fsbl_srcdir)/ $(fsbl_wrkdir) -r
+$(fsbl_wrkdir): $(fsbl_srcdir)
+	- rm -rf $(fsbl_wrkdir)
+	mkdir $(fsbl_wrkdir) -p && cd $(fsbl_wrkdir) && git clone $(fsbl_srcdir) .
+	cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
+
+$(fsbl): $(libversion) $(fsbl_wrkdir) $(device_tree_blob)
 	rm -f $(fsbl_wrkdir)/fsbl/ux00_fsbl.dts
 	cp -f $(wrkdir)/riscvpc.dtb $(fsbl_wrkdir)/fsbl/ux00_fsbl.dtb
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
@@ -444,3 +451,16 @@ endif
 	dd if=$(fsbl) of=$(PART3) bs=4096
 	dd if=$(opensbi) of=$(PART4) bs=4096
 	dd if=$(vfat_image) of=$(PART1) bs=4096
+
+# DEB_IMAGE	:= rootfs.tar.gz
+# DEB_URL		:= 
+
+# $(DEB_IMAGE):
+# 	wget $(DEB_URL)$(DEB_IMAGE)
+
+# format-deb-image: $(DEB_IMAGE) format-boot-loader
+# 	/sbin/mke2fs -L ROOTFS -t ext4 $(PART2)
+# 	-mkdir tmp-mnt
+# 	-sudo mount $(PART2) tmp-mnt && cd tmp-mnt && \
+# 		sudo tar -zxf ../$(DEB_IMAGE) -C .
+# 	sudo umount tmp-mnt

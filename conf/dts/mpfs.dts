@@ -57,26 +57,47 @@
 	};
 
 	pcie: pcie@2030000000 {
-		#address-cells = <3>;
-		#size-cells = <2>;
-		#interrupt-cells = <1>;
-		compatible = "microchip,pf-axi-pcie-host-1.0";
+		#address-cells = <0x3>;
+		#interrupt-cells = <0x1>;
+		#size-cells = <0x2>;
+		compatible = "microsemi,ms-pf-axi-pcie-host";
 		device_type = "pci";
 		bus-range = <0x01 0x7f>;
-		interrupt-map = <0 0 0 1 &pcie 1>,
-				<0 0 0 2 &pcie 2>,
-				<0 0 0 3 &pcie 3>,
-				<0 0 0 4 &pcie 4>;
+		interrupt-map = <0 0 0 1 &ms_pcie_intc 0 0 0 0 2 &ms_pcie_intc 1 0 0 0 3 &ms_pcie_intc 2 0 0 0 4 &ms_pcie_intc 3>;
 		interrupt-map-mask = <0 0 0 7>;
 		interrupt-parent = <&plic0>;
 		interrupts = <32>;
-		ranges = <0x3000000 0 0x40000000 0x0 0x40000000 0x0 0x20000000>;
-		reg = <0x20 0x30000000 0x0 0x4000000>,	/* internal registers */
-			<0x20 0x0 0x0 0x100000>;	/* config space access registers */
+		ranges = <0x3000000 0x0 0x40000000 0x0 0x40000000 0x0 0x20000000>;
+		reg = <0x20 0x30000000 0x0 0x4000000 0x20 0x0 0x0 0x100000>;
 		reg-names = "control", "apb";
-		interrupt-controller;
+		ms_pcie_intc: interrupt-controller {
+			#address-cells = <0>;
+			#interrupt-cells = <1>;
+			interrupt-controller;
+		};
 	};
 
+	// pcie: pcie@2030000000 {
+	// 	#address-cells = <3>;
+	// 	#size-cells = <2>;
+	// 	compatible = "microchip,pf-axi-pcie-host-1.0";
+	// 	device_type = "pci";
+	// 	bus-range = <0x01 0x7f>;
+	// 	interrupt-map = <0 0 0 1 &pcie 1>,
+	// 			<0 0 0 2 &pcie 2>,
+	// 			<0 0 0 3 &pcie 3>,
+	// 			<0 0 0 4 &pcie 4>;
+	// 	interrupt-map-mask = <0 0 0 7>;
+	// 	interrupt-parent = <&plic0>;
+	// 	#interrupt-cells = <1>;
+	// 	interrupts = <32>;
+	// 	ranges = <0x3000000 0 0x40000000 0x0 0x40000000 0x0 0x20000000>;
+	// 	reg = <0x20 0x30000000 0x0 0x4000000>,	/* internal registers */
+	// 		<0x20 0x0 0x0 0x100000>;	/* config space access registers */
+	// 	reg-names = "control", "apb";
+	// 	interrupt-controller;
+	// }; 
+	
 	L56: i2c@2000100000 {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -84,7 +105,7 @@
 		reg = <0x20 0x00100000 0x0 0x1000>;
 		interrupt-parent = <&plic0>;
 		interrupts = <32>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		clock-frequency = <400000>;
 	};
 
@@ -105,7 +126,7 @@
 		compatible = "microsemi,ms-pf-mss-can-uio";
 		reg = <0x20 0x00105000 0x0 0x1000>;
 		interrupt-parent = <&plic0>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		interrupts = <32>;
 	};
 
@@ -114,7 +135,7 @@
 		interrupt-parent = <&plic0>;
 		interrupts = <32>;
 		reg = <0x20 0x00107000 0 0x1000>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		spi-max-frequency = <25000000>;
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -127,7 +148,7 @@
 		interrupt-parent = <&plic0>;
 		interrupts = <32>;
 		reg = <0x20 0x00400000 0 0x1000>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		spi-max-frequency = <25000000>;
 		#address-cells = <1>;
 		#size-cells = <0>;

@@ -62,8 +62,8 @@
 		compatible = "microsemi,ms-pf-mss-i2c";
 		reg = <0x20 0x00100000 0x0 0x1000>;
 		interrupt-parent = <&plic0>;
-		interrupts = <35>; // pactron
-		clocks = <&xclk 0>;
+		interrupts = <32>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		clock-frequency = <400000>;
 	};
 
@@ -84,26 +84,21 @@
 		compatible = "microsemi,ms-pf-mss-can-uio";
 		reg = <0x20 0x00105000 0x0 0x1000>;
 		interrupt-parent = <&plic0>;
-		clocks = <&xclk 0>;
 		interrupts = <32>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 	};
 
 	L54: spi@2000107000 {
 		compatible = "microsemi,ms-pf-mss-spi";
 		interrupt-parent = <&plic0>;
-		interrupts = <32>;
+		interrupts = <34>;
 		reg = <0x20 0x00107000 0 0x1000>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		spi-max-frequency = <25000000>;
 		#address-cells = <1>;
 		#size-cells = <0>;
 		num-cs = <8>;
 		status = "okay";
-		spidev1: spidev@0 {
-			compatible = "linux,spidev";
-			spi-max-frequency = <16000000>;
-			reg = <0>;
-		};
 	};
 
 	L58: qspi@2000400000 {
@@ -111,7 +106,7 @@
 		interrupt-parent = <&plic0>;
 		interrupts = <32>;
 		reg = <0x20 0x00400000 0 0x1000>;
-		clocks = <&xclk 0>;
+		clocks = <&prci PRCI_CLK_TLCLK>;
 		spi-max-frequency = <25000000>;
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -136,9 +131,14 @@
 
 	L60: uio_axi_lsram@2030000000 {
 		compatible = "generic-uio";
-		reg = <0x20 0x30000000 0  0x4000 >;
+		reg = <0x20 0x30000000 0 0x80000000 >;
+        status = "okay";
+    };
+	L61: uio_cq@2600000000 {
+		compatible = "generic-uio";
+		reg =    <0x00000026 0x00000000 0x00000000 0x40000000>;
 		status = "okay";
-	};
+	}; 
 };
 
 &uart0 {

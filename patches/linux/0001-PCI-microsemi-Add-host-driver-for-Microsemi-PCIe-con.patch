@@ -16,24 +16,6 @@ Upstream-Status: Inappropriate [not author]
  3 files changed, 773 insertions(+)
  create mode 100644 drivers/pci/controller/pcie-microsemi.c
 
-// diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-// index fe9f9f13ce11..800b0b61dedf 100644
-// --- a/drivers/pci/controller/Kconfig
-// +++ b/drivers/pci/controller/Kconfig
-// @@ -281,5 +281,13 @@ config VMD
-//  	  To compile this driver as a module, choose M here: the
-//  	  module will be called vmd.
-//  
-// +config PCIE_MICROSEMI
-// +	bool "Microsemi AXI PCIe host bridge support"
-// +	depends on PCI_MSI && OF
-// +	help
-// +	  Say 'Y' here if you want kernel to support the Microsemi AXI PCIe
-// +	  Host Bridge driver.
-// +
-// +
-//  source "drivers/pci/controller/dwc/Kconfig"
-//  endmenu
 diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
 index d56a507495c5..c3b76ff221be 100644
 --- a/drivers/pci/controller/Makefile

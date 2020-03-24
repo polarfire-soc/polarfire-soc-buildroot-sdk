@@ -7,3 +7,4 @@ scripts/
 .cache.mk
 /conf/old_configs
 *.orig
+rootfs.tar.gz
