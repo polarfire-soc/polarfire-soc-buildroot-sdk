@@ -73,6 +73,7 @@ qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
 
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
+fsbl_wrkdir_stamp := $(wrkdir)/.fsbl_wrkdir
 fsbl_patchdir := $(patchdir)/fsbl/
 libversion := $(fsbl_wrkdir)/lib/version.c
 fsbl := $(wrkdir)/fsbl.bin
@@ -209,7 +210,7 @@ $(uImage): $(vmlinux_bin)
 	$(uboot_s_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
 
 .PHONY: kernel-modules kernel-modules-install
-$(kernel-modules-stamp): $(linux_srcdir) $(vmlinux)
+$(kernel-modules-stamp): $(linux_builddir) $(vmlinux)
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -217,7 +218,7 @@ $(kernel-modules-stamp): $(linux_srcdir) $(vmlinux)
 		modules
 	touch $@
 
-$(kernel-modules-install-stamp): $(linux_srcdir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
+$(kernel-modules-install-stamp): $(linux_builddir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
 	rm -rf $(buildroot_initramfs_sysroot)/lib/modules/
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
@@ -278,19 +279,20 @@ $(qemu): $(qemu_srcdir)
 	touch -c $@
 
 .PHONY: fsbl
-$(libversion): $(fsbl_wrkdir)
+$(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)
 	echo "const char *gitid = \"$(shell git describe --always --dirty)\";" > $(libversion)
 	echo "const char *gitdate = \"$(shell git log -n 1 --date=short --format=format:"%ad.%h" HEAD)\";" >> $(libversion)
 	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" >> $(libversion)
 
 fsbl: $(fsbl) 
-$(fsbl_wrkdir): $(fsbl_srcdir)
+$(fsbl_wrkdir_stamp): $(fsbl_srcdir)
 	- rm -rf $(fsbl_wrkdir)
 	mkdir $(fsbl_wrkdir) -p && cd $(fsbl_wrkdir) && git clone $(fsbl_srcdir) .
 	cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
+	touch $@
 
-$(fsbl): $(libversion) $(fsbl_wrkdir) $(device_tree_blob)
+$(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
 	rm -f $(fsbl_wrkdir)/fsbl/ux00_fsbl.dts
 	cp -f $(wrkdir)/riscvpc.dtb $(fsbl_wrkdir)/fsbl/ux00_fsbl.dtb
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
