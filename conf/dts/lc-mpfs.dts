@@ -62,7 +62,7 @@
 		compatible = "microsemi,ms-pf-mss-i2c";
 		reg = <0x20 0x00100000 0x0 0x1000>;
 		interrupt-parent = <&plic0>;
-		interrupts = <32>;
+		interrupts = <35>;
 		clocks = <&prci PRCI_CLK_TLCLK>;
 		clock-frequency = <400000>;
 	};
