@@ -166,7 +166,7 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 
 $(linux_builddir): $(linux_srcdir)
 	- rm -rf $(linux_builddir)
-	mkdir $(linux_builddir) && cd $(linux_builddir) && git clone $(linux_srcdir) .
+	mkdir -p $(linux_builddir) && cd $(linux_builddir) && git clone $(linux_srcdir) .
 	cd $(linux_builddir) && git apply $(linux_patchdir)/*.patch;
 
 $(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir)
