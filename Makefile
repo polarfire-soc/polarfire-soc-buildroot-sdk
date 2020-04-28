@@ -42,6 +42,7 @@ linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
 linux_builddir := $(wrkdir)/linux_build
+linux_builddir_stamp := $(wrkdir)/.linux_builddir
 linux_defconfig := $(confdir)/$(DEVKIT)_linux_54_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
@@ -164,12 +165,15 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	tar -xpf $< -C $(buildroot_initramfs_sysroot) --exclude ./dev --exclude ./usr/share/locale
 	touch $@
 
-$(linux_builddir): $(linux_srcdir)
+$(linux_builddir_stamp): $(linux_srcdir) $(linux_patchdir)
 	- rm -rf $(linux_builddir)
-	mkdir -p $(linux_builddir) && cd $(linux_builddir) && git clone $(linux_srcdir) .
-	cd $(linux_builddir) && git apply $(linux_patchdir)/*.patch;
+	mkdir -p $(linux_builddir) && cd $(linux_builddir) && cp $(linux_srcdir)/* . -r
+	for file in $(linux_patchdir)/* ; do \
+			cd $(linux_builddir) && patch -p1 < $${file} ; \
+	done
+	touch $@
 
-$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir)
+$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir_stamp)
 	mkdir -p $(dir $@)
 	cp -p $< $@
 	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
@@ -193,8 +197,8 @@ $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
 
-$(vmlinux): $(linux_builddir) $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
-	$(MAKE) -C $< O=$(linux_wrkdir) \
+$(vmlinux): $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
 		PATH=$(PATH) \
@@ -278,18 +282,18 @@ $(qemu): $(qemu_srcdir)
 	$(MAKE) -C $(qemu_wrkdir) install
 	touch -c $@
 
-.PHONY: fsbl
 $(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)
 	echo "const char *gitid = \"$(shell git describe --always --dirty)\";" > $(libversion)
 	echo "const char *gitdate = \"$(shell git log -n 1 --date=short --format=format:"%ad.%h" HEAD)\";" >> $(libversion)
 	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" >> $(libversion)
 
-fsbl: $(fsbl) 
-$(fsbl_wrkdir_stamp): $(fsbl_srcdir)
+$(fsbl_wrkdir_stamp): $(fsbl_srcdir) $(fsbl_patchdir)
 	- rm -rf $(fsbl_wrkdir)
-	mkdir $(fsbl_wrkdir) -p && cd $(fsbl_wrkdir) && git clone $(fsbl_srcdir) .
-	cd $(fsbl_wrkdir) && git apply $(fsbl_patchdir)/*.patch;
+	mkdir $(fsbl_wrkdir) -p && cd $(fsbl_wrkdir) && cp $(fsbl_srcdir)/* . -r
+	for file in $(fsbl_patchdir)/* ; do \
+			cd $(fsbl_wrkdir) && patch -p1 < $${file} ; \
+	done
 	touch $@
 
 $(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
@@ -330,6 +334,7 @@ u-boot: $(uboot_s)
 flash_image: $(flash_image)
 initrd: $(initramfs)
 opensbi: $(opensbi)
+fsbl: $(fsbl)
 
 .PHONY: clean distclean clean-image clean-linux
 clean:
