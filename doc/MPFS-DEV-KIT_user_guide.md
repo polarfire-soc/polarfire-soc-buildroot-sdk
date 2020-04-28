@@ -23,7 +23,6 @@ enabling PCIe root port functionality.
 - One USB-A to micro USB-B cable
 - One 12 V, AC power adapter and cord
 - One FlashPro4/FlashPro5 programming dongle
-- Two Libero Platinum software licenses of duration one year ($995 value)
 
 SiFive’s HiFive Unleashed development kit is based on the Freedom U540-C000 chip, the first 4+1 multicore RISC-V Linux-capable SoC.
 
