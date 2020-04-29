@@ -247,7 +247,7 @@ $(device_tree_blob): $(confdir)/dts/$(device_tree)
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
-$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
+$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
@@ -460,7 +460,7 @@ endif
 	dd if=$(vfat_image) of=$(PART1) bs=4096
 
 # DEB_IMAGE	:= rootfs.tar.gz
-# DEB_URL		:= 
+# DEB_URL := 
 
 # $(DEB_IMAGE):
 # 	wget $(DEB_URL)$(DEB_IMAGE)
@@ -471,3 +471,6 @@ endif
 # 	-sudo mount $(PART2) tmp-mnt && cd tmp-mnt && \
 # 		sudo tar -zxf ../$(DEB_IMAGE) -C .
 # 	sudo umount tmp-mnt
+
+format-rootfs-image: $(rootfs) format-boot-loader
+	dd if=$(rootfs) of=$(PART2) bs=4096
