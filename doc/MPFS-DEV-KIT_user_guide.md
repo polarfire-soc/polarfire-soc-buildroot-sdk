@@ -4,8 +4,7 @@
 The HiFive Unleashed Platform™ is purpose-built to emulate most of the functionality of the upcoming
 PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
 This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
-platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
-Design Suite. For more details on the design suite, see section FPGA Design in Libero.   
+platform boot Linux.   
 
 ### HiFive Unleashed Platform (MPFS-DEV-KIT)   
 The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
