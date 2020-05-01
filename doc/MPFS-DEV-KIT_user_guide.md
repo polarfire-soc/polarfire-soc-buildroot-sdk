@@ -4,15 +4,12 @@
 The HiFive Unleashed Platform™ is purpose-built to emulate most of the functionality of the upcoming
 PolarFire SoC FPGA, which will be the industry’s first RISC-V based FPGA SoC.       
 This guide describes the MPFS-DEV-KIT, board setup, and installation steps to get the HiFive Unleashed
-platform boot Linux. New IP cores can be ported on the PolarFire FPGA with the Libero SoC PolarFire
-Design Suite. For more details on the design suite, see the section [FPGA Design in Libero](#fpga-design-in-libero).        
+platform boot Linux.         
 
 ### HiFive Unleashed Platform (MPFS-DEV-KIT)   
 The HiFive Unleashed Platform consists of the SiFive’s HiFive Unleashed kit and Microsemi’s HiFive
 Unleashed Expansion kit with their respective accessories. Microsemi's HiFive Unleashed Expansion
-board enables users to create a Linux system running on a RISC-V core complex, with a large FPGA fabric
-accessible through the memory map. The expansion board is shipped with a pre-configured bitstream
-enabling PCIe root port functionality.          
+board enables users to create a Linux system running on a RISC-V core complex, with a large FPGA fabric accessible through the memory map. The expansion board is shipped with a pre-configured bitstream enabling PCIe root port functionality.          
 
 ## HiFive Unleashed Kit
 - One SiFive's HiFive Unleashed board
@@ -23,7 +20,6 @@ enabling PCIe root port functionality.
 - One USB-A to micro USB-B cable
 - One 12 V, AC power adapter and cord
 - One FlashPro4/FlashPro5 programming dongle
-- Two Libero Platinum software licenses of duration one year ($995 value)
 
 SiFive’s HiFive Unleashed development kit is based on the Freedom U540-C000 chip, the first 4+1 multicore RISC-V Linux-capable SoC.
 
@@ -56,14 +52,14 @@ The HiFive Unleashed Expansion board contains the following items:
 ![HiFive Unleashed Expansion Board](images/HUEB.png)
 
 ## System Setup and Prerequisites
-Download and install the following development tools in the PC in order to design, synthesize, simulate,
+Download and install the following development tools in the PC in order to design, simulate,
 and debug on the HiFive Unleashed Platform (MPFS-DEV-KIT).
 
 ### Programming FlashPro and FlashPro Express
 The Microsemi FlashPro programming system is a combination of Microsemi's FlashPro software and a
 hardware programmer. Together, they provide in-system programming (ISP) for all FPGA families. The
 required programming and debug software is integrated with the Libero SoC PolarFire software. This
-software is also available as a standalone programmer for production programming. Visit [Microsemi's
+software is available as a standalone programmer for production programming. Visit [Microsemi's
 FlashPro page](https://www.microsemi.com/product-directory/programming/4977-flashpro#software) 
 to download the standalone programmer (if needed).
 
@@ -101,12 +97,13 @@ openssl-devel wget vim-common
 ```
 
 ### Firmware Versions
-The following table contains links to the Libero Project, .stp file, .job file, and the Linux SDK for each
+The following table contains links to the .stp file, .job file, schematic and the Linux SDK for each
 release.
 
 | Revision | .stp | .job | MPFS-Linux-SDK | Schematic |
 | --- | --- | --- | --- | --- |
 | Initial release | [.stp](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244810) | [.job](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244809) | [Polarfire SoC Buildroot SDK](https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk) | [Schematic](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244811) |
+| Second release | [.stp Second Release](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244810) | [.job Second Release](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244809) | [Polarfire SoC Buildroot SDK](https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk) | [Schematic](http://www.microsemi.com/index.php?option=com_docman&task=doc_download&gid=1244811) |
 
 
 ## Board Setup
@@ -226,18 +223,7 @@ The root password is “microchip”. The console should look similar to the fol
 ![Console Image for Boot](images/Console_Image_for_Boot.png)
 
 ## FPGA Design in Libero
-Libero SoC Design suite provides a comprehensive design flow including traditional FPGA design flow,
-embedded design flow, and graphical configurators. The suite provides a comprehensive development
-environment to build embedded solutions using hard core and soft core processors.            
-The FPGA design has provision to interface the PolarFire FPGA (in the HiFive Unleashed Expansion
-board) with the HiFive Unleashed board using the ChipLink interface. The FPGA fabric is instantiated
-with the ChipLink to AXI bridge, while peripherals (GPIO, MMUART, SPI, and I2C) are connected to it 
-using the CoreAXIInterconnect, AXI to AHB, AHBLite, and CoreAPB IPs. The PolarFire PCIe AXI Slave is
-connected to the AXI2CL2AXI bridge through CoreAXIInterconnect. One AXI port is exposed and marked
-as unused and can connect to user logic.            
-The ChipLink interface uses 125 MHz clock and AXI interface uses 75 MHz clock.           
-The high-level block diagram for the Libero project implemented on the PolarFire FPGA is as seen in the
-following figure.         
+The high-level block diagram for the Libero project implemented on the PolarFire FPGA is as seen in the following figure.         
 
 ![Libero Project Block Diagram](images/Libero_Project_Block_Diagram.png)
 
