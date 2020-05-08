@@ -95,7 +95,7 @@ At this point, your system should be bootable using your new SD card. You can re
 and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
 
 ### Rebuilding the Linux Kernel
-To rebuild your kernel or to change the machine being targeted, type the following from the top level of mpfs-linux-sdk:
+To rebuild your kernel or to change the machine being targeted, type the following from the top level of polarfire-soc-buildroot-sdk:
 ```
 $ make clean
 $ make DEVKIT=<devkit>
