@@ -30,13 +30,23 @@ Along with the purchase of the LC-MPFS-DEV-KIT, customers are eligible for one p
 The latest revisions of the Libero project and bitstream files are available [here](http://soc.microsemi.com/download/rsc/?f=Libero_Project_LC-MPFS-DEV-KIT).
 
 ## Board Setup
-The following instructions guide you to set up the LC-MPFS-DEV-KIT.
+The following instructions guide you through setting up the LC-MPFS-DEV-KIT.
 
 1. Switch off the power button on the LC-MPFS-DEV-KIT.
 
 ![Power Button](images/Power_On.PNG)
 
 2. Set the pins in the DIP switch to select MSEL of 1011 (MSEL2 = 0).
+```
+      USB   LED    Mode Select                  Ethernet
+ +===|___|==****==+-+-+-+-+-+-+=================|******|====
+ |                | | | | |X| |                 |      |   
+ |                | | | | | | |                 |      |   
+ |        HFXSEL->|X|X|X|X| |X|                 |______|   
+ |                +-+-+-+-+-+-+                            
+ |        RTCSEL-----/ 0 1 2 3 <--MSEL                     
+ |                                                         
+``` 
 
 ![DIP Switch Setting](images/DIP_Switch.PNG)
 
@@ -58,19 +68,7 @@ The following instructions guide you to set up the LC-MPFS-DEV-KIT.
 
 ![Linux Booting Messages on the Terminal](images/Linux_Booting.PNG)
 
-Enter the following commands on the serial terminal.
-```
-mmc_spi 1 20000000 0
-mmc read 0x80000000 0x1000 0x10000
-```
-
-![Serial Terminal](images/Serial_Command.PNG)
-
-12. Now, boot linux with the the following command:
-```
-go 0x80000000
-```
-13. You should see linux boot. Enter the following login credentials.
+11. You should see linux boot. Enter the following login credentials.
 ```
 Buildroot login: root
 
@@ -80,7 +78,7 @@ The console should now look as shown in the following figure.
 
 ![Linux Booting Credentials](images/Booting_Credentials.PNG)
 
-14. You should now see an LED flashing alongside PWM0_0 on the evaluation board.
+12. You should now see an LED flashing alongside PWM0_0 on the evaluation board.
 
 ![LED Flash On](images/LED.PNG)
 
@@ -88,7 +86,8 @@ The console should now look as shown in the following figure.
 The following sections explain the step-by-step procedure to download the FPGA bitstream onto the PolarFire FPGA. 
 ### Programming the FPGA using FlashPro
 #### Windows Environment 
-To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps. The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
+To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps.       
+The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
 Note: The power supply switch must be switched off while making the jumper connections.
 
 1. Connect the power supply cable to the J3 connector on the board.
