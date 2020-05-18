@@ -1,0 +1,58 @@
+/dts-v1/;
+
+/ {
+        description = "U-Boot fitImage for OpenEmbedded/5.4.x+gitAUTOINC+2d636a1263/freedom-u540";
+        #address-cells = <1>;
+
+        images {
+                kernel@1 {
+                        description = "Linux kernel";
+                        data = /incbin/("../work/vmlinux.bin");
+                        type = "kernel";
+                        arch = "riscv";
+                        os = "linux";
+                        compression = "none";
+                        load = <0x80200000>;
+                        entry = <0x80200000>;
+                        hash@1 {
+                                algo = "sha256";
+                        };
+                };
+                fdt@riscvpc.dtb {
+                        description = "Flattened Device Tree blob";
+                        data = /incbin/("../work/riscvpc.dtb");
+                        type = "flat_dt";
+                        arch = "riscv";
+                        compression = "none";
+                        load = <0x82200000>;
+                        hash@1 {
+                                algo = "sha256";
+                        };
+                };
+                ramdisk@initramfs.cpio.gz {
+                        description = "buildroot initramfs";
+                        data = /incbin/("../work/initramfs.cpio.gz");
+                        type = "ramdisk";
+                        arch = "riscv";
+                        os = "linux";
+                        load = <0x84000000>;
+                        compression = "gzip";
+                        hash-1 {
+                                algo = "sha256";
+                        };
+                };
+	};
+
+        configurations {
+                default = "conf@riscvpc.dtb";
+                conf@riscvpc.dtb {
+			description = "1 Linux kernel, FDT blob";
+			kernel = "kernel@1";
+			fdt = "fdt@riscvpc.dtb";
+                        ramdisk = "ramdisk@initramfs.cpio.gz";
+                        hash@1 {
+                                algo = "sha256";
+                        };
+                };
+	};
+};

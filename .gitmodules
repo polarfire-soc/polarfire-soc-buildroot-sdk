@@ -1,12 +1,9 @@
 [submodule "linux"]
 	path = linux
-	url = https://github.com/Microsemi-SoC-IP/mpfs-riscv-linux.git
+	url = https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git  
 [submodule "buildroot"]
 	path = buildroot
-	url = https://github.com/Microsemi-SoC-IP/mpfs-buildroot.git
-[submodule "riscv-pk"]
-	path = riscv-pk
-	url = https://github.com/Microsemi-SoC-IP/mpfs-riscv-pk.git
+	url = https://github.com/buildroot/buildroot.git
 [submodule "riscv-gnu-toolchain"]
 	path = riscv-gnu-toolchain
 	url = https://github.com/riscv/riscv-gnu-toolchain.git
@@ -18,7 +15,16 @@
 	url = https://github.com/riscv/riscv-fesvr.git
 [submodule "riscv-qemu"]
 	path = riscv-qemu
-	url = git://github.com/riscv/riscv-qemu.git
-[submodule "HiFive_U-Boot"]
-	path = HiFive_U-Boot
-	url = https://github.com/Microsemi-SoC-IP/HiFive_U-Boot.git
+	url = https://github.com/sifive/riscv-qemu.git
+[submodule "opensbi"]
+	path = opensbi
+	url = https://github.com/riscv/opensbi.git
+[submodule "u-boot"]
+	path = u-boot
+	url = https://github.com/u-boot/u-boot.git
+[submodule "riscv-openocd"]
+	path = riscv-openocd
+	url = https://github.com/riscv/riscv-openocd.git
+[submodule "fsbl"]
+	path = fsbl
+	url = https://github.com/sifive/freedom-u540-c000-bootloader.git

@@ -1,3 +1,10 @@
 linux-*.tar.xz
 work/
 toolchain
+arch/
+include/
+scripts/
+.cache.mk
+/conf/old_configs
+*.orig
+rootfs.tar.gz
