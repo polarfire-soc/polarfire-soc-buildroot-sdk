@@ -540,4 +540,7 @@ endif
 # 	sudo umount tmp-mnt
 
 format-rootfs-image: $(rootfs) format-boot-loader
+ifeq ($(DEVKIT),icicle-kit-es)	
+else 
 	dd if=$(rootfs) of=$(PART2) bs=4096
+endif
