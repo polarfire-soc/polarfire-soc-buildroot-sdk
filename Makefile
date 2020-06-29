@@ -1,7 +1,6 @@
 ISA ?= rv64imafdc
 ABI ?= lp64d
 
-
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
 patchdir := $(CURDIR)/patches
@@ -10,8 +9,18 @@ wrkdir := $(CURDIR)/work
 
 # target mpfs by default
 DEVKIT ?= mpfs
-device_tree := $(confdir)/$(DEVKIT).dts
 device_tree_blob := $(wrkdir)/riscvpc.dtb
+
+ifeq "$(DEVKIT)" "icicle-kit-es"
+HSS_SUPPORT ?= y
+HSS_TARGET ?= icicle-kit-es
+else ifeq "$(DEVKIT)" "icicle-kit-es-sd"
+HSS_SUPPORT ?= y
+HSS_TARGET ?= icicle-kit-es
+else
+FSBL_SUPPORT ?= y
+OSBI_SUPPORT ?= y
+endif
 
 RISCV ?= $(CURDIR)/toolchain
 PATH := $(RISCV)/bin:$(PATH)
@@ -19,14 +28,11 @@ GITID := $(shell git describe --dirty --always)
 
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
+bm_toolchain_wrkdir := $(wrkdir)/bm_riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
 target := riscv64-unknown-linux-gnu
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
 target_gdb := $(CROSS_COMPILE)gdb
-
-DEVKIT ?= mpfs
-device_tree := $(DEVKIT).dts
-device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 buildroot_srcdir := $(srcdir)/buildroot
 buildroot_initramfs_wrkdir := $(wrkdir)/buildroot_initramfs
@@ -43,7 +49,7 @@ linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
 linux_builddir := $(wrkdir)/linux_build
 linux_builddir_stamp := $(wrkdir)/.linux_builddir
-linux_defconfig := $(confdir)/$(DEVKIT)_linux_54_defconfig
+linux_defconfig := $(confdir)/$(DEVKIT)/linux_56_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
@@ -58,7 +64,7 @@ flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
 vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
-fit := $(wrkdir)/image-$(GITID).fit
+fit := $(wrkdir)/fitImage.fit
 
 fesvr_srcdir := $(srcdir)/riscv-fesvr
 fesvr_wrkdir := $(wrkdir)/riscv-fesvr
@@ -81,8 +87,15 @@ fsbl := $(wrkdir)/fsbl.bin
 
 uboot_s_srcdir := $(srcdir)/u-boot
 uboot_s_wrkdir := $(wrkdir)/u-boot-smode
+
+# TODO remove below when osbi supports memory reservation
+uboot_s_builddir := $(wrkdir)/u-boot-smode-build 
+uboot_s_builddir_stamp := $(wrkdir)/.uboot_s_builddir
+uboot_s_patchdir := $(patchdir)/u-boot/
+# TODO remove above when osbi supports memory reservation
+
 uboot_s := $(wrkdir)/u-boot-s.bin
-uboot_s_cfg := $(confdir)/smode_defconfig
+uboot_s_cfg := $(confdir)/$(DEVKIT)/smode_defconfig
 
 opensbi_srcdir := $(srcdir)/opensbi
 opensbi_wrkdir := $(wrkdir)/opensbi
@@ -92,12 +105,29 @@ openocd_srcdir := $(srcdir)/riscv-openocd
 openocd_wrkdir := $(wrkdir)/riscv-openocd
 openocd := $(openocd_wrkdir)/src/openocd
 
+hss_srcdir := $(srcdir)/hart-software-services
+hss_defconfig := $(confdir)/hss_defconfig
+hss_wrkdir := $(wrkdir)/hart-software-services
+hss := $(hss_wrkdir)/hss.bin
+hss_config := $(hss_wrkdir)/config.h
+hss_uboot_payload_bin := $(hss_wrkdir)/payload.bin
+hss_uboot_payload_o := $(hss_wrkdir)/payload.o
 
-.PHONY: all
-all: $(fit) $(flash_image)
-	@echo
-	@echo "Linux defconfig: $(linux_defconfig)"
-	@echo "Device tree: $(confdir)/dts/$(device_tree)"
+xml_config := $(confdir)/$(DEVKIT)/config.xml 
+config_generator_srcdir := $(srcdir)/hardware-config-generator
+xml_hw_config := $(config_generator_srcdir)/hardware
+hss_hw_config := $(hss_wrkdir)/boards/$(DEVKIT)/config/hardware
+hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
+hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
+
+emmc_image=$(wrkdir)/emmc.img
+emmc_image_mnt_point=/mnt
+
+bootloaders-$(HSS_SUPPORT) += $(hss)
+bootloaders-$(FSBL_SUPPORT) += $(fsbl)
+bootloaders-$(OSBI_SUPPORT) += $(opensbi)
+
+all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo
 	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
 	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
@@ -168,7 +198,7 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 $(linux_builddir_stamp): $(linux_srcdir) $(linux_patchdir)
 	- rm -rf $(linux_builddir)
 	mkdir -p $(linux_builddir) && cd $(linux_builddir) && cp $(linux_srcdir)/* . -r
-	for file in $(linux_patchdir)/* ; do \
+	for file in $(linux_patchdir)/$(DEVKIT)/* ; do \
 			cd $(linux_builddir) && patch -p1 < $${file} ; \
 	done
 	touch $@
@@ -188,11 +218,11 @@ ifeq ($(ISA),$(filter rv32%,$(ISA)))
 endif
 
 $(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
-	cd $(wrkdir) && $(linux_srcdir)/usr/gen_initramfs_list.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
+	cd $(wrkdir) && $(linux_builddir)/usr/gen_initramfs.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
 
 $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install-stamp)
 	cd $(linux_wrkdir) && \
-		$(linux_srcdir)/usr/gen_initramfs_list.sh \
+		$(linux_builddir)/usr/gen_initramfs.sh \
 		-o $@ -u $(shell id -u) -g $(shell id -g) \
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
@@ -238,16 +268,23 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
-$(device_tree_blob): $(confdir)/dts/$(device_tree)
+$(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
+ifeq ($(DEVKIT),icicle-kit-es)
+	dtc -I dts $(confdir)/$(DEVKIT)/$(DEVKIT).dts -O dtb -o $(device_tree_blob)
+else ifeq ($(DEVKIT),icicle-kit-es-sd)
+	dtc -I dts $(confdir)/$(DEVKIT)/$(DEVKIT).dts -O dtb -o $(device_tree_blob)
+else
 	rm -rf $(wrkdir)/dts
 	mkdir $(wrkdir)/dts
 	cp $(confdir)/dts/* $(wrkdir)/dts
-	(cat $(wrkdir)/dts/$(device_tree); ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
+	cp $< $(wrkdir)/dts
+	(cat $(wrkdir)/dts/$(DEVKIT).dts; ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
 	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
+endif
 
-$(fit): $(opensbi) $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
+$(fit): $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
@@ -302,17 +339,29 @@ $(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
-$(uboot_s): $(uboot_s_srcdir) $(CROSS_COMPILE)gcc
-	rm -rf $(uboot_s_wrkdir)
+$(uboot_s_builddir_stamp): $(uboot_s_srcdir) $(uboot_s_patchdir)
+	- rm -rf $(uboot_s_builddir)
+	mkdir -p $(uboot_s_builddir) && cd $(uboot_s_builddir) && cp $(uboot_s_srcdir)/* . -r
+ifeq ($(DEVKIT),icicle-kit-es)	
+	for file in $(uboot_s_patchdir)/* ; do \
+			cd $(uboot_s_builddir) && patch -p1 < $${file} ; \
+	done
+else ifeq ($(DEVKIT),icicle-kit-es-sd)	
+	for file in $(uboot_s_patchdir)/* ; do \
+			cd $(uboot_s_builddir) && patch -p1 < $${file} ; \
+	done
+endif
+	touch $@
+
+$(uboot_s): $(uboot_s_builddir_stamp) $(CROSS_COMPILE)gcc
+	- rm -rf $(uboot_s_wrkdir)
 	mkdir -p $(uboot_s_wrkdir)
-	mkdir -p $(dir $@)
-	# cp $(confdir)/uboot-smode-citest_defconfig $(uboot_s_wrkdir)/.config
 	cp  $(uboot_s_cfg) $(uboot_s_wrkdir)/.config
-	$(MAKE) -C $(uboot_s_srcdir) O=$(uboot_s_wrkdir) ARCH=riscv olddefconfig
-	$(MAKE) -C $(uboot_s_srcdir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE)
 	cp -v $(uboot_s_wrkdir)/u-boot.bin $(uboot_s)
 
-$(opensbi): $(uboot) $(uboot_s) $(CROSS_COMPILE)gcc 
+$(opensbi): $(uboot_s) $(CROSS_COMPILE)gcc 
 	rm -rf $(opensbi_wrkdir)
 	mkdir -p $(opensbi_wrkdir)
 	mkdir -p $(dir $@)
@@ -325,9 +374,35 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot
+$(hss_wrkdir_stamp): $(hss_srcdir)
+	rm -rf $(hss_wrkdir) $(hss_wrkdir_stamp) $(hss_hw_config_stamp)
+	mkdir -p $(hss_wrkdir)
+	cp -r $(hss_srcdir)/* $(hss_wrkdir)
+	touch $@
+
+$(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
+	# cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config)
+	# cp $(xml_hw_config) $(hss_wrkdir)/boards/$(HSS_TARGET)/config -r
+	touch $@
+
+$(hss_uboot_payload_bin): $(hss_wrkdir_stamp) $(uboot_s)
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir)/tools/bin2chunks
+	$(hss_wrkdir)/tools/bin2chunks/bin2chunks 0x80200000 0x80200000 0x80200000 0x80200000 32768 $(hss_uboot_payload_bin) 1 1 $(uboot_s_wrkdir)/u-boot.bin 0x80200000
+
+$(hss_uboot_payload_o): $(hss_uboot_payload_bin)
+	cd $(hss_wrkdir) && $(RISCV)/bin/riscv64-unknown-linux-gnu-ld -r -b binary payload.bin -o payload.o
+
+$(hss_config): $(hss_wrkdir_stamp)
+	cp $(confdir)/$(DEVKIT)/hss_def_config $(hss_wrkdir)/.config
+	cp $(hss_wrkdir)/boards/$(HSS_TARGET)/hss-envm.ld $(hss_wrkdir)/boards/$(HSS_TARGET)/hss.ld
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
+
+$(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE)
+
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot hss bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
-vmlinux: $(vmlinux)
+vmlinux: $(vmlinux_bin)
 fit: $(fit)
 initrd: $(initramfs)
 u-boot: $(uboot_s)
@@ -335,6 +410,8 @@ flash_image: $(flash_image)
 initrd: $(initramfs)
 opensbi: $(opensbi)
 fsbl: $(fsbl)
+hss: $(hss)
+bootloaders: $(bootloaders-y)
 
 .PHONY: clean distclean
 clean:
@@ -385,38 +462,34 @@ UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 
 # partition addreses
 VFAT_START=2048
-VFAT_END=65502
-VFAT_SIZE=63454
+VFAT_END=95502
+VFAT_SIZE=83454
 FSBL_START=1024
 FSBL_END=2047
 FSBL_SIZE=1023
 UENV_START=100
 UENV_END=1023
 RESERVED_SIZE=2000
-OSBI_START=65536
-OSBI_END=95536
+OSBI_START=95536
+OSBI_END=125536
 
-$(vfat_image): $(fit) $(fsbl)
+$(vfat_image): $(fit)
 	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
 		echo "FSBL is too large for partition!!\nReduce fsbl or increase partition size"; \
 		rm $(flash_image); exit 1; fi
 	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
 	/sbin/mkfs.vfat $(vfat_image)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/uEnv_s-mode.txt ::uEnv.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/$(DEVKIT)/uEnv_s-mode.txt ::uEnv.txt
 
-$(flash_image): $(fit) $(vfat_image) $(fsbl)
-	dd if=/dev/zero of=$(flash_image) bs=1M count=32
-	/sbin/sgdisk --clear  \
-		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
-		--new=3:$(FSBL_START):$(FSBL_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
-		--new=4:$(UENV_START):$(UENV_END)   --change-name=4:uboot-env	--typecode=4:$(UBOOTENV) \
-		$(flash_image)
-	dd conv=notrunc if=$(vfat_image) of=$(flash_image) bs=512 seek=$(VFAT_START)
-	dd conv=notrunc if=$(fsbl) of=$(flash_image) bs=512 seek=$(FSBL_START) count=$(FSBL_SIZE)
+.PHONY: format-icicle-image
+format-icicle-image: $(hss_uboot_payload_bin)
+	$(confdir)/create-icicle-img.sh $(emmc_image) $(fit) $(confdir)/$(DEVKIT)/uEnv_s-mode.txt $(hss_uboot_payload_bin) $(emmc_image_mnt_point)
+	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
+	dd if=$(emmc_image) of=$(DISK)
 
 .PHONY: format-boot-loader
-format-boot-loader: $(fit) $(vfat_image) $(fsbl)
+format-boot-loader: $(fit) $(vfat_image) $(bootloaders-y)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
@@ -424,8 +497,8 @@ format-boot-loader: $(fit) $(vfat_image) $(fsbl)
 	/sbin/sgdisk --clear  \
 		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
 		--new=2:264192:$(ROOT_SIZE) --change-name=2:root	--typecode=2:$(LINUX) \
-		--new=3:$(FSBL_START):$(FSBL_END)   --change-name=3:fsbl	--typecode=3:$(FSBL) \
-		--new=4:$(OSBI_START):$(OSBI_END)  --change-name=4:osbi	--typecode=4:$(BBL) \
+		--new=3:$(OSBI_START):$(OSBI_END)  --change-name=3:osbi	--typecode=3:$(BBL) \
+		--new=4:$(FSBL_START):$(FSBL_END)   --change-name=4:fsbl	--typecode=4:$(FSBL) \
 		$(DISK)
 	-/sbin/partprobe
 	@sleep 1
@@ -448,8 +521,9 @@ else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
-	dd if=$(fsbl) of=$(PART3) bs=4096
-	dd if=$(opensbi) of=$(PART4) bs=4096
+
+	dd if=$(fsbl) of=$(PART4) bs=4096
+	dd if=$(opensbi) of=$(PART3) bs=4096
 	dd if=$(vfat_image) of=$(PART1) bs=4096
 
 # DEB_IMAGE	:= rootfs.tar.gz

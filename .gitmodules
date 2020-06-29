@@ -28,3 +28,9 @@
 [submodule "fsbl"]
 	path = fsbl
 	url = https://github.com/sifive/freedom-u540-c000-bootloader.git
+[submodule "hart-software-services"]
+	path = hart-software-services
+	url = https://github.com/polarfire-soc/hart-software-services.git
+[submodule "hardware-config-generator"]
+	path = hardware-config-generator
+	url = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/polarfire-soc-configuration-generator.git

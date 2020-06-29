@@ -1,7 +1,7 @@
 /dts-v1/;
 
 / {
-        description = "U-Boot fitImage for OpenEmbedded/5.6.x+gitAUTOINC+c4bbda2100/icicle-kit-es";
+        description = "U-Boot fitImage for OpenEmbedded/5.4.x+gitAUTOINC+2d636a1263/freedom-u540";
         #address-cells = <1>;
 
         images {
@@ -17,7 +17,18 @@
                         hash@1 {
                                 algo = "sha256";
                         };
-                };              
+                };
+                fdt@riscvpc.dtb {
+                        description = "Flattened Device Tree blob";
+                        data = /incbin/("../work/riscvpc.dtb");
+                        type = "flat_dt";
+                        arch = "riscv";
+                        compression = "none";
+                        load = <0x82200000>;
+                        hash@1 {
+                                algo = "sha256";
+                        };
+                };
                 ramdisk@initramfs.cpio.gz {
                         description = "buildroot initramfs";
                         data = /incbin/("../work/initramfs.cpio.gz");
@@ -29,28 +40,15 @@
                                 algo = "sha256";
                         };
                 };
-                fdt@microchip_icicle-kit-es-a000-microchip.dtb {
-                        description = "Flattened Device Tree blob";
-                        data = /incbin/("../work/riscvpc.dtb");
-                        type = "flat_dt";
-                        arch = "riscv";
-                        compression = "none";
-                        load = <0x82200000>;
-                        hash@1 {
-                                algo = "sha256";
-                        };
-                };
 	};
 
         configurations {
-                default = "conf@microchip_icicle-kit-es-a000-microchip.dtb";
-                conf@microchip_icicle-kit-es-a000-microchip.dtb {
+                default = "conf@riscvpc.dtb";
+                conf@riscvpc.dtb {
 			description = "1 Linux kernel, FDT blob";
 			kernel = "kernel@1";
-            ramdisk = "ramdisk@initramfs.cpio.gz";
-			fdt = "fdt@microchip_icicle-kit-es-a000-microchip.dtb";
-			
-			
+			fdt = "fdt@riscvpc.dtb";
+                        ramdisk = "ramdisk@initramfs.cpio.gz";
                         hash@1 {
                                 algo = "sha256";
                         };
