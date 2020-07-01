@@ -57,7 +57,7 @@ The following instructions guide you through setting up the LC-MPFS-DEV-KIT.
 
 ![USB Connector](images/USB_Connector.PNG)
 
-6. Update the PolarFire FPGA with the FPGA bitstream provided in Software Versions. See [Programming the FPGA Using FlashPro](#programming-the-fpga-using-flashpro) for steps to program the FPGA.
+6. Update the PolarFire FPGA with the FPGA bitstream provided in [Solution Versions](#solution-versions). See [Programming the FPGA Using FlashPro](#programming-the-fpga-using-flashpro) for steps to program the FPGA.
 7. The LC-MPFS-DEV-KIT is now configured as seen in Libero Block Diagram.
 8. Ensure the push-button is switched on, connect the power supply to the board, and slide the power switch SW3 as shown in the following figure.
 
@@ -87,7 +87,7 @@ The following sections explain the step-by-step procedure to download the FPGA b
 ### Programming the FPGA using FlashPro
 #### Windows Environment 
 To program the PolarFire SoC device with the .job programming file (using FlashPro in Windows environment), perform the following steps.       
-The link to the .job file is given in Software Versions. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
+The link to the .job file is given in [Solution Versions](#solution-versions). Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
 Note: The power supply switch must be switched off while making the jumper connections.
 
 1. Connect the power supply cable to the J3 connector on the board.
@@ -109,7 +109,7 @@ Note: The power supply switch must be switched off while making the jumper conne
 
 #### Linux Environment 
 
-To program the PolarFire SoC device with the .job programming file (using FlashPro5 programmer in Linux environment), perform the following steps. The link to the .job file can be found in Software Versions.
+To program the PolarFire SoC device with the .job programming file (using FlashPro5 programmer in Linux environment), perform the following steps. The link to the .job file can be found in [Solution Versions](#solution-versions).
 
 1. Ensure that the jumpers J13, J21, J28, and J31 are plugged in.
 Note: The power supply switch must be switched off while making the jumper connections.

@@ -143,7 +143,7 @@ The following steps explain the procedure to download the FPGA bitstream onto th
 ### Programming the FPGA Using FlashPro
 #### Windows Environment
 To program the PolarFire device with the .stp programming file (using FlashPro in Windows
-environment), perform the following steps. The link to the .stp file is given in Firmware Versions.
+environment), perform the following steps. The link to the .stp file is given in [Firmware Versions](#firmware-versions).
 1. Ensure that the jumper settings on the board are the same as those listed in Jumper Settings.
 Note: The power supply switch must be switched off while making the jumper connections.
 2. Connect the power supply cable to the J3 connector on the board.
@@ -163,7 +163,7 @@ See the [FlashPro User Guide](https://www.microsemi.com/document-portal/doc_down
 
 #### Linux Environment
 To program the PolarFire device with the .job programming file (using FlashPro5 programmer in Linux
-environment), perform the following steps. The link to the .job file can be found in Firmware Versions.
+environment), perform the following steps. The link to the .job file can be found in [Firmware Versions](#firmware-versions).
 1. Ensure that the jumper settings on the board are the same as those listed in Jumper Settings.
 Note: The power supply switch must be switched off while making the jumper connections.
 2. Connect the power supply cable to the J3 connector on the board.

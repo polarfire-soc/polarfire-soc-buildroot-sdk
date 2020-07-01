@@ -23,16 +23,6 @@ Ubuntu 18.04 x86_64 host - Working.
 
 Ubuntu 16.04 x86_64 host - Working.
 
-### Supported Build Targets
-The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
-The following table details the available targets:
-
-| `DEVKIT` | Board Name |
-| --- | --- |
-| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
-| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
-
-
 ### Install Prerequisite Packages
 Before starting, use the `apt` command to install prerequisite packages:
 ```
@@ -131,4 +121,4 @@ The configuration options used for the Linux kernel are in `conf/<devkit>_linux_
 [PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)    
 [MPFS-DEV-KIT User Guide](doc/MPFS-DEV-KIT_user_guide.md)    
 [LC-MPFS-DEV-KIT User Guide](doc/LC-MPFS-DEV-KIT_user_guide.md) 
-[Kernel Documentation for v4.15](https://www.kernel.org/doc/html/v4.15/)
+[Kernel Documentation for Linux](https://www.kernel.org/doc/html/v5.4/)
