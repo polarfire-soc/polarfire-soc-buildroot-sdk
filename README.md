@@ -4,7 +4,7 @@ It first will build the GNU cross-compilation toolchain for RISC-V, which will b
 
 Currently the following development platforms are supported:
 - [MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/mpfs-dev-kit/MPFS-DEV-KIT_user_guide.md) (HiFive Unleashed Expansion Board)
-- [LC-MPFS-DEV-KIT]((https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
+- [LC-MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
 - Icicle Kit (Engineering Sample)
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the `doc/` subdirectory. 
@@ -40,15 +40,17 @@ pip install kconfiglib
 
 ### Checkout Code & Build
 
-##### Supported Build Targets
-The `DEVKIT` option can be used to set the target board for which Linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
+#### Supported Build Targets
+The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
 The following table details the available targets:
 
 | `DEVKIT` | Board Name |
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
 | `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
+| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 
+#### Build instructions
 The following commands checkout SDK in a new directory:
 ```
 git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
@@ -57,6 +59,7 @@ git checkout master
 ```
 Before building for the first time, it is required to acquire the contents of the sub-components:
 ```
+git submodule sync
 git submodule update --init --recursive
 ```
 Then the Linux image can be built in the `work` sub-directory:
