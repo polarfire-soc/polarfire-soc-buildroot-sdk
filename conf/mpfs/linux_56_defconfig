@@ -105,7 +105,7 @@ CONFIG_CRYPTO_USER_API_HASH=y
 CONFIG_CRYPTO_DEV_VIRTIO=y
 CONFIG_PRINTK_TIME=y
 # CONFIG_RCU_TRACE is not set
-CONFIG_CMDLINE="debug console=tty0 console=ttySIF0 rootwait root=/dev/mmcblk0p2  pci=hpmemsize=0M uio_pdrv_genirq.of_id=generic-uio"
+CONFIG_CMDLINE="debug console=tty0 console=ttySIF0 rootwait root=/dev/mmcblk0p2 pci=hpmemsize=0M uio_pdrv_genirq.of_id=generic-uio libata.force=nocq"
 CONFIG_OF=y
 CONFIG_BLK_DEV_ZONED=y
 CONFIG_PCI_DEBUG=y

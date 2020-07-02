@@ -96,6 +96,7 @@ uboot_s_patchdir := $(patchdir)/u-boot/
 
 uboot_s := $(wrkdir)/u-boot-s.bin
 uboot_s_cfg := $(confdir)/$(DEVKIT)/smode_defconfig
+uboot_s_scr := $(confdir)/$(DEVKIT)/uEnv_s-mode.txt
 
 opensbi_srcdir := $(srcdir)/opensbi
 opensbi_wrkdir := $(wrkdir)/opensbi
@@ -480,11 +481,11 @@ $(vfat_image): $(fit)
 	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
 	/sbin/mkfs.vfat $(vfat_image)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(confdir)/$(DEVKIT)/uEnv_s-mode.txt ::uEnv.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
 
 .PHONY: format-icicle-image
 format-icicle-image: $(hss_uboot_payload_bin)
-	$(confdir)/create-icicle-img.sh $(emmc_image) $(fit) $(confdir)/$(DEVKIT)/uEnv_s-mode.txt $(hss_uboot_payload_bin) $(emmc_image_mnt_point)
+	$(confdir)/create-icicle-img.sh $(emmc_image) $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(emmc_image_mnt_point)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	dd if=$(emmc_image) of=$(DISK)
 
