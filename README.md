@@ -94,7 +94,7 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image
 ```
 
 When the transfer has completed, press `CTRL+C` in the hss serial console to return to the hss console.                 
-To load into Linux, type `boot` in the hss console. U-Boot and Linux will use MMUART1.
+To boot into Linux, type `boot` in the hss console. U-Boot and Linux will use MMUART1. When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Preparing an SD Card (for MPFS & LC-MPFS)
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -133,7 +133,7 @@ To automatically partition and format your SD card, in the top level of mpfs-lin
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 At this point, your system should be bootable using your new SD card. You can remove it from your PC
-and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
+and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT. When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Rebuilding the Linux Kernel
 To rebuild your kernel or to change the machine being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
