@@ -13,16 +13,8 @@ The complete User Guides for each development platform, containing board and boo
 This section describes the procedure to build the Linux boot image and loading it into an SD card using Buildroot.
 
 ### Supported Build Hosts
-This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 18.04 LTS.    
-It should also work with other Linux distributions if the equivalent prerequisite packages are installed.
-
-#### Tested Build Hosts:
-
-Ubuntu 20.04 x86_64 host - Working.
-
-Ubuntu 18.04 x86_64 host - Working.
-
-Ubuntu 16.04 x86_64 host - Working.
+This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
+It should also work with other Linux distributions if the equivalent prerequisite packages are installed.        
 
 ### Install Prerequisite Packages
 Before starting, use the `apt` command to install prerequisite packages:
@@ -37,18 +29,6 @@ The Hart Software Services (HSS) require kconfiglib:
 ```
 pip install kconfiglib
 ```
-
-### Checkout Code & Build
-
-#### Supported Build Targets
-The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`.           
-The following table details the available targets:
-
-| `DEVKIT` | Board Name |
-| --- | --- |
-| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
-| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
-| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 
 #### Build instructions
 The following commands checkout SDK in a new directory:
@@ -65,12 +45,56 @@ git submodule update --init --recursive
 Then the Linux image can be built in the `work` sub-directory:
 ```
 unset RISCV
-make all DEVKIT=lc-mpfs
+make all DEVKIT=icicle-kit-es
 ```
+
+The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`. 
+
+The following table details the available targets:
+
+| `DEVKIT` | Board Name |
+| --- | --- |
+| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
+| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
+| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
+
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
 The output file contains the first stage bootloader, the root file system and a VFAT image containing the linux kernel, device tree blob & second stage bootloader. 
 This can then be copied to an SD card. The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
+
+## Loading the Image onto the Target
+The instructions for the [Icicle Kit can be found here](#Preparing-the-eMMC-for-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
+
+### Preparing the eMMC for Icicle Kit
+If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
+Power on the board, and connect to UART0. Press a key to stop automatic boot. In the hss console, type `usbdmsc` to expose the emmc as a block device.          
+Connect the board to your dev machine using J16, located beside the SD card slot.
+
+Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
+```
+$ dmesg | egrep "sd|mmcblk"
+```
+The output should contain a line similar to one of the below lines:
+```
+[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
+[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+```
+`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+For these examples the identifier `sdX` is used. 
+
+#### WARNING:              
+        The drive with the identifier `sda` is the default location for your operating system.        
+        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.       
+        Check that the size of the card matches the dmesg output before continuing.     
+
+Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X as appropriate:
+```
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
+```
+
+When the transfer has completed, press `CTRL+C` in the hss serial console to return to the hss console.                 
+To load into Linux, type `boot` in the hss console. U-Boot and Linux will use MMUART1.
 
 ### Preparing an SD Card (for MPFS & LC-MPFS)
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
@@ -110,36 +134,6 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 At this point, your system should be bootable using your new SD card. You can remove it from your PC
 and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.
-
-### Preparing the eMMC (for Icicle kit)
-If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
-Power on the board, and connect to UART0. Press a key to stop automatic boot. In the hss console, type `usbdmsc` to expose the emmc as a block device.          
-Connect the board to your dev machine using J16, located beside the SD card slot.
-
-Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
-```
-$ dmesg | egrep "sd|mmcblk"
-```
-The output should contain a line similar to one of the below lines:
-```
-[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
-```
-`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
-For these examples the identifier `sdX` is used. 
-
-#### WARNING:              
-        The drive with the identifier `sda` is the default location for your operating system.        
-        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.       
-        Check that the size of the card matches the dmesg output before continuing.     
-
-Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X as appropriate:
-```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
-```
-
-When the transfer has completed, press `CTRL+C` in the hss serial console to return to the hss console.                 
-To load into Linux, type `boot` in the hss console. U-Boot and Linux will use MMUART1.
 
 ### Rebuilding the Linux Kernel
 To rebuild your kernel or to change the machine being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
