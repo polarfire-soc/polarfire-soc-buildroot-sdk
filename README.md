@@ -7,10 +7,10 @@ Currently the following development platforms are supported:
 - [LC-MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
 - Icicle Kit (Engineering Sample)
 
-The complete User Guides for each development platform, containing board and boot instructions, are available in the `doc/` subdirectory. 
+The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
 
 ## Building Linux Using Buildroot
-This section describes the procedure to build the Linux boot image and loading it into an SD card using Buildroot.
+This section describes the procedure to build the Linux boot image and load it into an SD card using Buildroot.
 
 ### Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
@@ -37,7 +37,7 @@ git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
 cd polarfire-soc-buildroot-sdk
 git checkout master
 ```
-Before building for the first time, it is required to acquire the contents of the sub-components:
+Before building for the first time, the contents of the sub-components must be acquired:
 ```
 git submodule sync
 git submodule update --init --recursive
@@ -54,7 +54,7 @@ The following table details the available targets:
 
 | `DEVKIT` | Board Name |
 | --- | --- |
-| `DEVKIT=mpfs` | MPFS-DEV-KIT, HiFive Unleashed Expansion Board |
+| `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
 | `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
 | `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 
@@ -68,19 +68,19 @@ The instructions for the [Icicle Kit can be found here](#Preparing-the-eMMC-for-
 
 ### Preparing the eMMC for Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
-Power on the board, and connect to UART0. Press a key to stop automatic boot. In the hss console, type `usbdmsc` to expose the emmc as a block device.          
-Connect the board to your dev machine using J16, located beside the SD card slot.
+Power on the board, and connect to UART0. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the hss console, type `usbdmsc` to expose the emmc as a block device.          
+Connect the board to your development machine using J16, located beside the SD card slot.
 
 Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
-The output should contain a line similar to one of the below lines:
+The output should contain a line similar to one of the following lines:
 ```
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
 [51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
 ```
-`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
 
 #### WARNING:              
@@ -104,12 +104,12 @@ After inserting your SD card, use `dmesg` to check what your card's identifier i
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
-The output should contain a line similar to one of the below lines:
+The output should contain a line similar to one of the following lines:
 ```
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
 [51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
 ```
-`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
 
 #### WARNING:              
@@ -128,7 +128,7 @@ $ sudo umount /dev/sdX
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
 ### Programming an Image for the First Time
-To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
+To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
