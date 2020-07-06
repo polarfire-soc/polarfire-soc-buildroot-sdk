@@ -10,34 +10,16 @@ Currently the following development platforms are supported:
 The complete User Guides for each development platform, containing board and boot instructions, are available in the `doc/` subdirectory. 
 
 ## Building Linux Using Buildroot
-This section describes the procedure to build the Linux boot image and loading it into an SD card using Buildroot.
+This section describes the procedure to build the Linux boot image and loading it into an SD card using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
 
-### Supported Build Hosts
-This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
-It should also work with other Linux distributions if the equivalent prerequisite packages are installed.        
-
-### Install Prerequisite Packages
-Before starting, use the `apt` command to install prerequisite packages:
-```
-sudo apt install autoconf automake autotools-dev bc bison \
-build-essential curl flex gawk gdisk git gperf libgmp-dev \
-libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
-patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
-device-tree-compiler mtools libexpat1-dev
-```
-The Hart Software Services (HSS) require kconfiglib:
-```
-pip install kconfiglib
-```
-
-#### Build instructions
+### Build instructions
 The following commands checkout SDK in a new directory:
 ```
 git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
 cd polarfire-soc-buildroot-sdk
 git checkout master
 ```
-Before building for the first time, it is required to acquire the contents of the sub-components:
+Before building for the first time (or if updating to the latest version), it is required to acquire the contents of the sub-components:
 ```
 git submodule sync
 git submodule update --init --recursive
@@ -148,6 +130,24 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 
 The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
 The configuration options used for the Linux kernel are in `conf/<devkit>_linux_<kernel-version>_defconfig`.
+
+### Supported Build Hosts
+This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
+It should also work with other Linux distributions if the equivalent prerequisite packages are installed.        
+
+### Prerequisite Packages
+Before starting, use the `apt` command to install prerequisite packages:
+```
+sudo apt install autoconf automake autotools-dev bc bison \
+build-essential curl flex gawk gdisk git gperf libgmp-dev \
+libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
+patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
+device-tree-compiler mtools libexpat1-dev
+```
+The Hart Software Services (HSS) require kconfiglib:
+```
+pip install kconfiglib
+```
 
 ## Additional Reading
 [Buildroot User Manual](https://buildroot.org/docs.html)    
