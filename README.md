@@ -1,5 +1,5 @@
 # Microchip PolarFire SoC Linux Software Development Kit
-This repository builds a command line only RISC-V Linux image for the Microchip PolarFire SoC Linux Software Development Kits.
+This repository builds a command line only RISC-V Linux image for the Microchip PolarFire SoC Development Boards.
 It first will build the GNU cross-compilation toolchain for RISC-V, which will be installed in the `toolchain/` subdirectory. This toolchain is then used to build a Linux image consisting of the kernel, a Busybox based root file system and the necessary bootloaders for each development platform.
 
 Currently the following development platforms are supported:
@@ -50,7 +50,7 @@ The instructions for the [Icicle Kit can be found here](#Preparing-the-eMMC-for-
 
 ### Preparing the eMMC for Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
-Power on the board, and connect to UART0. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the hss console, type `usbdmsc` to expose the emmc as a block device.          
+Power on the board, and connect to UART0. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
 Connect the board to your development machine using J16, located beside the SD card slot.
 
 Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
@@ -75,8 +75,8 @@ Once sure of the drive identifier, use the following command to copy your Linux 
 $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
 ```
 
-When the transfer has completed, press `CTRL+C` in the hss serial console to return to the hss console.                 
-To boot into Linux, type `boot` in the hss console. U-Boot and Linux will use MMUART1. When Linux boots, log in with the username `root` & the password `microchip`.
+When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
+To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use MMUART1. When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Preparing an SD Card (for MPFS & LC-MPFS)
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
