@@ -7,8 +7,8 @@ patchdir := $(CURDIR)/patches
 confdir := $(srcdir)/conf
 wrkdir := $(CURDIR)/work
 
-# target mpfs by default
-DEVKIT ?= mpfs
+# target icicle w/ emmc by default
+DEVKIT ?= icicle-kit-es
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 ifeq "$(DEVKIT)" "icicle-kit-es"
@@ -116,13 +116,11 @@ hss_uboot_payload_o := $(hss_wrkdir)/payload.o
 
 xml_config := $(confdir)/$(DEVKIT)/config.xml 
 config_generator_srcdir := $(srcdir)/hardware-config-generator
-xml_hw_config := $(config_generator_srcdir)/hardware
-hss_hw_config := $(hss_wrkdir)/boards/$(DEVKIT)/config/hardware
 hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
 hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
 
 emmc_image=$(wrkdir)/emmc.img
-emmc_image_mnt_point=/mnt
+icicle_image_mnt_point=/mnt
 
 bootloaders-$(HSS_SUPPORT) += $(hss)
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
@@ -382,8 +380,10 @@ $(hss_wrkdir_stamp): $(hss_srcdir)
 	touch $@
 
 $(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
-	# cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config)
-	# cp $(xml_hw_config) $(hss_wrkdir)/boards/$(HSS_TARGET)/config -r
+ifeq ($(DEVKIT),icicle-kit-es-sd)
+	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
+	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
+endif
 	touch $@
 
 $(hss_uboot_payload_bin): $(hss_wrkdir_stamp) $(uboot_s)
@@ -395,7 +395,6 @@ $(hss_uboot_payload_o): $(hss_uboot_payload_bin)
 
 $(hss_config): $(hss_wrkdir_stamp)
 	cp $(confdir)/$(DEVKIT)/hss_def_config $(hss_wrkdir)/.config
-	cp $(hss_wrkdir)/boards/$(HSS_TARGET)/hss-envm.ld $(hss_wrkdir)/boards/$(HSS_TARGET)/hss.ld
 	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
 
 $(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
@@ -483,11 +482,44 @@ $(vfat_image): $(fit)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
 
-.PHONY: format-icicle-image
-format-icicle-image: $(hss_uboot_payload_bin)
-	$(confdir)/create-icicle-img.sh $(emmc_image) $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(emmc_image_mnt_point)
+.PHONY: format-icicle-emmc-image
+format-icicle-emmc-image: $(hss_uboot_payload_bin)
+	$(confdir)/$(DEVKIT)/create-emmc-img.sh $(emmc_image) $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	dd if=$(emmc_image) of=$(DISK)
+
+.PHONY: format-icicle-sd-image
+format-icicle-sd-image: $(hss_uboot_payload_bin)
+	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
+	$(eval DEVICE_NAME := $(shell basename $(DISK)))
+	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
+	$(eval ROOT_SIZE := $(shell expr $(SD_SIZE) \- $(RESERVED_SIZE)))
+	/sbin/sgdisk -Zo  \
+    --new=1:2048:3248 --change-name=1:uboot --typecode=1:21686148-6449-6E6F-744E-656564454649 \
+    --new=2:4096:88063 --change-name=2:kernel --typecode=2:0FC63DAF-8483-4772-8E79-3D69D8477DE4 \
+    --new=3:88064:${ROOT_SIZE} --change-name=3:root	--typecode=2:0FC63DAF-8483-4772-8E79-3D69D8477DE4 \
+    ${DISK}	
+	-/sbin/partprobe
+	@sleep 1
+	
+ifeq ($(DISK)1,$(wildcard $(DISK)1))
+	@$(eval partition_prefix := )
+else ifeq ($(DISK)s1,$(wildcard $(DISK)s1))
+	@$(eval partition_prefix := s)
+else ifeq ($(DISK)p1,$(wildcard $(DISK)p1))
+	@$(eval partition_prefix := p)
+else
+	@echo Error: Could not find bootloader partition for $(DISK)
+	@exit 1
+endif
+
+	dd if=$(hss_uboot_payload_bin) of=$(DISK)$(partition_prefix)1
+	mkfs.ext4 $(DISK)$(partition_prefix)2 -F
+	mount $(DISK)$(partition_prefix)2 $(icicle_image_mnt_point)
+	cp $(fit) $(icicle_image_mnt_point)
+	cp $(uboot_s_scr) $(icicle_image_mnt_point)
+	umount $(icicle_image_mnt_point)
+
 
 .PHONY: format-boot-loader
 format-boot-loader: $(fit) $(vfat_image) $(bootloaders-y)
@@ -540,8 +572,11 @@ endif
 # 		sudo tar -zxf ../$(DEB_IMAGE) -C .
 # 	sudo umount tmp-mnt
 
-format-rootfs-image: $(rootfs) format-boot-loader
-ifeq ($(DEVKIT),icicle-kit-es)	
+format-rootfs-image: $(rootfs)
+ifeq ($(DEVKIT),icicle-kit-es)
+	@echo Error: Root fs not currently supported for $(DEVKIT)
+else ifeq ($(DEVKIT),icicle-kit-es-sd)
+	dd if=$(rootfs) of=$(PART3) bs=4096
 else 
 	dd if=$(rootfs) of=$(PART2) bs=4096
 endif

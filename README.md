@@ -30,7 +30,7 @@ unset RISCV
 make all DEVKIT=icicle-kit-es
 ```
 
-The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=mpfs`. 
+The `DEVKIT` option can be used to set the target board for which linux is built, and if left blank it will default to `DEVKIT=icicle-kit-es`. 
 
 The following table details the available targets:
 
@@ -38,7 +38,8 @@ The following table details the available targets:
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
 | `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
-| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
+| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon, using the eMMC |
+| `DEVKIT=icicle-kit-es-sd` | Icicle Development Kit with engineering sample silicon, using an SD card |
 
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
@@ -46,11 +47,11 @@ The output file contains the first stage bootloader, the root file system and a 
 This can then be copied to an SD card. The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
 
 ## Loading the Image onto the Target
-The instructions for the [Icicle Kit can be found here](#Preparing-the-eMMC-for-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
+The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
 
-### Preparing the eMMC for Icicle Kit
+### Preparing the eMMC for the Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
-Power on the board, and connect to UART0. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
+Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
 Connect the board to your development machine using J16, located beside the SD card slot.
 
 Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
@@ -72,13 +73,13 @@ For these examples the identifier `sdX` is used.
 
 Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X as appropriate:
 ```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-emmc-image 
 ```
 
 When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
-To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use MMUART1. When Linux boots, log in with the username `root` & the password `microchip`.
+To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root` & the password `microchip`.
 
-### Preparing an SD Card (for MPFS & LC-MPFS)
+### Preparing an SD Card for the Icicle Kit
 Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
@@ -109,8 +110,51 @@ $ sudo umount /dev/sdX
 ```
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
-### Programming an Image for the First Time
+#### Programming an Image for the First Time    
+
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
+```
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-sd-image 
+```
+
+At this point, your system should be bootable using your new SD card. You can remove it from your PC
+and insert it into the SD card slot on the Icicle kit.
+Connect to UART0 (J11) for the HSS and UART0 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
+When Linux boots, log in with the username `root` & the password `microchip`.  
+
+### Preparing an SD Card for MPFS & LC-MPFS
+Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
+The following steps will allow you to check and unmount the card if required:
+
+After inserting your SD card, use `dmesg` to check what your card's identifier is.
+```
+$ dmesg | egrep "sd|mmcblk"
+```
+The output should contain a line similar to one of the below lines:
+```
+[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
+[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+```
+`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+For these examples the identifier `sdX` is used. 
+
+#### WARNING:              
+        The drive with the identifier `sda` is the default location for your operating system.        
+        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.       
+        Check that the size of the card matches the dmesg output before continuing.     
+
+Next check if this card is mounted:
+```
+$ mount | grep sdX
+```
+If any entries are present, then run the following. If not then skip this command:
+```
+$ sudo umount /dev/sdX
+```
+The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
+
+#### Programming an Image for the First Time
+To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
