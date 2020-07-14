@@ -380,7 +380,10 @@ $(hss_wrkdir_stamp): $(hss_srcdir)
 	touch $@
 
 $(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
-ifeq ($(DEVKIT),icicle-kit-es-sd)
+ifeq ($(DEVKIT),icicle-kit-es)	
+	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
+	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
+else ifeq ($(DEVKIT),icicle-kit-es-sd)	
 	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
 	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
 endif
