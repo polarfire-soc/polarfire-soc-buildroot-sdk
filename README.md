@@ -13,13 +13,13 @@ The complete User Guides for each development platform, containing board and boo
 This section describes the procedure to build the Linux boot image and load it into an SD card using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
 
 ### Build instructions
-The following commands checkout SDK in a new directory:
+The following commands checkout the Software Development Kit (SDK) in a new directory:
 ```
 git clone https://github.com/polarfire-soc/polarfire-soc-buildroot-sdk.git
 cd polarfire-soc-buildroot-sdk
 git checkout master
 ```
-Before building for the first time (or if updating to the latest version), the contents of the sub-components must be acquired:
+Before building for the first time (or if updating to the latest version), the contents of the sub-modules must be acquired:
 ```
 git submodule sync
 git submodule update --init --recursive
@@ -43,8 +43,8 @@ The following table details the available targets:
 
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
-The output file contains the first stage bootloader, the root file system and a VFAT image containing the linux kernel, device tree blob & second stage bootloader. 
-This can then be copied to an SD card. The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
+The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader. 
+The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
 
 ## Loading the Image onto the Target
 The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
@@ -52,7 +52,7 @@ The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-t
 ### Preparing the eMMC for the Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
 Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
-Connect the board to your development machine using J16, located beside the SD card slot.
+Connect the board to your development computer using J16, located beside the SD card slot.
 
 Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
 ```
@@ -80,7 +80,7 @@ When the transfer has completed, press `CTRL+C` in the HSS serial console to ret
 To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Preparing an SD Card for the Icicle Kit
-Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
+Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
 After inserting your SD card, use `dmesg` to check what your card's identifier is.
@@ -117,13 +117,13 @@ To automatically partition and format your SD card, in the top level of polarfir
 $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-sd-image 
 ```
 
-At this point, your system should be bootable using your new SD card. You can remove it from your PC
-and insert it into the SD card slot on the Icicle kit.
+At this point, your SD card should be ready to boot Linux.         
+You can remove it from your PC and insert it into the SD card slot on the Icicle kit.
 Connect to UART0 (J11) for the HSS and UART0 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
 When Linux boots, log in with the username `root` & the password `microchip`.  
 
 ### Preparing an SD Card for MPFS & LC-MPFS
-Add an SD card to boot your system (16 GB or 32 GB). If the SD card is auto-mounted, first unmount it manually.               
+Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
 After inserting your SD card, use `dmesg` to check what your card's identifier is.
@@ -154,15 +154,17 @@ $ sudo umount /dev/sdX
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
 #### Programming an Image for the First Time
-To automatically partition and format your SD card, in the top level of mpfs-linux-sdk, type:
+
+To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
 ```
-At this point, your system should be bootable using your new SD card. You can remove it from your PC
-and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT. When Linux boots, log in with the username `root` & the password `microchip`.
+At this point, your SD card should be ready to boot Linux. 
+You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.      
+When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Rebuilding the Linux Kernel
-To rebuild your kernel or to change the machine being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
+To rebuild your kernel or to change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
 ```
 $ make clean
 $ make DEVKIT=<devkit>
