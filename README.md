@@ -190,7 +190,7 @@ libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
 patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
 device-tree-compiler mtools libexpat1-dev
 ```
-The Hart Software Services (HSS) require kconfiglib:
+Without the python library kconfiglib, the Hart Software Services (HSS) will fail to build with a genconfig error:
 ```
 pip install kconfiglib
 ```
