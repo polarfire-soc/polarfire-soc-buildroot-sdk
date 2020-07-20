@@ -119,7 +119,7 @@ config_generator_srcdir := $(srcdir)/hardware-config-generator
 hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
 hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
 
-emmc_image=$(wrkdir)/emmc.img
+emmc_image := $(wrkdir)/emmc.img
 icicle_image_mnt_point=/mnt
 
 bootloaders-$(HSS_SUPPORT) += $(hss)
@@ -486,13 +486,13 @@ $(vfat_image): $(fit)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
 
 .PHONY: format-icicle-emmc-image
-format-icicle-emmc-image: $(hss_uboot_payload_bin)
+format-icicle-emmc-image: $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
 	$(confdir)/$(DEVKIT)/create-emmc-img.sh $(emmc_image) $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	dd if=$(emmc_image) of=$(DISK)
 
 .PHONY: format-icicle-sd-image
-format-icicle-sd-image: $(hss_uboot_payload_bin)
+format-icicle-sd-image: $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
