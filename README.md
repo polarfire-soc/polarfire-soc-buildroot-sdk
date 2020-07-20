@@ -184,15 +184,16 @@ It should also work with other Linux distributions if the equivalent prerequisit
 ### Prerequisite Packages
 Before starting, use the `apt` command to install prerequisite packages:
 ```
-sudo apt install autoconf automake autotools-dev bc bison \
-build-essential curl flex gawk gdisk git gperf libgmp-dev \
-libmpc-dev libmpfr-dev libncurses-dev libssl-dev libtool \
-patchutils python screen texinfo unzip zlib1g-dev libblkid-dev \
-device-tree-compiler mtools libexpat1-dev
+sudo apt install autoconf automake autotools-dev bc bison build-essential curl \
+flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev \
+libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev \
+libblkid-dev device-tree-compiler libglib2.0-dev libpixman-1-dev mtools  \
+linux-firmware rsync python3 libexpat1-dev wget cpio xxd dosfstools \
+python3-pip
 ```
 Without the python library kconfiglib, the Hart Software Services (HSS) will fail to build with a genconfig error:
 ```
-pip install kconfiglib
+sudo pip3 install kconfiglib
 ```
 
 ## Additional Reading
