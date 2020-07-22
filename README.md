@@ -54,7 +54,7 @@ If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to
 Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
 Connect the board to your development computer using J16, located beside the SD card slot.
 
-Once this is complete, use `dmesg` to check what the drive identifier for the onboard eMMC is.
+Once this is complete, on the development computer, use `dmesg` to check what the drive identifier for the onboard eMMC is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -83,7 +83,7 @@ To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UA
 Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
-After inserting your SD card, use `dmesg` to check what your card's identifier is.
+After inserting your SD card, on the development computer, use `dmesg` to check what your card's identifier is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -126,7 +126,7 @@ When Linux boots, log in with the username `root` & the password `microchip`.
 Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
-After inserting your SD card, use `dmesg` to check what your card's identifier is.
+After inserting your SD card, on the development computer, use `dmesg` to check what your card's identifier is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
