@@ -52,9 +52,9 @@ The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-t
 ### Preparing the eMMC for the Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
 Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control. Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.          
-Connect the board to your development computer using J16, located beside the SD card slot.
+Connect the board to your host PC using J16, located beside the SD card slot.
 
-Once this is complete, on the development computer, use `dmesg` to check what the drive identifier for the onboard eMMC is.
+Once this is complete, on the host PC, use `dmesg` to check what the drive identifier for the onboard eMMC is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -80,10 +80,10 @@ When the transfer has completed, press `CTRL+C` in the HSS serial console to ret
 To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root` & the password `microchip`.
 
 ### Preparing an SD Card for the Icicle Kit
-Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
+Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
-After inserting your SD card, on the development computer, use `dmesg` to check what your card's identifier is.
+After inserting your SD card, on the host PC, use `dmesg` to check what your card's identifier is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -123,10 +123,10 @@ Connect to UART0 (J11) for the HSS and UART0 (also J11) for U-Boot and Linux. Se
 When Linux boots, log in with the username `root` & the password `microchip`.  
 
 ### Preparing an SD Card for MPFS & LC-MPFS
-Insert an SD Card (16 GB or 32 GB) into the card reader of your development computer. If the SD card is auto-mounted, first unmount it manually.               
+Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
-After inserting your SD card, on the development computer, use `dmesg` to check what your card's identifier is.
+After inserting your SD card, on the host PC, use `dmesg` to check what your card's identifier is.
 ```
 $ dmesg | egrep "sd|mmcblk"
 ```
@@ -191,7 +191,7 @@ libblkid-dev device-tree-compiler libglib2.0-dev libpixman-1-dev mtools  \
 linux-firmware rsync python3 libexpat1-dev wget cpio xxd dosfstools \
 python3-pip
 ```
-Without the python library kconfiglib, the Hart Software Services (HSS) will fail to build with a genconfig error:
+Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
 ```
 sudo pip3 install kconfiglib
 ```
