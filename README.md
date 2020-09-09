@@ -175,7 +175,7 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 ```
 
 The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
-The configuration options used for the Linux kernel are in `conf/<devkit>_linux_<kernel-version>_defconfig`.
+The configuration options used for the Linux kernel are in `conf/<devkit>/linux_<kernel-version>_defconfig`.
 
 ### Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
