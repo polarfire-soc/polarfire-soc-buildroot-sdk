@@ -73,7 +73,7 @@ For these examples the identifier `sdX` is used.
 
 Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X as appropriate:
 ```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-emmc-image 
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
 ```
 
 When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
@@ -114,7 +114,7 @@ The SD card should have a GUID Partition Table (GPT) rather than a Master Boot R
 
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-sd-image 
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-image 
 ```
 
 At this point, your SD card should be ready to boot Linux.         

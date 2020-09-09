@@ -453,7 +453,18 @@ $(openocd): $(openocd_srcdir)
 .PHONY: gdb
 gdb: $(target_gdb)
 
-# partition type codes
+$(vfat_image): $(fit) $(uboot_s_scr)
+	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
+		echo "FSBL is too large for partition!!\nReduce fsbl or increase partition size"; \
+		rm $(flash_image); exit 1; fi
+	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
+	/sbin/mkfs.vfat $(vfat_image)
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage.fit
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
+
+## sd/emmc formatting
+
+# partition addreses for {lc-,}mpfs
 BBL			= 2E54B353-1271-4842-806F-E436D6AF6985
 VFAT		= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
 LINUX		= 0FC63DAF-8483-4772-8E79-3D69D8477DE4
@@ -462,6 +473,7 @@ UBOOT		= 5B193300-FC78-40CD-8002-E86C45580B47
 UBOOTENV	= a09354ac-cd63-11e8-9aff-70b3d592f0fa
 UBOOTDTB	= 070dd1a8-cd64-11e8-aa3d-70b3d592f0fa
 UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
+HSS_PAYLOAD = 21686148-6449-6E6F-744E-656564454649
 
 # partition addreses
 VFAT_START=2048
@@ -476,31 +488,23 @@ RESERVED_SIZE=2000
 OSBI_START=95536
 OSBI_END=125536
 
-$(vfat_image): $(fit)
-	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
-		echo "FSBL is too large for partition!!\nReduce fsbl or increase partition size"; \
-		rm $(flash_image); exit 1; fi
-	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
-	/sbin/mkfs.vfat $(vfat_image)
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
+# partition addreses for icicle kit
+UBOOT_START=2048
+UBOOT_END=3248
+LINUX_START=4096
+LINUX_END=98063
+ROOT_START=98304
 
-.PHONY: format-icicle-emmc-image
-format-icicle-emmc-image: $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
-	$(confdir)/$(DEVKIT)/create-emmc-img.sh $(emmc_image) $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
-	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
-	dd if=$(emmc_image) of=$(DISK)
-
-.PHONY: format-icicle-sd-image
-format-icicle-sd-image: $(fit) $(uboot_s_scr) $(hss_uboot_payload_bin) $(icicle_image_mnt_point)
+.PHONY: format-icicle-image
+format-icicle-image: $(fit) $(uboot_s_scr) $(icicle_image_mnt_point)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
 	$(eval ROOT_SIZE := $(shell expr $(SD_SIZE) \- $(RESERVED_SIZE)))
 	/sbin/sgdisk -Zo  \
-    --new=1:2048:3248 --change-name=1:uboot --typecode=1:21686148-6449-6E6F-744E-656564454649 \
-    --new=2:4096:88063 --change-name=2:kernel --typecode=2:0FC63DAF-8483-4772-8E79-3D69D8477DE4 \
-    --new=3:88064:${ROOT_SIZE} --change-name=3:root	--typecode=2:0FC63DAF-8483-4772-8E79-3D69D8477DE4 \
+    --new=1:$(UBOOT_START):$(UBOOT_END) --change-name=1:uboot --typecode=1:$(HSS_PAYLOAD) \
+    --new=2:$(LINUX_START):$(LINUX_END) --change-name=2:kernel --typecode=2:$(LINUX) \
+    --new=3:$(ROOT_START):${ROOT_SIZE} --change-name=3:root	--typecode=2:$(LINUX) \
     ${DISK}	
 	-/sbin/partprobe
 	@sleep 1
@@ -517,13 +521,9 @@ else
 endif
 
 	dd if=$(hss_uboot_payload_bin) of=$(DISK)$(partition_prefix)1
-	mkfs.ext4 $(DISK)$(partition_prefix)2 -F
-	mount $(DISK)$(partition_prefix)2 $(icicle_image_mnt_point)
-	cp $(fit) $(icicle_image_mnt_point)
-	cp $(uboot_s_scr) $(icicle_image_mnt_point)
-	umount $(icicle_image_mnt_point)
+	dd if=$(vfat_image) of=$(DISK)$(partition_prefix)2
 
-
+# {lc-,}mpfs
 .PHONY: format-boot-loader
 format-boot-loader: $(fit) $(vfat_image) $(bootloaders-y)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
@@ -577,7 +577,7 @@ endif
 
 format-rootfs-image: $(rootfs)
 ifeq ($(DEVKIT),icicle-kit-es)
-	@echo Error: Root fs not currently supported for $(DEVKIT)
+	dd if=$(rootfs) of=$(PART3) bs=4096
 else ifeq ($(DEVKIT),icicle-kit-es-sd)
 	dd if=$(rootfs) of=$(PART3) bs=4096
 else 
