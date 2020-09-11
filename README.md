@@ -10,7 +10,7 @@ Currently the following development platforms are supported:
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
 
 ## Building Linux Using Buildroot
-This section describes the procedure to build the Linux boot image and load it into an SD card using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
+This section describes the procedure to build the Linux boot image and load it onto an SD card or eMMC using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
 
 ### Build instructions
 The following commands checkout the Software Development Kit (SDK) in a new directory:
@@ -46,6 +46,16 @@ Note: The first time the build is run it can take a long time, as it also builds
 The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader. 
 The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
 
+The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
+The configuration options used for the Linux kernel are in `conf/<devkit>/linux_<kernel-version>_defconfig`.
+
+### Rebuilding the Linux Kernel
+To rebuild your kernel or to change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
+```
+$ make clean
+$ make DEVKIT=<devkit>
+```
+
 ## Loading the Image onto the Target
 The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
 
@@ -61,7 +71,7 @@ $ dmesg | egrep "sd|mmcblk"
 The output should contain a line similar to one of the following lines:
 ```
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+[51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
 `sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
@@ -90,7 +100,7 @@ $ dmesg | egrep "sd|mmcblk"
 The output should contain a line similar to one of the following lines:
 ```
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+[51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
 `sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
@@ -133,7 +143,7 @@ $ dmesg | egrep "sd|mmcblk"
 The output should contain a line similar to one of the below lines:
 ```
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblk0: mmc0:0001 EB1QT 29.8 GiB 
+[51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
 `sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
 For these examples the identifier `sdX` is used. 
@@ -162,20 +172,6 @@ $ sudo make DISK=/dev/sdX format-boot-loader
 At this point, your SD card should be ready to boot Linux. 
 You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.      
 When Linux boots, log in with the username `root` & the password `microchip`.
-
-### Rebuilding the Linux Kernel
-To rebuild your kernel or to change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
-```
-$ make clean
-$ make DEVKIT=<devkit>
-```
-Copy this newly built image to the SD card using the same method as before:
-```
-$ sudo make DISK=/dev/sdX format-boot-loader
-```
-
-The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
-The configuration options used for the Linux kernel are in `conf/<devkit>/linux_<kernel-version>_defconfig`.
 
 ### Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
