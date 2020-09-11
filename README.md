@@ -9,6 +9,7 @@ Currently the following development platforms are supported:
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
 
+
 ## Building Linux Using Buildroot
 This section describes the procedure to build the Linux boot image and load it onto an SD card or eMMC using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
 
@@ -41,19 +42,19 @@ The following table details the available targets:
 | `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon, using the eMMC |
 | `DEVKIT=icicle-kit-es-sd` | Icicle Development Kit with engineering sample silicon, using an SD card |
 
+To boot Linux on your board using this image, see: [Loading the Image onto the Target](#Loading-the-Image-onto-the-Target).
+
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
-The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader. 
-The option `DEVKIT=<devkit>` selects the correct device tree for the board.   
-
-The source for the device tree for boards are in `conf/dts/<devkit>.dts`.            
+The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader.           
+The source for the device tree for boards are in `conf/<devkit>/<devkit>.dts`.            
 The configuration options used for the Linux kernel are in `conf/<devkit>/linux_<kernel-version>_defconfig`.
 
-### Rebuilding the Linux Kernel
-To rebuild your kernel or to change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
+### Rebuilding the Linux Image
+If you need to rebuild your image or change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
 ```
 $ make clean
-$ make DEVKIT=<devkit>
+$ make all DEVKIT=<devkit>
 ```
 
 ## Loading the Image onto the Target
@@ -73,7 +74,7 @@ The output should contain a line similar to one of the following lines:
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
 [51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
-`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
+`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific character from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
 
 #### WARNING:              
@@ -102,7 +103,7 @@ The output should contain a line similar to one of the following lines:
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
 [51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
-`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific value from the output of the previous command.           
+`sdX` or `mmcblkX` is the drive identifier that should be used in the next command, where `X` should be replaced with the specific character from the output of the previous command.           
 For these examples the identifier `sdX` is used. 
 
 #### WARNING:              
@@ -121,7 +122,6 @@ $ sudo umount /dev/sdX
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
 #### Programming an Image for the First Time    
-
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-image 
@@ -145,7 +145,7 @@ The output should contain a line similar to one of the below lines:
 [85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
 [51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB 
 ```
-`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific value from the previous command.           
+`sdX` or `mmcblkX` is the drive identifier that should be used going forwards, where `X` should be replaced with the specific character from the previous command.           
 For these examples the identifier `sdX` is used. 
 
 #### WARNING:              
@@ -164,7 +164,6 @@ $ sudo umount /dev/sdX
 The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
 
 #### Programming an Image for the First Time
-
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
 $ sudo make DISK=/dev/sdX format-boot-loader
@@ -173,7 +172,8 @@ At this point, your SD card should be ready to boot Linux.
 You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.      
 When Linux boots, log in with the username `root` & the password `microchip`.
 
-### Supported Build Hosts
+
+## Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
 It should also work with other Linux distributions if the equivalent prerequisite packages are installed.        
 
