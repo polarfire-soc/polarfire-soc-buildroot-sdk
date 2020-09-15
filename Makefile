@@ -109,7 +109,7 @@ openocd := $(openocd_wrkdir)/src/openocd
 hss_srcdir := $(srcdir)/hart-software-services
 hss_defconfig := $(confdir)/hss_defconfig
 hss_wrkdir := $(wrkdir)/hart-software-services
-hss := $(hss_wrkdir)/hss.bin
+hss := $(wrkdir)/hss.bin
 hss_config := $(hss_wrkdir)/config.h
 hss_uboot_payload_bin := $(hss_wrkdir)/payload.bin
 hss_uboot_payload_o := $(hss_wrkdir)/payload.o
@@ -402,6 +402,7 @@ $(hss_config): $(hss_wrkdir_stamp)
 
 $(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
 	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE)
+	cp $(hss_wrkdir)/Default/hss.bin $@
 
 .PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot hss bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
