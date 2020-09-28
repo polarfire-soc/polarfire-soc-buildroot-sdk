@@ -106,25 +106,17 @@ openocd_srcdir := $(srcdir)/riscv-openocd
 openocd_wrkdir := $(wrkdir)/riscv-openocd
 openocd := $(openocd_wrkdir)/src/openocd
 
-hss_srcdir := $(srcdir)/hart-software-services
-hss_defconfig := $(confdir)/hss_defconfig
-hss_wrkdir := $(wrkdir)/hart-software-services
-hss := $(wrkdir)/hss.bin
-hss_config := $(hss_wrkdir)/config.h
-hss_uboot_payload_bin := $(hss_wrkdir)/payload.bin
-hss_uboot_payload_o := $(hss_wrkdir)/payload.o
+payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-generator
+payloadgen_wrkdir := $(wrkdir)/payload_generator
+hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
 
-xml_config := $(confdir)/$(DEVKIT)/config.xml 
-config_generator_srcdir := $(srcdir)/hardware-config-generator
-hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
-hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
-
+hss_uboot_payload_bin := $(wrkdir)/payload.bin
 emmc_image := $(wrkdir)/emmc.img
 icicle_image_mnt_point=/mnt
 
-bootloaders-$(HSS_SUPPORT) += $(hss)
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
+bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
 
 all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo
@@ -373,36 +365,12 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-$(hss_wrkdir_stamp): $(hss_srcdir)
-	rm -rf $(hss_wrkdir) $(hss_wrkdir_stamp) $(hss_hw_config_stamp)
-	mkdir -p $(hss_wrkdir)
-	cp -r $(hss_srcdir)/* $(hss_wrkdir)
-	touch $@
+$(hss_payload_generator): $(payload_generator_srcdir)
+	mkdir -p $(payloadgen_wrkdir)
+	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
 
-$(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
-ifeq ($(DEVKIT),icicle-kit-es)	
-	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
-	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
-else ifeq ($(DEVKIT),icicle-kit-es-sd)	
-	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
-	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
-endif
-	touch $@
-
-$(hss_uboot_payload_bin): $(hss_wrkdir_stamp) $(uboot_s)
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir)/tools/bin2chunks
-	$(hss_wrkdir)/tools/bin2chunks/bin2chunks 0x80200000 0x80200000 0x80200000 0x80200000 32768 $(hss_uboot_payload_bin) 1 1 $(uboot_s_wrkdir)/u-boot.bin 0x80200000
-
-$(hss_uboot_payload_o): $(hss_uboot_payload_bin)
-	cd $(hss_wrkdir) && $(RISCV)/bin/riscv64-unknown-linux-gnu-ld -r -b binary payload.bin -o payload.o
-
-$(hss_config): $(hss_wrkdir_stamp)
-	cp $(confdir)/$(DEVKIT)/hss_def_config $(hss_wrkdir)/.config
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
-
-$(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE)
-	cp $(hss_wrkdir)/Default/hss.bin $@
+$(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator)
+	cd $(wrkdir) && $(hss_payload_generator) -c $(confdir)/config.yaml -v $(hss_uboot_payload_bin)
 
 .PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot hss bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
