@@ -126,12 +126,8 @@ all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo $(fit)
 	@echo $(flash_image)
 	@echo
-	@echo "To completely erase, reformat, and program a disk sdX, run:"
-	@echo "  make DISK=/dev/sdX format-boot-loader"
-	@echo "  ... you will need gdisk and e2fsprogs installed"
-	@echo "  Please note this will not currently format the SDcard ext4 partition"
-	@echo "  This can be done manually if needed"
-	@echo
+	@echo "Refer to the readme for instructions on how to format"
+	@echo "an SD/eMMC with the image & boot Linux."
 
 ifneq ($(RISCV),$(toolchain_dest))
 $(CROSS_COMPILE)gcc:
