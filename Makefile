@@ -457,8 +457,8 @@ OSBI_END=145536
 UBOOT_START=2048
 UBOOT_END=3248
 LINUX_START=4096
-LINUX_END=98063
-ROOT_START=98304
+LINUX_END=117550
+ROOT_START=118784
 
 .PHONY: format-icicle-image
 format-icicle-image: $(fit) $(uboot_s_scr) $(icicle_image_mnt_point)
