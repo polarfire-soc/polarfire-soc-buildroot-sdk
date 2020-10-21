@@ -541,6 +541,25 @@ endif
 # 	sudo umount tmp-mnt
 
 format-rootfs-image: $(rootfs)
+ifeq ($(DISK)p1,$(wildcard $(DISK)p1))
+	@$(eval PART1 := $(DISK)p1)
+	@$(eval PART2 := $(DISK)p2)
+	@$(eval PART3 := $(DISK)p3)
+	@$(eval PART4 := $(DISK)p4)
+else ifeq ($(DISK)s1,$(wildcard $(DISK)s1))
+	@$(eval PART1 := $(DISK)s1)
+	@$(eval PART2 := $(DISK)s2)
+	@$(eval PART3 := $(DISK)s3)
+	@$(eval PART4 := $(DISK)s4)
+else ifeq ($(DISK)1,$(wildcard $(DISK)1))
+	@$(eval PART1 := $(DISK)1)
+	@$(eval PART2 := $(DISK)2)
+	@$(eval PART3 := $(DISK)3)
+	@$(eval PART4 := $(DISK)4)
+else
+	@echo Error: Could not find bootloader partition for $(DISK)
+	@exit 1
+endif
 ifeq ($(DEVKIT),icicle-kit-es)
 	dd if=$(rootfs) of=$(PART3) bs=4096
 else ifeq ($(DEVKIT),icicle-kit-es-sd)
