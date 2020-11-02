@@ -1,0 +1,59 @@
+From 3919cede07084acd4a06fe407a02580a74229199 Mon Sep 17 00:00:00 2001
+From: Conor Dooley <conor.dooley@microchip.com>
+Date: Wed, 30 Sep 2020 14:45:25 +0100
+Subject: [PATCH 2/2] mchp linux examples package
+
+---
+ configs/icicle_kit_webserver_defconfig |  4 ++--
+ package/mchp_examples/Config.in            |  4 ++++
+ package/mchp_examples/mchp_examples.mk         | 27 ++++++++++++++++++++++++++
+ 3 files changed, 33 insertions(+), 2 deletions(-)
+ create mode 100644 package/mchp_examples/Config.in
+ create mode 100644 package/mchp_examples/mchp_examples.mk
+
+diff --git a/package/mchp_examples/Config.in b/package/mchp_examples/Config.in
+new file mode 100644
+index 0000000000..ef74da98b8
+--- /dev/null
++++ b/package/mchp_examples/Config.in
+@@ -0,0 +1,4 @@
++config BR2_PACKAGE_MCHP_EXAMPLES
++	bool "mchp_examples"
++	help
++	  blah blah blah
+diff --git a/package/mchp_examples/mchp_examples.mk b/package/mchp_examples/mchp_examples.mk
+new file mode 100644
+index 0000000000..8d8918de85
+--- /dev/null
++++ b/package/mchp_examples/mchp_examples.mk
+@@ -0,0 +1,27 @@
++MCHP_EXAMPLES_VERSION = d5ff903b9ead9eead9fd37f190c498e20f00c341
++MCHP_EXAMPLES_SITE = https://github.com/polarfire-soc/polarfire-soc-linux-examples.git
++MCHP_EXAMPLES_SITE_METHOD = git
++
++define MCHP_EXAMPLES_INSTALL_TARGET_CMDS
++# iiohttp server
++$(INSTALL) -d $(TARGET_DIR)/opt/microchip/iiohttpserver
++chmod a+x $(TARGET_DIR)/opt/microchip/iiohttpserver
++cp -r $(@D)/iiohttpserver $(TARGET_DIR)/opt/microchip/
++endef
++
++define MCHP_EXAMPLES_INSTALL_INIT_SYSTEMD
++$(INSTALL) -D -m 644 $(@D)/iiohttpserver/collection/collectdiio.service \
++        $(TARGET_DIR)/usr/lib/systemd/system/collectdiio.service
++endef
++
++define MCHP_EXAMPLES_INSTALL_INIT_SYSV
++# iiohttp server
++$(INSTALL) -D -m 775 $(@D)/iiohttpserver/collection/collectdiio.busybox \
++        $(TARGET_DIR)/etc/init.d/collectdiio
++# busy box init requires script renames
++mv $(TARGET_DIR)/opt/microchip/iiohttpserver/run.{sh,systemd}
++mv $(TARGET_DIR)/opt/microchip/iiohttpserver/run.{busybox,sh}
++chmod +x $(TARGET_DIR)/opt/microchip/iiohttpserver/run.sh
++endef
++
++$(eval $(generic-package))
+-- 
+2.17.1
+

@@ -1,0 +1,24 @@
+From c303b6b9849d8dc8e4af4d12f3e703f5161685f0 Mon Sep 17 00:00:00 2001
+From: Conor Dooley <conor.dooley@microchip.com>
+Date: Wed, 30 Sep 2020 14:43:55 +0100
+Subject: [PATCH 1/2] mchp linux examples package
+
+---
+ package/Config.in | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/package/Config.in b/package/Config.in
+index d7e79f4795..011b9b4fe6 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -8,6 +8,7 @@ menu "Target packages"
+ 	source "package/skeleton-init-openrc/Config.in"
+ 	source "package/skeleton-init-systemd/Config.in"
+ 	source "package/skeleton-init-sysv/Config.in"
++	source "package/mchp_examples/Config.in"
+ 
+ menu "Audio and video applications"
+ 	source "package/alsa-utils/Config.in"
+-- 
+2.17.1
+

@@ -147,35 +147,47 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	$(MAKE) -C $(toolchain_wrkdir)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
-$(buildroot_initramfs_wrkdir)/.config: $(buildroot_srcdir) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config)
+buildroot_patchdir := $(patchdir)/buildroot/
+buildroot_builddir := $(wrkdir)/buildroot_build
+buildroot_builddir_stamp := $(wrkdir)/.buildroot_builddir
+
+$(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patchdir)
+	- rm -rf $(buildroot_builddir)
+	mkdir -p $(buildroot_builddir) && cd $(buildroot_builddir) && cp $(buildroot_srcdir)/* . -r
+	for file in $(buildroot_patchdir)/* ; do \
+			cd $(buildroot_builddir) && patch -p1 < $${file} ; \
+	done
+	touch $@
+
+$(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_initramfs_config) $@
-	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE)
 
-$(buildroot_initramfs_tar): $(buildroot_srcdir) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
-	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir)
+$(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir)
 
 .PHONY: buildroot_initramfs-menuconfig
-buildroot_initramfs-menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_srcdir)
-	$(MAKE) -C $(dir $<) O=$(buildroot_initramfs_wrkdir) menuconfig
-	$(MAKE) -C $(dir $<) O=$(buildroot_initramfs_wrkdir) savedefconfig
-	cp $(dir $<)/defconfig conf/buildroot_initramfs_config
+buildroot_initramfs-menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
+	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_initramfs_wrkdir) menuconfig
+	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_initramfs_wrkdir) savedefconfig
+	cp $(dir $(buildroot_builddir))/defconfig conf/buildroot_initramfs_config
 
-$(buildroot_rootfs_wrkdir)/.config: $(buildroot_srcdir)
+$(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_rootfs_config) $@
-	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) olddefconfig
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) olddefconfig
 
-$(buildroot_rootfs_ext): $(buildroot_srcdir) $(buildroot_rootfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_rootfs_config)
-	$(MAKE) -C $< RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir)
+$(buildroot_rootfs_ext): $(buildroot_builddir_stamp) $(buildroot_rootfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_rootfs_config)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir)
 
 .PHONY: buildroot_rootfs-menuconfig
-buildroot_rootfs-menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_srcdir)
-	$(MAKE) -C $(dir $<) O=$(buildroot_rootfs_wrkdir) menuconfig
-	$(MAKE) -C $(dir $<) O=$(buildroot_rootfs_wrkdir) savedefconfig
-	cp $(dir $<)/defconfig conf/buildroot_rootfs_config
+buildroot_rootfs-menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_builddir_stamp)
+	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_rootfs_wrkdir) menuconfig
+	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_rootfs_wrkdir) savedefconfig
+	cp $(dir $(buildroot_builddir))/defconfig conf/buildroot_rootfs_config
 
 $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	mkdir -p $(buildroot_initramfs_sysroot)
@@ -442,23 +454,23 @@ HSS_PAYLOAD = 21686148-6449-6E6F-744E-656564454649
 
 # partition addreses
 VFAT_START=2048
-VFAT_END=115502
-VFAT_SIZE=113454
+VFAT_END=126976
+VFAT_SIZE=124928
 FSBL_START=1024
 FSBL_END=2047
 FSBL_SIZE=1023
 UENV_START=100
 UENV_END=1023
 RESERVED_SIZE=2000
-OSBI_START=115536
-OSBI_END=145536
+OSBI_START=129024
+OSBI_END=159024
 
 # partition addreses for icicle kit
 UBOOT_START=2048
 UBOOT_END=3248
 LINUX_START=4096
-LINUX_END=117550
-ROOT_START=118784
+LINUX_END=133120
+ROOT_START=135168
 
 .PHONY: format-icicle-image
 format-icicle-image: $(fit) $(uboot_s_scr) $(icicle_image_mnt_point)
