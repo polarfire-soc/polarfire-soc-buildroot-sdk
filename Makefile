@@ -44,6 +44,10 @@ buildroot_rootfs_wrkdir := $(wrkdir)/buildroot_rootfs
 buildroot_rootfs_ext := $(buildroot_rootfs_wrkdir)/images/rootfs.ext4
 buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
+buildroot_patchdir := $(patchdir)/buildroot/
+buildroot_builddir := $(wrkdir)/buildroot_build
+buildroot_builddir_stamp := $(wrkdir)/.buildroot_builddir
+
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
@@ -146,10 +150,6 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 		--enable-linux
 	$(MAKE) -C $(toolchain_wrkdir)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
-
-buildroot_patchdir := $(patchdir)/buildroot/
-buildroot_builddir := $(wrkdir)/buildroot_build
-buildroot_builddir_stamp := $(wrkdir)/.buildroot_builddir
 
 $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patchdir)
 	- rm -rf $(buildroot_builddir)
