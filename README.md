@@ -58,7 +58,7 @@ $ make all DEVKIT=<devkit>
 ```
 
 ## Loading the Image onto the Target
-The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-&-LC-MPFS).
+The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-or-LC-MPFS).
 
 ### Preparing the eMMC for the Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
@@ -132,7 +132,7 @@ You can remove it from your PC and insert it into the SD card slot on the Icicle
 Connect to UART0 (J11) for the HSS and UART1 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
 When Linux boots, log in with the username `root` & the password `microchip`.  
 
-### Preparing an SD Card for MPFS & LC-MPFS
+### Preparing an SD Card for MPFS or LC-MPFS
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
