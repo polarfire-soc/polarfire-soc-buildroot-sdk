@@ -1,19 +1,19 @@
-From 7e99bfce11649e107990f5e0f481b2eeacf93689 Mon Sep 17 00:00:00 2001
+From fef52134f55b2be3dac644fd1c06ee7dd0305ff7 Mon Sep 17 00:00:00 2001
 From: Padmarao Begari <padmarao.begari@microchip.com>
-Date: Fri, 19 Jun 2020 16:38:23 +0530
-Subject: [PATCH 5/5] gem driver for the Microchip mpfs-icicle SoC board.
+Date: Tue, 11 Aug 2020 13:56:10 +0530
+Subject: [PATCH 5/5] gem driver for the Microchip mpfs-icicle kit.
 
 gem and vitesse driver for 64-bit dma access
 
 Signed-off-by: Padmarao Begari <padmarao.begari@microchip.com>
 ---
- drivers/net/macb.c        | 28 ++++++++++++++++++----------
+ drivers/net/macb.c        | 52 ++++++++++++++++++++++++++++++---------
  drivers/net/macb.h        |  3 ++-
- drivers/net/phy/vitesse.c | 28 +++++++++++++++++++++++++++-
- 3 files changed, 47 insertions(+), 12 deletions(-)
+ drivers/net/phy/vitesse.c | 28 ++++++++++++++++++++-
+ 3 files changed, 70 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/net/macb.c b/drivers/net/macb.c
-index 8359425378..6667b818bd 100644
+index 8359425378..f0a6b5365a 100644
 --- a/drivers/net/macb.c
 +++ b/drivers/net/macb.c
 @@ -79,6 +79,8 @@ DECLARE_GLOBAL_DATA_PTR;
@@ -35,6 +35,15 @@ index 8359425378..6667b818bd 100644
  	macb_writel(macb, NCR, MACB_BIT(TE) | MACB_BIT(RE) | MACB_BIT(TSTART));
  
  	/*
+@@ -344,7 +345,7 @@ static int _macb_send(struct macb_device *macb, const char *name, void *packet,
+ 		udelay(1);
+ 	}
+ 
+-	dma_unmap_single(packet, length, paddr);
++	dma_unmap_single(paddr, length, DMA_TO_DEVICE);
+ 
+ 	if (i <= MACB_TX_TIMEOUT) {
+ 		if (ctrl & MACB_BIT(TX_UNDERRUN))
 @@ -467,18 +468,18 @@ static void macb_phy_reset(struct macb_device *macb, const char *name)
  
  static int macb_phy_find(struct macb_device *macb, const char *name)
@@ -98,7 +107,36 @@ index 8359425378..6667b818bd 100644
  	}
  	macb_flush_ring_desc(macb, TX);
  
-@@ -1188,6 +1193,7 @@ static const struct eth_ops macb_eth_ops = {
+@@ -916,6 +921,28 @@ static int _macb_write_hwaddr(struct macb_device *macb, unsigned char *enetaddr)
+ 	u32 hwaddr_bottom;
+ 	u16 hwaddr_top;
+ 
++	char mac_addr_buff[20], *p_mac_addr_buff;
++	u8 *hw_mac_addr;
++	u16 value, i;
++	const char hex_ascii[] = "0123456789abcdef";
++
++	hw_mac_addr = enetaddr;
++	p_mac_addr_buff = mac_addr_buff;
++
++	*p_mac_addr_buff++ = '[';
++	for (i = 0; i < 6; i++) {
++		value = hw_mac_addr[i] / 16;
++		*p_mac_addr_buff++ = hex_ascii[value];
++		value = hw_mac_addr[i] % 16;
++		*p_mac_addr_buff++ = hex_ascii[value];
++		*p_mac_addr_buff++ = ' ';
++	}
++	--p_mac_addr_buff;
++	*p_mac_addr_buff++ = ']';
++	*p_mac_addr_buff = '\0';
++
++	env_set("icicle_mac_addr", mac_addr_buff);
++
+ 	/* set hardware address */
+ 	hwaddr_bottom = enetaddr[0] | enetaddr[1] << 8 |
+ 			enetaddr[2] << 16 | enetaddr[3] << 24;
+@@ -1188,6 +1215,7 @@ static const struct eth_ops macb_eth_ops = {
  static int macb_enable_clk(struct udevice *dev)
  {
  	struct macb_device *macb = dev_get_priv(dev);
@@ -106,7 +144,7 @@ index 8359425378..6667b818bd 100644
  	struct clk clk;
  	ulong clk_rate;
  	int ret;
-@@ -1210,7 +1216,9 @@ static int macb_enable_clk(struct udevice *dev)
+@@ -1210,7 +1238,9 @@ static int macb_enable_clk(struct udevice *dev)
  		return -EINVAL;
  
  	macb->pclk_rate = clk_rate;

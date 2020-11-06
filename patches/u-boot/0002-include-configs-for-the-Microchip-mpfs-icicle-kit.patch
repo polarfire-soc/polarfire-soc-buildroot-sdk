@@ -1,21 +1,20 @@
-From cfce858b4f72850f34446ebf9985d3bb96b46b20 Mon Sep 17 00:00:00 2001
-From: m34782 <lewis.hanly@microchip.com>
-Date: Fri, 19 Jun 2020 17:35:58 +0100
-Subject: [PATCH] [PATCH 2/5] include configs for the Microchip mpfs-icicle SoC
- board.
+From 2f74decdabcdb0cdafe7f062116d1429172a4c3f Mon Sep 17 00:00:00 2001
+From: Padmarao Begari <padmarao.begari@microchip.com>
+Date: Tue, 11 Aug 2020 13:45:30 +0530
+Subject: [PATCH 2/5] include configs for the Microchip mpfs-icicle kit.
 
 include configuration for icicle kit
 
 Signed-off-by: Padmarao Begari <padmarao.begari@microchip.com>
 ---
- include/configs/microchip_mpfs_icicle.h | 65 +++++++++----------------
- 1 file changed, 23 insertions(+), 42 deletions(-)
+ include/configs/microchip_mpfs_icicle.h | 64 +++++++++----------------
+ 1 file changed, 22 insertions(+), 42 deletions(-)
 
 diff --git a/include/configs/microchip_mpfs_icicle.h b/include/configs/microchip_mpfs_icicle.h
-index 2f90ab3175..954b0ad4a8 100644
+index 2f90ab3175..5da67c295f 100644
 --- a/include/configs/microchip_mpfs_icicle.h
 +++ b/include/configs/microchip_mpfs_icicle.h
-@@ -7,56 +7,37 @@
+@@ -7,56 +7,36 @@
  #ifndef __CONFIG_H
  #define __CONFIG_H
  
@@ -73,8 +72,7 @@ index 2f90ab3175..954b0ad4a8 100644
  
 -#define CONFIG_SYS_LOAD_ADDR	0x80000000 /* SDRAM */
 +#define BOOT_TARGET_DEVICES(func) \
-+    func(MMC, mmc, 0) \
-+    func(DHCP, dhcp, na)
++	func(MMC, mmc, 0)
  
 -/*
 - * memtest works on DRAM
@@ -85,13 +83,16 @@ index 2f90ab3175..954b0ad4a8 100644
  
 -/* When we use RAM as ENV */
 +#define CONFIG_EXTRA_ENV_SETTINGS \
-+    "fdt_high=0xffffffffffffffff\0" \
-+    "initrd_high=0xffffffffffffffff\0" \
-+    "kernel_addr_r=0x84000000\0" \
-+    "fdt_addr_r=0x88000000\0" \
-+    "scriptaddr=0x88100000\0" \
-+    "pxefile_addr_r=0x88200000\0" \
-+    "ramdisk_addr_r=0x88300000\0" \
-+    BOOTENV
++	"fdt_high=0xffffffffffffffff\0" \
++	"initrd_high=0xffffffffffffffff\0" \
++	"kernel_addr_r=0x84000000\0" \
++	"fdt_addr_r=0x88000000\0" \
++	"scriptaddr=0x88100000\0" \
++	"pxefile_addr_r=0x88200000\0" \
++	"ramdisk_addr_r=0x88300000\0" \
++	BOOTENV
  
  #endif /* __CONFIG_H */
+-- 
+2.17.1
+

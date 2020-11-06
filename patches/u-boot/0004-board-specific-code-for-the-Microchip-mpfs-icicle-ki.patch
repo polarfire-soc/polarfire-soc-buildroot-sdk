@@ -1,15 +1,15 @@
-From 7282e34b455bbd10b927500c677ed538f96ab0ab Mon Sep 17 00:00:00 2001
+From 22a75cdf40bacdf35c2a988bac7c446c84b8aa89 Mon Sep 17 00:00:00 2001
 From: Padmarao Begari <padmarao.begari@microchip.com>
-Date: Fri, 19 Jun 2020 16:27:37 +0530
-Subject: [PATCH 4/5] board specific code for the Microchip mpfs-icicle SoC
+Date: Tue, 11 Aug 2020 13:51:37 +0530
+Subject: [PATCH 4/5] board specific code for the Microchip mpfs-icicle kit
 
 board initialization code for icicle kit
 
 Signed-off-by: Padmarao Begari <padmarao.begari@microchip.com>
 ---
  board/microchip/mpfs_icicle/Kconfig       |  24 +-
- board/microchip/mpfs_icicle/mpfs_icicle.c | 319 +++++++++++++++++++++-
- 2 files changed, 333 insertions(+), 10 deletions(-)
+ board/microchip/mpfs_icicle/mpfs_icicle.c | 459 +++++++++++++++++++++-
+ 2 files changed, 474 insertions(+), 9 deletions(-)
 
 diff --git a/board/microchip/mpfs_icicle/Kconfig b/board/microchip/mpfs_icicle/Kconfig
 index bf8e1a13ec..3de4df2bb9 100644
@@ -46,16 +46,73 @@ index bf8e1a13ec..3de4df2bb9 100644
  
  endif
 diff --git a/board/microchip/mpfs_icicle/mpfs_icicle.c b/board/microchip/mpfs_icicle/mpfs_icicle.c
-index 0ef243186d..3b3b0433a0 100644
+index 0ef243186d..cd608aea9b 100644
 --- a/board/microchip/mpfs_icicle/mpfs_icicle.c
 +++ b/board/microchip/mpfs_icicle/mpfs_icicle.c
-@@ -8,23 +8,326 @@
+@@ -8,23 +8,468 @@
  #include <dm.h>
  #include <asm/io.h>
  
 -#define MPFS_SYSREG_SOFT_RESET	((unsigned int *)0x20002088)
 +#define MPFS_SYSREG_SOFT_RESET  ((unsigned int *)0x20002088)
 +#define MPFS_SYSREG_SUBBLK_CLOCK_CR  ((unsigned int *)0x20002084)
++/*******************************System services*******************************************/
++typedef struct {
++	volatile u32 SOFT_RESET;
++	volatile u32 VDETECTOR;
++	volatile u32 TVS_CONTROL;
++	volatile u32 TVS_TEMP_A;
++	volatile u32 TVS_TEMP_B;
++	volatile u32 TVS_TEMP_C;
++	volatile u32 TVS_VOLT_A;
++	volatile u32 TVS_VOLT_B;
++	volatile u32 TVS_VOLT_C;
++	volatile u32 TVS_OUTPUT0;
++	volatile u32 TVS_OUTPUT1;
++	volatile u32 TVS_TRIGGER;
++	volatile u32 TRIM_VDET1P05;
++	volatile u32 TRIM_VDET1P8;
++	volatile u32 TRIM_VDET2P5;
++	volatile u32 TRIM_TVS;
++	volatile u32 TRIM_GDET1P05;
++	volatile u32 RESERVED0;
++	volatile u32 RESERVED1;
++	volatile u32 RESERVED2;
++	volatile u32 SERVICES_CR;
++	volatile u32 SERVICES_SR;
++	volatile u32 USER_DETECTOR_SR;
++	volatile u32 USER_DETECTOR_CR;
++	volatile u32 MSS_SPI_CR;
++} SCBCTRL_TypeDef;
++
++#define MSS_SCBCTRL					((SCBCTRL_TypeDef *)(0x37020000UL))
++/*2kB bytes long mailbox.*/
++#define MSS_SCBMAILBOX				((u32 *)(0x37020800UL))
++/*SCB message register*/
++#define MSS_SCBMESSAGE				((u32 *)(0x20003190UL))
++
++#define SCBCTRL_SERVICESCR_COMMAND				(16u)
++#define SCBCTRL_SERVICESCR_COMMAND_MASK			(0xFFFFu << SCBCTRL_SERVICESCR_COMMAND)
++#define SCBCTRL_SERVICESCR_REQ					(0u)
++#define SCBCTRL_SERVICESCR_REQ_MASK				(1u << SCBCTRL_SERVICESCR_REQ)
++#define SCBCTRL_SERVICESSR_BUSY					(1u)
++#define SCBCTRL_SERVICESSR_BUSY_MASK			(1u << SCBCTRL_SERVICESSR_BUSY)
++#define SCBCTRL_SERVICESSR_STATUS				(16u)
++#define SCBCTRL_SERVICESSR_STATUS_MASK			(0xFFFFu << SCBCTRL_SERVICESSR_STATUS)
++
++static u16 request_system_service
++(
++	u8 cmd_opcode,
++	u8 *cmd_data,
++	u16 cmd_data_size,
++	u8 *p_response,
++	u16 response_size,
++	u16 mb_offset,
++	u16 response_offset
++
++);
++/*SCB message interrupt register*/
++#define MSS_SCBMESSAGE_INT					((u32 *)(0x2000318CUL))
 +
 +/*******************************GPIO*******************************************/
 +#define GPIO0_LO                        ((GPIO_TypeDef *)0x20120000)
@@ -66,11 +123,11 @@ index 0ef243186d..3b3b0433a0 100644
 +#define GPIO2_HI                        ((GPIO_TypeDef *)0x28122000)
 +
 +/*-----------------------------------------------------------------------------
-+  The mss_gpio_id_t enumeration is used to identify individual GPIO ports as an
-+  argument to functions:
-+    - MSS_GPIO_config()
-+    - MSS_GPIO_set_output() and MSS_GPIO_drive_inout()
-+    - MSS_GPIO_enable_irq(), MSS_GPIO_disable_irq() and MSS_GPIO_clear_irq()
++ * The mss_gpio_id_t enumeration is used to identify individual GPIO ports as an
++ * argument to functions:
++ *  - MSS_GPIO_config()
++ *   - MSS_GPIO_set_output() and MSS_GPIO_drive_inout()
++ *   - MSS_GPIO_enable_irq(), MSS_GPIO_disable_irq() and MSS_GPIO_clear_irq()
 + */
 +typedef enum __mss_gpio_id_t {
 +	MSS_GPIO_0 = 0,
@@ -108,12 +165,12 @@ index 0ef243186d..3b3b0433a0 100644
 +} mss_gpio_id_t;
 +
 +/*----------------------------------------------------------------------------
-+* These constant definitions are used as an argument to the
-+* MSS_GPIO_set_outputs() function to identify GPIO ports. A logical OR of these
-+* constants can be used to specify multiple GPIO ports.
-+* These definitions can also be used to identify GPIO ports through logical
-+* operations on the return value of the MSS_GPIO_get_inputs() function.
-+*/
++ * These constant definitions are used as an argument to the
++ * MSS_GPIO_set_outputs() function to identify GPIO ports. A logical OR of these
++ * constants can be used to specify multiple GPIO ports.
++ * These definitions can also be used to identify GPIO ports through logical
++ * operations on the return value of the MSS_GPIO_get_inputs() function.
++ */
 +#define MSS_GPIO_0_MASK         0x00000001uL
 +#define MSS_GPIO_1_MASK         0x00000002uL
 +#define MSS_GPIO_2_MASK         0x00000004uL
@@ -148,9 +205,9 @@ index 0ef243186d..3b3b0433a0 100644
 +#define MSS_GPIO_31_MASK        0x80000000uL
 +
 +/*----------------------------------------------------------------------------
-+* These constant definitions are used as an argument to the MSS_GPIO_config()
-+* function to specify the I/O mode of each GPIO port.
-+*/
++ * These constant definitions are used as an argument to the MSS_GPIO_config()
++ * function to specify the I/O mode of each GPIO port.
++ */
 +#define MSS_GPIO_INPUT_MODE              0x0000000002uL
 +#define MSS_GPIO_OUTPUT_MODE             0x0000000005uL
 +#define MSS_GPIO_INOUT_MODE              0x0000000003uL
@@ -233,7 +290,7 @@ index 0ef243186d..3b3b0433a0 100644
 +
 +#define MSS_MPU(master)                ((MPU_TypeDef *) (0x20005000UL + ((master) << 8u)))
 +
-+static void MSS_GPIO_config(GPIO_TypeDef *gpio, mss_gpio_id_t port_id, uint32_t config)
++static void MSS_GPIO_config(GPIO_TypeDef *gpio, mss_gpio_id_t port_id, u32 config)
 +{
 +	gpio->GPIO_CFG[port_id] = config;
 +}
@@ -250,9 +307,9 @@ index 0ef243186d..3b3b0433a0 100644
 +static void MSS_GPIO_set_output(GPIO_TypeDef *gpio, mss_gpio_id_t port_id, u8 value)
 +{
 +	/* Setting the bit in GPIO_SET_BITS (offset 0xA4) sets the corresponding
-+	* output port. Setting the bit in GPIO_CLR_BITS (offset 0xA0) clears the corresponding
-+	* output port.
-+	*/
++	 * output port. Setting the bit in GPIO_CLR_BITS (offset 0xA0) clears the corresponding
++	 * output port.
++	 */
 +
 +	if (value)
 +		gpio->GPIO_SET_BITS = ((u32)0x01u << port_id);
@@ -260,7 +317,7 @@ index 0ef243186d..3b3b0433a0 100644
 +		gpio->GPIO_CLR_BITS = ((u32)0x01u << port_id);
 +}
 +
-+uint8_t MSS_MPU_configure(mss_mpu_mport_t master_port,
++u8 MSS_MPU_configure(mss_mpu_mport_t master_port,
 +					mss_mpu_pmp_region_t pmp_region,
 +					u64 base,
 +					u64 size,
@@ -273,9 +330,9 @@ index 0ef243186d..3b3b0433a0 100644
 +	volatile u64 baddr = 0;
 +
 +	/* size must be minimum 4k
-+	* Size must be power of 2
-+	* different masters have different number of regions
-+	*/
++	 * Size must be power of 2
++	 * different masters have different number of regions
++	 */
 +
 +	if (size >= 4096u && (0u == (size & (size - 1))) && pmp_region < num_pmp_lut[master_port]) {
 +		while ((0 == (temp & 0x01))) {
@@ -302,8 +359,31 @@ index 0ef243186d..3b3b0433a0 100644
  int board_init(void)
  {
 -	/* For now nothing to do here. */
-+	u32 ret;
++	u32 ret, node;
 +	u32 delay_count;
++	u8 device_serial_number[16], i;
++	char mac_addr[6];
++
++	for (i = 0; i < 16; i++) {
++		device_serial_number[i] = 0;
++	}
++	request_system_service(0, 0, 0, device_serial_number, 16, 0, 0);
++
++	node = fdt_path_offset(gd->fdt_blob, "ethernet0");
++	if (node < 0) {
++		printf("no ethernet0 path offset\n");
++	}
++
++	ret = fdtdec_get_byte_array(gd->fdt_blob, node, "mac-address", mac_addr, 6);
++	/* Update MAC */
++	mac_addr[3] = device_serial_number[2];
++	mac_addr[4] = device_serial_number[1];
++	mac_addr[5] = device_serial_number[0];
++	ret = fdt_setprop(gd->fdt_blob, node, "mac-address", mac_addr, 6);
++
++	if (ret) {
++		printf("error setting mac-address property\n");
++	}
 +
 +	ret = MSS_MPU_configure(MSS_MPU_MMC,
 +			MSS_MPU_PMP_REGION3,
@@ -312,7 +392,7 @@ index 0ef243186d..3b3b0433a0 100644
 +			MPU_MODE_READ_ACCESS | MPU_MODE_WRITE_ACCESS | MPU_MODE_EXEC_ACCESS,
 +			MSS_MPU_AM_NAPOT,
 +			0);
-+
+ 
 +	ret = MSS_MPU_configure(MSS_MPU_GEM1,
 +			MSS_MPU_PMP_REGION1,
 +			0x80000000,
@@ -320,7 +400,7 @@ index 0ef243186d..3b3b0433a0 100644
 +			MPU_MODE_READ_ACCESS | MPU_MODE_WRITE_ACCESS | MPU_MODE_EXEC_ACCESS,
 +			MSS_MPU_AM_NAPOT,
 +			0);
- 
++
 +	MSS_GPIO_config(GPIO2_LO, MSS_GPIO_0,  MSS_GPIO_OUTPUT_MODE);  /* USB ULPI Reset */
 +	MSS_GPIO_config(GPIO2_LO, MSS_GPIO_2,  MSS_GPIO_OUTPUT_MODE);  /* VSC8662 Reset */
 +	MSS_GPIO_config(GPIO2_LO, MSS_GPIO_3,  MSS_GPIO_OUTPUT_MODE);  /* VSC8662 Soft Reset */
@@ -373,15 +453,76 @@ index 0ef243186d..3b3b0433a0 100644
  int board_early_init_f(void)
  {
 -	unsigned int val;
--
++	/* Reset all peripheral and set clocks */
++	writel(0xFFFFFFFF, MPFS_SYSREG_SUBBLK_CLOCK_CR);
++	writel(0, MPFS_SYSREG_SOFT_RESET);
++
++	return 0;
++}
++static u16 request_system_service
++(
++	u8 cmd_opcode,
++	u8 *cmd_data,
++	u16 cmd_data_size,
++	u8 *p_response,
++	u16 response_size,
++	u16 mb_offset,
++	u16 response_offset
++)
++{
++	u16 ss_command = 0u;
++	u32 idx;
++	u16 response_limit = 0u;
++	u8 *response_buf;
++	u16 status = 0u;
++
++	*MSS_SCBMESSAGE_INT = 0x0u; /*clear message_int reg*/
++
++	/* Form the SS command: bit 0to6 is the opcode, bit 7to15 is the Mailbox
++	 * offset For some services this field has another meaning.
++	 * (e.g. for IAP bit-stream auth. it means spi_idx)
++	 */
++	ss_command = ((mb_offset << 7u) |  (cmd_opcode & 0x7Fu));
++
++	MSS_SCBCTRL->SERVICES_CR = (((ss_command << SCBCTRL_SERVICESCR_COMMAND)
++							& SCBCTRL_SERVICESCR_COMMAND_MASK) |
++							SCBCTRL_SERVICESCR_REQ_MASK);
++
++	/* REQ bit will remain set till the system controller starts
++	 * processing command. Since DRI is slow interface, we are waiting
++	 * here to make sure System controller has started processing
++	 * command
++	 */
++	while (SCBCTRL_SERVICESCR_REQ_MASK == (MSS_SCBCTRL->SERVICES_CR &
++			SCBCTRL_SERVICESCR_REQ_MASK)) {
++		;
++	}
++
++	/* Once system controller starts processing command The busy bit will
++	 *  go 1. Make sure that service is complete i.e. BUSY bit is gone 0
++	 */
++	while (SCBCTRL_SERVICESSR_BUSY_MASK == (MSS_SCBCTRL->SERVICES_SR &
++			SCBCTRL_SERVICESSR_BUSY_MASK)) {
++		;
++	}
++
++	if (response_size > 0u) {
++		response_limit = response_size + response_offset;
++		response_buf = (u8 *)p_response;
+ 
 -	/* Reset uart peripheral */
 -	val = readl(MPFS_SYSREG_SOFT_RESET);
 -	val = (val & ~(1u << 5u));
 -	writel(val, MPFS_SYSREG_SOFT_RESET);
-+	/* Reset all peripheral and set clocks */
-+	writel(0xFFFFFFFF, MPFS_SYSREG_SUBBLK_CLOCK_CR);
-+	writel(0, MPFS_SYSREG_SOFT_RESET);
++		for (idx = response_offset; idx < response_limit; idx++) {
++			response_buf[idx - response_offset] =
++					*((u8 *)MSS_SCBMAILBOX + idx);
++		}
++	}
  
++	/* Read the status returned by System Controller */
++	status = ((MSS_SCBCTRL->SERVICES_SR & SCBCTRL_SERVICESSR_STATUS_MASK) >>
++			SCBCTRL_SERVICESSR_STATUS);
  	return 0;
  }
 -- 

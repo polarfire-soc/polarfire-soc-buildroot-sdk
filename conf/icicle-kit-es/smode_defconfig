@@ -16,3 +16,4 @@ CONFIG_DM_MTD=y
 # CONFIG_FIT_SIGNATURE=
 # CONFIG_RSA=
 CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; load mmc 0:2 ${fileaddr} uEnv.txt; env import -t ${fileaddr} ${filesize}; echo 'Running boot cmd...'; run boot3"
+CONFIG_SYS_BOOT_RAMDISK_HIGH=y

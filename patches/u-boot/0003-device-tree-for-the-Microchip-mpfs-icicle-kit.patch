@@ -1,15 +1,15 @@
-From 73c5889b9788bf7695c617c3ffa60f8dff50e45d Mon Sep 17 00:00:00 2001
+From 39f686b9f1f9a33c904717a6148bc392e5190ff8 Mon Sep 17 00:00:00 2001
 From: Padmarao Begari <padmarao.begari@microchip.com>
-Date: Fri, 19 Jun 2020 16:23:04 +0530
-Subject: [PATCH 3/5] device tree for the Microchip mpfs-icicle SoC board.
+Date: Tue, 11 Aug 2020 13:48:20 +0530
+Subject: [PATCH 3/5] device tree for the Microchip mpfs-icicle kit.
 
 device tree for icicle kit
 
 Signed-off-by: Padmarao Begari <padmarao.begari@microchip.com>
 ---
  arch/riscv/dts/Makefile        |   1 +
- arch/riscv/dts/mpfs_icicle.dts | 430 +++++++++++++++++++++++++++++++++
- 2 files changed, 431 insertions(+)
+ arch/riscv/dts/mpfs_icicle.dts | 435 +++++++++++++++++++++++++++++++++
+ 2 files changed, 436 insertions(+)
  create mode 100644 arch/riscv/dts/mpfs_icicle.dts
 
 diff --git a/arch/riscv/dts/Makefile b/arch/riscv/dts/Makefile
@@ -26,10 +26,10 @@ index 4f30e6936f..34c81dcae1 100644
  
 diff --git a/arch/riscv/dts/mpfs_icicle.dts b/arch/riscv/dts/mpfs_icicle.dts
 new file mode 100644
-index 0000000000..29af1f82ba
+index 0000000000..72c4602d86
 --- /dev/null
 +++ b/arch/riscv/dts/mpfs_icicle.dts
-@@ -0,0 +1,430 @@
+@@ -0,0 +1,435 @@
 +// SPDX-License-Identifier: (GPL-2.0 OR MIT)
 +/* Copyright (c) 2019-2020 Microchip Technology Inc. */
 +
@@ -39,6 +39,11 @@ index 0000000000..29af1f82ba
 +	#size-cells = <2>;
 +	compatible = "SiFive,FU540G-dev", "fu540-dev", "sifive-dev";
 +	model = "SiFive,FU540G";
++
++	aliases {
++		ethernet0 = &emac1;
++	};
++
 +	L45: cpus {
 +		#address-cells = <1>;
 +		#size-cells = <0>;
@@ -369,7 +374,7 @@ index 0000000000..29af1f82ba
 +	};
 +
 +	chosen {
-+		stdout-path = "/serial@20100000:115200n8";
++		stdout-path = "/serial@20000000:115200n8";
 +		bootargs = "console=ttyS0,115200n8 ";
 +	};
 +
@@ -389,18 +394,18 @@ index 0000000000..29af1f82ba
 +		clock-output-names = "cpuclk", "axiclk", "ahbclk", "ENVMclk", "MAC0clk", "MAC1clk", "MMCclk", "TIMERclk", "MMUART0clk", "MMUART1clk", "MMUART2clk", "MMUART3clk", "MMUART4clk", "SPI0clk", "SPI1clk", "I2C0clk", "I2C1clk", "CAN0clk", "CAN1clk", "USBclk", "RESERVED", "RTCclk", "QSPIclk", "GPIO0clk", "GPIO1clk", "GPIO2clk", "DDRCclk", "FIC0clk", "FIC1clk", "FIC2clk", "FIC3clk", "ATHENAclk", "CFMclk";
 +	};
 +
-+   serial0: serial@20100000 {
-+       compatible = "ns16550a";
-+       reg = <0x0 0x20100000 0x0 0x400>;
-+       reg-io-width = <4>;
-+       reg-shift = <2>;
-+       interrupt-parent = <&L1>;
-+       interrupts = <91>;
-+       current-speed = <115200>;
-+       clock-frequency = <150000000>;
-+       clocks = <&clkcfg 9>;
-+       status = "okay";
-+   };
++	serial0: serial@20000000 {
++		compatible = "ns16550a";
++		reg = <0x0 0x20000000 0x0 0x400>;
++		reg-io-width = <4>;
++		reg-shift = <2>;
++		interrupt-parent = <&L1>;
++		interrupts = <90>;
++		current-speed = <115200>;
++		clock-frequency = <150000000>;
++		clocks = <&clkcfg 8>;
++		status = "okay";
++	};
 +
 +	emmc: sdhc@20008000 {
 +		compatible = "cdns,sd4hc";
