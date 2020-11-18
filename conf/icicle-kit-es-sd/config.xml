@@ -1,10 +1,10 @@
   <mss xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="mpfs_hw_description.xsd">
     <design_information>
-      <libero_version>12.900.0.16-PFSOC_MSS:2.0.108</libero_version>
+      <libero_version>1.0</libero_version>
       <design_name>ICICLE_MSS</design_name>
       <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
-      <mpfs_package>FCVG484_Eval</mpfs_package>
-      <creation_date_time>06-26-2020_17:56:45</creation_date_time>
+      <mpfs_package>FCVG484</mpfs_package>
+      <creation_date_time>11-16-2020_11:46:52</creation_date_time>
       <xml_format_version>0.3.8</xml_format_version>
     </design_information>
     <mss_memory_map>
@@ -3219,3 +3219,4 @@
       </mss_peripherals>
     </mss_general>
   </mss>
+

@@ -268,20 +268,14 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
 $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
-ifeq ($(DEVKIT),icicle-kit-es)
-	dtc -I dts $(confdir)/$(DEVKIT)/$(DEVKIT).dts -O dtb -o $(device_tree_blob)
-else ifeq ($(DEVKIT),icicle-kit-es-sd)
-	dtc -I dts $(confdir)/$(DEVKIT)/$(DEVKIT).dts -O dtb -o $(device_tree_blob)
-else
 	rm -rf $(wrkdir)/dts
-	mkdir $(wrkdir)/dts
+	mkdir -p $(wrkdir)/dts
 	cp $(confdir)/dts/* $(wrkdir)/dts
 	cp $< $(wrkdir)/dts
 	(cat $(wrkdir)/dts/$(DEVKIT).dts; ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
 	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
-endif
 
 $(fit): $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
