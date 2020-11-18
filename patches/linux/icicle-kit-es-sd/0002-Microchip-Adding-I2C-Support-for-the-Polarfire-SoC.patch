@@ -1,10 +1,9 @@
-From 3b584d7553239483335154f68a7f7aff1bd75f58 Mon Sep 17 00:00:00 2001
+From 8c90e8e1acc12c2983b6e2ee4518ff466bb4b35e Mon Sep 17 00:00:00 2001
 From: Lewis Hanly <Lewis.Hanly@microchip.com>
 Date: Fri, 21 Feb 2020 14:29:18 +0000
-Subject: [PATCH] Microchip Adding I2C Support for the Polarfire SoC
+Subject: [PATCH 2/8] Microchip Adding I2C Support for the Polarfire SoC
 
 Adding Microsemi I2C driver for the MPFS platforms.
-
 
 Signed-off-by: Lewis Hanly <Lewis.Hanly@microchip.com>
 ---
@@ -15,10 +14,10 @@ Signed-off-by: Lewis Hanly <Lewis.Hanly@microchip.com>
  create mode 100755 drivers/i2c/busses/i2c-microsemi.c
 
 diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-index 146ce40d8e0a..b79c14320197 100644
+index 2ddca08f8a76..98fb53ca6bcb 100644
 --- a/drivers/i2c/busses/Kconfig
 +++ b/drivers/i2c/busses/Kconfig
-@@ -729,6 +729,12 @@ config I2C_MESON
+@@ -734,6 +734,12 @@ config I2C_MESON
  	  If you say yes to this option, support will be included for the
  	  I2C interface on the Amlogic Meson family of SoCs.
  
@@ -32,7 +31,7 @@ index 146ce40d8e0a..b79c14320197 100644
  	tristate "MPC107/824x/85xx/512x/52xx/83xx/86xx"
  	depends on PPC
 diff --git a/drivers/i2c/busses/Makefile b/drivers/i2c/busses/Makefile
-index 3ab8aebc39c9..7e16c17102b2 100644
+index 25d60889713c..207ca93f01e1 100644
 --- a/drivers/i2c/busses/Makefile
 +++ b/drivers/i2c/busses/Makefile
 @@ -75,6 +75,7 @@ obj-$(CONFIG_I2C_JZ4780)	+= i2c-jz4780.o
@@ -483,7 +482,6 @@ index 000000000000..436d9319884b
 +	struct resource *res;
 +	int irq, ret;
 +	u32 val;
-+	printk("i2c probe function\r\n");
 +
 +	idev = devm_kzalloc(&pdev->dev, sizeof(*idev), GFP_KERNEL);
 +	if (!idev)
@@ -595,3 +593,6 @@ index 000000000000..436d9319884b
 +MODULE_DESCRIPTION("Microsemi I2C bus driver");
 +MODULE_AUTHOR("Microsemi Corporation");
 +MODULE_LICENSE("GPL v2");
+-- 
+2.17.1
+

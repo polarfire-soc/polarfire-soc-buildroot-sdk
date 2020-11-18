@@ -6,8 +6,8 @@ Subject: [PATCH] test
 ---
  drivers/gpio/Kconfig          |   7 +
  drivers/gpio/Makefile         |   1 +
- drivers/gpio/gpio-microsemi.c | 502 ++++++++++++++++++++++++++++++++++
- 3 files changed, 510 insertions(+)
+ drivers/gpio/gpio-microsemi.c | 501 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 509 insertions(+)
  create mode 100644 drivers/gpio/gpio-microsemi.c
 
 diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
@@ -45,7 +45,7 @@ new file mode 100644
 index 000000000000..b7aefe460404
 --- /dev/null
 +++ b/drivers/gpio/gpio-microsemi.c
-@@ -0,0 +1,502 @@
+@@ -0,0 +1,501 @@
 +/*
 + * Microsemi GPIO driver
 + *
@@ -429,7 +429,6 @@ index 000000000000..b7aefe460404
 +	struct resource *res;
 +	int gpio_index, irq, ret, ngpio;
 +
-+    printk("Starting probe function\r\n");
 +	mss_gpio = devm_kzalloc(dev, sizeof(*mss_gpio), GFP_KERNEL);
 +	if (!mss_gpio) {
 +		//dev_err(dev, "out of memory\n");

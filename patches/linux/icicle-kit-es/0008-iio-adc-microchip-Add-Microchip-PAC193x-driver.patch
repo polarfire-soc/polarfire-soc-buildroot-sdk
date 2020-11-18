@@ -1,3 +1,18 @@
+From 74effb627427a8f78f80fe762b116b14154dbcde Mon Sep 17 00:00:00 2001
+From: Daire McNamara <daire.mcnamara@microchip.com>
+Date: Fri, 13 Nov 2020 15:05:49 +0000
+Subject: [PATCH 8/8] iio: adc: microchip: Add Microchip PAC193x driver
+
+Add driver for Microchip PAC193x ADC
+
+Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+---
+ drivers/iio/adc/Kconfig   |   13 +
+ drivers/iio/adc/Makefile  |    1 +
+ drivers/iio/adc/pac193x.c | 1671 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 1685 insertions(+)
+ create mode 100644 drivers/iio/adc/pac193x.c
+
 diff --git a/drivers/iio/adc/Kconfig b/drivers/iio/adc/Kconfig
 index 82e33082958c..d1efd33bba3a 100644
 --- a/drivers/iio/adc/Kconfig
@@ -1706,3 +1721,6 @@ index 000000000000..2e0b0c232984
 +MODULE_DESCRIPTION("PAC193x");
 +MODULE_LICENSE("GPL v2");
 +MODULE_VERSION("0.0.1");
+-- 
+2.17.1
+
