@@ -1,5 +1,7 @@
 ISA ?= rv64imafdc
 ABI ?= lp64d
+LIBERO_PATH ?= /usr/local/microsemi/Libero_SoC_v12.5/Libero/
+fpgenprog := $(LIBERO_PATH)/bin64/fpgenprog
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
@@ -14,9 +16,15 @@ device_tree_blob := $(wrkdir)/riscvpc.dtb
 ifeq "$(DEVKIT)" "icicle-kit-es"
 HSS_SUPPORT ?= y
 HSS_TARGET ?= icicle-kit-es
+target_die = MPFS250T_ES
+target_package = FCVG484
+mem_file_base_address = 20220000
 else ifeq "$(DEVKIT)" "icicle-kit-es-sd"
 HSS_SUPPORT ?= y
 HSS_TARGET ?= icicle-kit-es
+target_die = MPFS250T_ES
+target_package = FCVG484
+mem_file_base_address = 20220000
 else
 FSBL_SUPPORT ?= y
 OSBI_SUPPORT ?= y
@@ -114,6 +122,16 @@ payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-g
 payloadgen_wrkdir := $(wrkdir)/payload_generator
 hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
 
+hss_srcdir := $(srcdir)/hart-software-services
+hss_defconfig := $(confdir)/hss_defconfig
+hss_wrkdir := $(wrkdir)/hart-software-services
+hss := $(hss_wrkdir)/hss.bin
+hss_config := $(hss_wrkdir)/config.h
+
+xml_config := $(confdir)/$(DEVKIT)/config.xml 
+hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
+hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
+
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 emmc_image := $(wrkdir)/emmc.img
 icicle_image_mnt_point=/mnt
@@ -121,6 +139,7 @@ icicle_image_mnt_point=/mnt
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
 bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
+bootloaders-$(HSS_SUPPORT) += $(hss)
 
 all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo
@@ -367,6 +386,29 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
+$(hss_wrkdir_stamp): $(hss_srcdir)
+	rm -rf $(hss_wrkdir) $(hss_wrkdir_stamp) $(hss_hw_config_stamp)
+	mkdir -p $(hss_wrkdir)
+	cp -r $(hss_srcdir)/* $(hss_wrkdir)
+	touch $@
+
+$(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
+ifeq ($(DEVKIT),icicle-kit-es)	
+	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
+	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
+else ifeq ($(DEVKIT),icicle-kit-es-sd)	
+	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
+	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
+endif
+	touch $@
+
+$(hss_config): $(hss_wrkdir_stamp)
+	cp $(confdir)/$(DEVKIT)/hss_def_config $(hss_wrkdir)/.config
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
+
+$(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE)
+
 $(hss_payload_generator): $(payload_generator_srcdir)
 	mkdir -p $(payloadgen_wrkdir)
 	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
@@ -433,7 +475,7 @@ $(vfat_image): $(fit) $(uboot_s_scr)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage.fit
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
 
-## sd/emmc formatting
+## sd/emmc/envm formatting
 
 # partition addreses for {lc-,}mpfs
 BBL			= 2E54B353-1271-4842-806F-E436D6AF6985
@@ -573,3 +615,15 @@ else ifeq ($(DEVKIT),icicle-kit-es-sd)
 else 
 	dd if=$(rootfs) of=$(PART2) bs=4096
 endif
+
+program_envm: $(hss)
+ifeq (,$(shell which $(fpgenprog)))
+	$(error fpgenprog not found - either libero is not installed or LIBERO_PATH does not point to the installation directory)
+endif
+	rm -rf $(wrkdir)/fpgen
+	mkdir -p $(wrkdir)/fpgen
+	$(fpgenprog) new_project --location $(wrkdir)/fpgen --target_die $(target_die) --target_package $(target_package)
+	$(fpgenprog) envm_client --location $(wrkdir)/fpgen  --number_of_bytes 111552 --content_file_format intel-hex --content_file $(hss_wrkdir)/Default/hss.hex --start_page 0 --client_name envm1 --mem_file_base_address 20220000
+	$(fpgenprog) mss_boot_info --location $(wrkdir)/fpgen  --u_mss_bootmode 1 --u_mss_bootcfg $(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)
+	$(fpgenprog) generate_bitstream --location $(wrkdir)/fpgen
+	$(fpgenprog) run_action --location $(wrkdir)/fpgen --action PROGRAM
