@@ -4,7 +4,7 @@
     <design_name>ICICLE_MSS</design_name>
     <mpfs_part_no>MPFS250T_ES</mpfs_part_no>
     <mpfs_package>FCVG484</mpfs_package>
-    <creation_date_time>11-23-2020_10:20:10</creation_date_time>
+    <creation_date_time>11-19-2020_12:44:53</creation_date_time>
     <xml_format_version>0.3.8</xml_format_version>
   </design_information>
   <mss_memory_map>
@@ -961,22 +961,22 @@
           <field Type="RW" name="MDIO1_FABRIC" offset="13" width="1">0x0</field>
         </register>
         <register address="0x00000204" description="Configures the IO Mux structure for each IO pad. See the MSS MAS specification for for description." name="IOMUX1_CR">
-          <field Type="RW" name="PAD0" offset="0" width="4">0x0</field>
-          <field Type="RW" name="PAD1" offset="4" width="4">0x0</field>
-          <field Type="RW" name="PAD2" offset="8" width="4">0x0</field>
-          <field Type="RW" name="PAD3" offset="12" width="4">0x0</field>
-          <field Type="RW" name="PAD4" offset="16" width="4">0x0</field>
-          <field Type="RW" name="PAD5" offset="20" width="4">0x0</field>
-          <field Type="RW" name="PAD6" offset="24" width="4">0x0</field>
-          <field Type="RW" name="PAD7" offset="28" width="4">0x0</field>
+          <field Type="RW" name="PAD0" offset="0" width="4">0x1</field>
+          <field Type="RW" name="PAD1" offset="4" width="4">0x1</field>
+          <field Type="RW" name="PAD2" offset="8" width="4">0x1</field>
+          <field Type="RW" name="PAD3" offset="12" width="4">0x1</field>
+          <field Type="RW" name="PAD4" offset="16" width="4">0x1</field>
+          <field Type="RW" name="PAD5" offset="20" width="4">0x1</field>
+          <field Type="RW" name="PAD6" offset="24" width="4">0x1</field>
+          <field Type="RW" name="PAD7" offset="28" width="4">0x1</field>
         </register>
         <register address="0x00000208" description="Configures the IO Mux structure for each IO pad. See the MSS MAS specification for for description." name="IOMUX2_CR">
-          <field Type="RW" name="PAD8" offset="0" width="4">0x0</field>
-          <field Type="RW" name="PAD9" offset="4" width="4">0x0</field>
-          <field Type="RW" name="PAD10" offset="8" width="4">0x0</field>
-          <field Type="RW" name="PAD11" offset="12" width="4">0x0</field>
-          <field Type="RW" name="PAD12" offset="16" width="4">0x0</field>
-          <field Type="RW" name="PAD13" offset="20" width="4">0x0</field>
+          <field Type="RW" name="PAD8" offset="0" width="4">0x1</field>
+          <field Type="RW" name="PAD9" offset="4" width="4">0x1</field>
+          <field Type="RW" name="PAD10" offset="8" width="4">0x1</field>
+          <field Type="RW" name="PAD11" offset="12" width="4">0x1</field>
+          <field Type="RW" name="PAD12" offset="16" width="4">0xF</field>
+          <field Type="RW" name="PAD13" offset="20" width="4">0xF</field>
         </register>
         <register address="0x0000020C" description="Configures the IO Mux structure for each IO pad. See the MSS MAS specification for for description." name="IOMUX3_CR">
           <field Type="RW" name="PAD14" offset="0" width="4">0x4</field>
@@ -1009,11 +1009,11 @@
           <field Type="RW" name="PAD37" offset="28" width="4">0xF</field>
         </register>
         <register address="0x00000218" description="Sets whether the MMC/SD Voltage select lines are inverted on entry to the IOMUX structure" name="IOMUX6_CR">
-          <field Type="RW" name="VLT_SEL" offset="0" width="1">0x1</field>
+          <field Type="RW" name="VLT_SEL" offset="0" width="1">0x0</field>
           <field Type="RW" name="VLT_EN" offset="1" width="1">0x0</field>
-          <field Type="RW" name="VLT_CMD_DIR" offset="2" width="1">0x1</field>
-          <field Type="RW" name="VLT_DIR_0" offset="3" width="1">0x1</field>
-          <field Type="RW" name="VLT_DIR_1_3" offset="4" width="1">0x1</field>
+          <field Type="RW" name="VLT_CMD_DIR" offset="2" width="1">0x0</field>
+          <field Type="RW" name="VLT_DIR_0" offset="3" width="1">0x0</field>
+          <field Type="RW" name="VLT_DIR_1_3" offset="4" width="1">0x0</field>
           <field Type="RW" name="SD_LED" offset="5" width="1">0x0</field>
           <field Type="RW" name="SD_VOLT_0" offset="6" width="1">0x0</field>
           <field Type="RW" name="SD_VOLT_1" offset="7" width="1">0x0</field>

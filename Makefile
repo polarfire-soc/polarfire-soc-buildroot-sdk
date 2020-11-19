@@ -15,13 +15,13 @@ device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 ifeq "$(DEVKIT)" "icicle-kit-es"
 HSS_SUPPORT ?= y
-HSS_TARGET ?= icicle-kit-es
+HSS_TARGET ?= mpfs-icicle-kit-es
 target_die = MPFS250T_ES
 target_package = FCVG484
 mem_file_base_address = 20220000
 else ifeq "$(DEVKIT)" "icicle-kit-es-sd"
 HSS_SUPPORT ?= y
-HSS_TARGET ?= icicle-kit-es
+HSS_TARGET ?= mpfs-icicle-kit-es
 target_die = MPFS250T_ES
 target_package = FCVG484
 mem_file_base_address = 20220000
@@ -125,7 +125,8 @@ hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
 hss_srcdir := $(srcdir)/hart-software-services
 hss_defconfig := $(confdir)/hss_defconfig
 hss_wrkdir := $(wrkdir)/hart-software-services
-hss := $(hss_wrkdir)/hss.bin
+hss := $(hss_wrkdir)/Default/hss.bin
+hss_hex := $(hss_wrkdir)/Default/hss.hex
 hss_config := $(hss_wrkdir)/config.h
 
 xml_config := $(confdir)/$(DEVKIT)/config.xml 
@@ -623,7 +624,7 @@ endif
 	rm -rf $(wrkdir)/fpgen
 	mkdir -p $(wrkdir)/fpgen
 	$(fpgenprog) new_project --location $(wrkdir)/fpgen --target_die $(target_die) --target_package $(target_package)
-	$(fpgenprog) envm_client --location $(wrkdir)/fpgen  --number_of_bytes 111552 --content_file_format intel-hex --content_file $(hss_wrkdir)/Default/hss.hex --start_page 0 --client_name envm1 --mem_file_base_address 20220000
+	$(fpgenprog) envm_client --location $(wrkdir)/fpgen  --number_of_bytes $(shell wc -c $(hss) | cut -d ' ' -f 1) --content_file_format intel-hex --content_file $(hss_hex) --start_page 0 --client_name envm1 --mem_file_base_address $(mem_file_base_address)
 	$(fpgenprog) mss_boot_info --location $(wrkdir)/fpgen  --u_mss_bootmode 1 --u_mss_bootcfg $(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)
 	$(fpgenprog) generate_bitstream --location $(wrkdir)/fpgen
 	$(fpgenprog) run_action --location $(wrkdir)/fpgen --action PROGRAM
