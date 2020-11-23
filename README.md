@@ -5,7 +5,7 @@ It first will build the GNU cross-compilation toolchain for RISC-V, which will b
 Currently the following development platforms are supported:
 - [MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/mpfs-dev-kit/MPFS-DEV-KIT_user_guide.md) (HiFive Unleashed Expansion Board)
 - [LC-MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
-- Icicle Kit (Engineering Sample) (Requires minimum FPGA design: [version](https://github.com/polarfire-soc/icicle-kit-reference-design/tree/25ce91fee53eed1c85bfe58a6661c92ee59786ec))
+- Icicle Kit (Engineering Sample) (Requires minimum FPGA design: v2020.11)
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
 
