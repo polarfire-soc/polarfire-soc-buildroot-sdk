@@ -399,7 +399,7 @@ ifeq ($(DEVKIT),icicle-kit-es)
 	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
 else ifeq ($(DEVKIT),icicle-kit-es-sd)	
 	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
-	cd $(config_generator_srcdir)/ && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
+	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
 endif
 	touch $@
 
