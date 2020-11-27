@@ -265,7 +265,7 @@
 			reg = <0x0 0x20112000 0x0 0x2000>;
 			interrupt-parent = <&L1>;
 			interrupts = <70 71 72 73>;
-			mac-address = [56 34 12 00 FC 00];
+			mac-address = [00 04 A3 00 FC 00];
 			phy-mode = "sgmii";
 			clocks = <&clkcfg CLK_MAC1>, <&clkcfg CLK_AHB>;
 			clock-names = "pclk", "hclk";
