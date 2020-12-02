@@ -88,7 +88,7 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image
 ```
 
 When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
-To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root` & the password `microchip`.
+To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root`. There is no password required.
 
 ### Preparing an SD Card for the Icicle Kit
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
@@ -130,7 +130,7 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-image
 At this point, your SD card should be ready to boot Linux.         
 You can remove it from your PC and insert it into the SD card slot on the Icicle kit, and then power-on the board.
 Connect to UART0 (J11) for the HSS and UART1 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
-When Linux boots, log in with the username `root` & the password `microchip`.  
+When Linux boots, log in with the username `root`. There is no password required.  
 
 ### Preparing an SD Card for MPFS or LC-MPFS
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
@@ -171,7 +171,7 @@ $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-boot-loader
 At this point, your SD card should be ready to boot Linux. 
 You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.    
 Connect to UART1 (J7) for the fsbl, U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.       
-When Linux boots, log in with the username `root` & the password `microchip`.
+When Linux boots, log in with the username `root`. There is no password required.  
 
 ## Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
