@@ -1,6 +1,6 @@
 ISA ?= rv64imafdc
 ABI ?= lp64d
-LIBERO_PATH ?= /usr/local/microsemi/Libero_SoC_v12.5/Libero/
+LIBERO_PATH ?= /usr/local/microsemi/Libero_SoC_v12.6/Libero/
 fpgenprog := $(LIBERO_PATH)/bin64/fpgenprog
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
