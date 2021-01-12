@@ -1,17 +1,18 @@
-From fc2352a02c9096fc3042cf2849f89306e4615da1 Mon Sep 17 00:00:00 2001
-From: Conor Dooley <conor.dooley@microchip.com>
-Date: Mon, 5 Oct 2020 15:47:32 +0100
-Subject: [PATCH] test
+From 96f4ec636a594e4ddbf6c15e6e2b599e95412e28 Mon Sep 17 00:00:00 2001
+From: m34782 <lewis.hanly@microchip.com>
+Date: Thu, 24 Dec 2020 04:13:41 +0000
+Subject: [PATCH] V2 GPIO Driver updates Enabled MSS Clock for GPIO
 
+Signed-off-by: Lewis Hanly <lewis.hanly@microchip.com>
 ---
  drivers/gpio/Kconfig          |   7 +
  drivers/gpio/Makefile         |   1 +
- drivers/gpio/gpio-microsemi.c | 501 ++++++++++++++++++++++++++++++++++
- 3 files changed, 509 insertions(+)
+ drivers/gpio/gpio-microsemi.c | 510 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 518 insertions(+)
  create mode 100644 drivers/gpio/gpio-microsemi.c
 
 diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
-index b8013cf90064..bcdbbaa57069 100644
+index b8013cf90064..936aa0b346c6 100644
 --- a/drivers/gpio/Kconfig
 +++ b/drivers/gpio/Kconfig
 @@ -353,6 +353,13 @@ config GPIO_MENZ127
@@ -19,7 +20,7 @@ index b8013cf90064..bcdbbaa57069 100644
  	  Say yes here to support the MEN 16Z127 GPIO Controller
  
 +config GPIO_MICROSEMI
-+	tristate "Microsemi GPIO support"
++	bool "Microsemi GPIO support"
 +	depends on OF_GPIO
 +	select GPIOLIB_IRQCHIP
 +	help
@@ -42,10 +43,10 @@ index 0b571264ddbc..be283b6abd0e 100644
  obj-$(CONFIG_GPIO_MM_LANTIQ)		+= gpio-mm-lantiq.o
 diff --git a/drivers/gpio/gpio-microsemi.c b/drivers/gpio/gpio-microsemi.c
 new file mode 100644
-index 000000000000..b7aefe460404
+index 000000000000..16866493ad60
 --- /dev/null
 +++ b/drivers/gpio/gpio-microsemi.c
-@@ -0,0 +1,501 @@
+@@ -0,0 +1,510 @@
 +/*
 + * Microsemi GPIO driver
 + *
@@ -58,9 +59,9 @@ index 000000000000..b7aefe460404
 +
 +#include <linux/bitops.h>
 +#include <linux/device.h>
-+#include <linux/module.h>
 +#include <linux/errno.h>
 +#include <linux/gpio/driver.h>
++#include <linux/clk.h>
 +#include <linux/irq.h>
 +#include <linux/irqchip/chained_irq.h>
 +#include <linux/of_irq.h>
@@ -93,6 +94,7 @@ index 000000000000..b7aefe460404
 +struct microsemi_mss_gpio_chip {
 +	raw_spinlock_t lock;
 +	struct gpio_chip gc;
++        struct clk		*clk;
 +
 +	MSS_GPIO_REG_TYPE __iomem *base;
 +	MSS_GPIO_REG_TYPE __iomem *gpio_cfg_base;
@@ -428,6 +430,7 @@ index 000000000000..b7aefe460404
 +	struct microsemi_mss_gpio_chip *mss_gpio;
 +	struct resource *res;
 +	int gpio_index, irq, ret, ngpio;
++	struct clk			*clk;
 +
 +	mss_gpio = devm_kzalloc(dev, sizeof(*mss_gpio), GFP_KERNEL);
 +	if (!mss_gpio) {
@@ -442,13 +445,25 @@ index 000000000000..b7aefe460404
 +		dev_err(dev, "failed to allocate device memory\n");
 +		return PTR_ERR(mss_gpio->base);
 +	}
++	clk = devm_clk_get(&pdev->dev, NULL);
++	if (IS_ERR(clk)) {
++		dev_err(&pdev->dev, "failed to get clock\n");
++		return PTR_ERR(clk);
++	}
++
++	ret = clk_prepare_enable(clk);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to enable clock\n");
++		return -EINVAL;
++	}
++        mss_gpio->clk = clk;
 +
 +	mss_gpio->gpio_cfg_base = mss_gpio->base + (0x00u/sizeof(MSS_GPIO_REG_TYPE));
 +	mss_gpio->gpio_irq_base = mss_gpio->base + (0x80u/sizeof(MSS_GPIO_REG_TYPE));
 +	mss_gpio->gpio_in_base  = mss_gpio->base + (0x84u/sizeof(MSS_GPIO_REG_TYPE));
 +	mss_gpio->gpio_out_base = mss_gpio->base + (0x88u/sizeof(MSS_GPIO_REG_TYPE));
 +
-+	ngpio = platform_irq_count(pdev);
++	ngpio = of_irq_count(node);
 +	if (ngpio > MSS_NUM_GPIO) {
 +		dev_err(dev, "too many interrupts\n");
 +		return -EINVAL;
@@ -532,21 +547,13 @@ index 000000000000..b7aefe460404
 +	},
 +	{},
 +};
-+MODULE_DEVICE_TABLE(of, microsemi_mss_gpio_match);
 +
 +static struct platform_driver microsemi_mss_gpio_driver = {
-+        .driver = {
-+                .name = "microsemi,mss-gpio",
-+                .of_match_table = microsemi_mss_gpio_match,
-+        },
-+        .probe = microsemi_mss_gpio_probe,
++	.probe = microsemi_mss_gpio_probe,
++	.driver = {
++		.name = "microsemi,mss-gpio",
++		.of_match_table = of_match_ptr(microsemi_mss_gpio_match),
++	},
 +};
-+module_platform_driver(microsemi_mss_gpio_driver);
 +
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR("Lewis Hanly");
-+MODULE_DESCRIPTION("PFSoC MSS GPIO driver");
-+
--- 
-2.17.1
-
++builtin_platform_driver(microsemi_mss_gpio_driver)
