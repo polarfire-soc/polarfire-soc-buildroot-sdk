@@ -411,4 +411,18 @@
         #size-cells = <1>;
         syscontroller = <&syscontroller>;
     };
+
+    serialnum: serialnum {
+        compatible = "microchip,polarfire-soc-serial-number";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        syscontroller = <&syscontroller>;
+    };
+
+    fpgadigest: fpgadigest {
+        compatible = "microchip,polarfire-soc-digest";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        syscontroller = <&syscontroller>;
+    };
 };
