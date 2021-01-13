@@ -26,3 +26,5 @@ index bb680352708a..9b2c5962d37b 100644
  
  	err = phy_write(phydev, MII_VSC8244_AUX_CONSTAT,
  			MII_VSC8244_AUXCONSTAT_INIT);
+-- 
+2.17.1

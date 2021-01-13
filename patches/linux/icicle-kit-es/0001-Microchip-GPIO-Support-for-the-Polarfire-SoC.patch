@@ -557,3 +557,5 @@ index 000000000000..16866493ad60
 +};
 +
 +builtin_platform_driver(microsemi_mss_gpio_driver)
+-- 
+2.17.1
