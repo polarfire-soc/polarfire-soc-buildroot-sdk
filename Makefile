@@ -188,11 +188,11 @@ $(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/in
 $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir)
 
-.PHONY: buildroot_initramfs-menuconfig
-buildroot_initramfs-menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
-	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_initramfs_wrkdir) menuconfig
-	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_initramfs_wrkdir) savedefconfig
-	cp $(dir $(buildroot_builddir))/defconfig conf/buildroot_initramfs_config
+.PHONY: buildroot_initramfs_menuconfig
+buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
+	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) menuconfig
+	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) savedefconfig
+	cp $(buildroot_builddir)/defconfig conf/buildroot_initramfs_config
 
 $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 	rm -rf $(dir $@)
@@ -297,7 +297,7 @@ $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
-$(fit): $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
+$(fit): $(uboot_s) $(uImage) $(vmlinux_bin) $(root) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
