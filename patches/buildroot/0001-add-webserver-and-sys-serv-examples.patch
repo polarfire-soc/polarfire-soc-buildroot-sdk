@@ -39,7 +39,7 @@ index 0000000000..5b19995f6a
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,34 @@
-+MCHP_EXAMPLES_VERSION = eff3a0288d0cc9a86d96ca6d52e9951fd1400cfd
++MCHP_EXAMPLES_VERSION = d8981e9d0d1e20d811b243d0e4e55d1fa9897144
 +MCHP_EXAMPLES_SITE = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/polarfire-soc-linux-examples.git
 +MCHP_EXAMPLES_SITE_METHOD = git
 +
@@ -52,8 +52,8 @@ index 0000000000..5b19995f6a
 +# sys services test program
 +$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/system-services CC=$(TARGET_CC)
 +$(INSTALL) -d $(TARGET_DIR)/opt/microchip/system-services
-+$(INSTALL) -D -m 775 $(@D)/system-services/test \
-+        $(TARGET_DIR)/opt/microchip/system-services/test
++$(INSTALL) -D -m 775 $(@D)/system-services/system-services-example \
++        $(TARGET_DIR)/opt/microchip/system-services/system-services-example
 +endef
 +
 +define MCHP_EXAMPLES_INSTALL_INIT_SYSTEMD

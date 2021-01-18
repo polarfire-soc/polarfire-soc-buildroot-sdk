@@ -179,18 +179,18 @@ index 000000000000..c534848b3ee3
 +	writel_relaxed(0, mbox->int_reg);
 +
 +	if (msg->cmd_data_size) {
-+		byte_buf = msg->cmd_data;
++		word_buf = (u32 *) msg->cmd_data;
 +
 +		for (index = 0; index < (msg->cmd_data_size / 4); index++)
 +			writel_relaxed(word_buf[index],
-+				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index);
++				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index * 0x4);
 +		extra_bits = msg->cmd_data_size & 3;
 +		if (extra_bits) {
 +			byte_off = ALIGN_DOWN(msg->cmd_data_size, 4);
 +			byte_buf = msg->cmd_data + byte_off;
 +
 +			mailbox_val = readl_relaxed(mbox->mailbox_base +
-+						    MAILBOX_REG_OFFSET + index);
++						    MAILBOX_REG_OFFSET + index * 0x4);
 +
 +			for (i = 0u; i < extra_bits; i++) {
 +				mailbox_val &= ~(0xffu << (i * 8u));
@@ -198,7 +198,7 @@ index 000000000000..c534848b3ee3
 +			}
 +
 +			writel_relaxed(mailbox_val,
-+				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index);
++				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index * 0x4);
 +		}
 +	}
 +
