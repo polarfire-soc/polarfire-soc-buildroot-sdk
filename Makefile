@@ -2,6 +2,7 @@ ISA ?= rv64imafdc
 ABI ?= lp64d
 LIBERO_PATH ?= /usr/local/microsemi/Libero_SoC_v12.6/Libero/
 fpgenprog := $(LIBERO_PATH)/bin64/fpgenprog
+num_threads = $(shell nproc --ignore=1)
 
 srcdir := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 srcdir := $(srcdir:/=)
@@ -168,7 +169,7 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 		--with-arch=$(ISA) \
 		--with-abi=$(ABI) \
 		--enable-linux
-	$(MAKE) -C $(toolchain_wrkdir)
+	$(MAKE) -C $(toolchain_wrkdir) -j$(num_threads)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
 $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patchdir)
@@ -183,10 +184,10 @@ $(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/in
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_initramfs_config) $@
-	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
 
 $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
-	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) -j$(num_threads)
 
 .PHONY: buildroot_initramfs_menuconfig
 buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
@@ -201,7 +202,7 @@ $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) olddefconfig
 
 $(buildroot_rootfs_ext): $(buildroot_builddir_stamp) $(buildroot_rootfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_rootfs_config)
-	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) -j$(num_threads)
 
 .PHONY: buildroot_rootfs-menuconfig
 buildroot_rootfs-menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_builddir_stamp)
@@ -222,18 +223,20 @@ $(linux_builddir_stamp): $(linux_srcdir) $(linux_patchdir)
 	done
 	touch $@
 
-$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir_stamp)
+.PHONY: cfg
+cfg: $(linux_wrkdir)/.config
+$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir_stamp) $(CROSS_COMPILE)gcc
 	mkdir -p $(dir $@)
 	cp -p $< $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
 ifeq (,$(filter rv%c,$(ISA)))
 	sed 's/^.*CONFIG_RISCV_ISA_C.*$$/CONFIG_RISCV_ISA_C=n/' -i $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
 endif
 ifeq ($(ISA),$(filter rv32%,$(ISA)))
 	sed 's/^.*CONFIG_ARCH_RV32I.*$$/CONFIG_ARCH_RV32I=y/' -i $@
 	sed 's/^.*CONFIG_ARCH_RV64I.*$$/CONFIG_ARCH_RV64I=n/' -i $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
 endif
 
 $(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
@@ -251,7 +254,7 @@ $(vmlinux): $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
 		PATH=$(PATH) \
-		vmlinux
+		vmlinux -j$(num_threads)
 
 $(vmlinux_stripped): $(vmlinux)
 	PATH=$(PATH) $(target)-strip -o $@ $<
@@ -268,7 +271,7 @@ $(kernel-modules-stamp): $(linux_builddir) $(vmlinux)
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
 		PATH=$(PATH) \
-		modules
+		modules -j$(num_threads)
 	touch $@
 
 $(kernel-modules-install-stamp): $(linux_builddir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
@@ -283,8 +286,8 @@ $(kernel-modules-install-stamp): $(linux_builddir) $(buildroot_initramfs_sysroot
 	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
-	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig
-	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig
+	$(MAKE) -C $(linux_builddir) O=$(dir $<) ARCH=riscv menuconfig CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(linux_builddir) O=$(dir $<) ARCH=riscv savedefconfig CROSS_COMPILE=$(CROSS_COMPILE)
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
 $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
@@ -349,7 +352,7 @@ $(fsbl_wrkdir_stamp): $(fsbl_srcdir) $(fsbl_patchdir)
 $(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
 	rm -f $(fsbl_wrkdir)/fsbl/ux00_fsbl.dts
 	cp -f $(wrkdir)/riscvpc.dtb $(fsbl_wrkdir)/fsbl/ux00_fsbl.dtb
-	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all
+	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all -j$(num_threads)
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
 $(uboot_s_builddir_stamp): $(uboot_s_srcdir) $(uboot_s_patchdir)
@@ -371,7 +374,7 @@ $(uboot_s): $(uboot_s_builddir_stamp) $(CROSS_COMPILE)gcc
 	mkdir -p $(uboot_s_wrkdir)
 	cp  $(uboot_s_cfg) $(uboot_s_wrkdir)/.config
 	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv olddefconfig
-	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
 	cp -v $(uboot_s_wrkdir)/u-boot.bin $(uboot_s)
 
 $(opensbi): $(uboot_s) $(CROSS_COMPILE)gcc 
@@ -408,7 +411,7 @@ $(hss_config): $(hss_wrkdir_stamp)
 	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
 
 $(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE)
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
 
 $(hss_payload_generator): $(payload_generator_srcdir)
 	mkdir -p $(payloadgen_wrkdir)
