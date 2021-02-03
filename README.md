@@ -192,6 +192,25 @@ Install the python library `kconfiglib`. Without this the Hart Software Services
 sudo pip3 install kconfiglib
 ```
 
+## Known Issues
+### U-Boot Error: "boot3 not defined" or "Error: Partition(s) 1, 2, 3 on /dev/sdX have been written, but we have been unable to inform the kernel of the change"
+This error is caused by auto mounting of the SD/onboard eMMC, preventing the image being written correctly to the disk. To fix this, install dconf-editor and disable automounting of the SD card.
+
+Install dconf-editor:
+```
+sudo apt install dconf-editor
+```
+Run the program:
+```
+dconf-editor
+```
+Navigate to `org/gnome/desktop/media-handling` and turn off auto mount.      
+Now you should be able to run the `format-icicle-image` command without any issues.
+
+### "Error: Could not find bootloader partition for /dev/sdX"
+This problem may occur when writing to a new SD card, or after deleting all partitions using GParted or similar.    
+If you encounter this problem, simply rerun the `format-icicle-image` make command and the image should be written correctly to the disk.
+
 ## Additional Reading
 [Buildroot User Manual](https://buildroot.org/docs.html)    
 [PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)    
