@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /* Copyright (c) 2019-2020 Microchip Technology Inc */
 /dts-v1/;
-#include "microchip,pfsoc-clock.h"
+#include "microchip,mpfs-clock.h"
 / {
 	#address-cells = <2>;
 	#size-cells = <2>;
-	compatible = "SiFive,FU540G-dev", "fu540-dev", "sifive-dev";
-	model = "SiFive,FU540G";
+	compatible = "microchip,mpfs-dev";
+	model = "microchip,mpfs";
 	L45: cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -126,7 +126,7 @@
 	L44: soc {
 		#address-cells = <2>;
 		#size-cells = <2>;
-		compatible = "SiFive,FU540G-soc", "fu540-soc", "sifive-soc", "simple-bus";
+		compatible = "microchip,mpfs-soc", "simple-bus";
 		ranges;
 		DDRC_CACHE_LO: memory@80000000 {
 			device_type = "memory";
@@ -280,16 +280,32 @@
 			reg = <0x0 0x20112000 0x0 0x2000>;
 			interrupt-parent = <&L1>;
 			interrupts = <70 71 72 73>;
-			mac-address = [00 04 A3 00 FC 00];
+			mac-address = [56 34 12 00 FC 01];
 			phy-mode = "sgmii";
 			clocks = <&clkcfg CLK_MAC1>, <&clkcfg CLK_AHB>;
 			clock-names = "pclk", "hclk";
 			#address-cells = <1>;
 			#size-cells = <0>;
+			phy-handle = <&phy1>;
 			phy1: ethernet-phy@9 {
 				reg = <9>;
 				ti,fifo-depth = <0x01>;
 			};
+			phy0: ethernet-phy@8 {
+				reg = <8>;
+				ti,fifo-depth = <0x01>;
+			};
+		};
+		emac0: ethernet@20110000 {
+			compatible = "cdns,macb";
+			reg = <0x0 0x20110000 0x0 0x2000>;
+			interrupt-parent = <&L1>;
+			interrupts = <64 65 66 67>;
+			mac-address = [56 34 12 00 FC 02];
+			phy-mode = "sgmii";
+			clocks = <&clkcfg CLK_MAC0>, <&clkcfg CLK_AHB>;
+			clock-names = "pclk", "hclk";
+			phy-handle = <&phy0>;
 		};
 		pcie: pcie@70000000 {
 			#address-cells = <0x3>;
