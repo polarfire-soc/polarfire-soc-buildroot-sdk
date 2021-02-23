@@ -172,7 +172,7 @@
 			clock-output-names = "msspllclk";
 		};
 		clkcfg: clkcfg@20002000 {
-			compatible = "microchip,pfsoc-clkcfg";
+			compatible = "microchip,mpfs-clkcfg";
 			reg = <0x0 0x20002000 0x0 0x1000>;
 			reg-names = "mss_sysreg";
 			clocks = <&refclk>;
