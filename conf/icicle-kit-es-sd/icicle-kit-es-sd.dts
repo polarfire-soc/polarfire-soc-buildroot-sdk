@@ -19,6 +19,8 @@
 			i-cache-size = <16384>;
 			reg = <0>;
 			riscv,isa = "rv64imac";
+			clocks = <&clkcfg CLK_CPU>;
+			operating-points-v2 = <&mpfs_opp_table>;
 			status = "disabled";
 			L4: interrupt-controller {
 				#interrupt-cells = <1>;
@@ -42,6 +44,8 @@
 			mmu-type = "riscv,sv39";
 			reg = <1>;
 			riscv,isa = "rv64imafdc";
+			clocks = <&clkcfg CLK_CPU>;
+			operating-points-v2 = <&mpfs_opp_table>;
 			tlb-split;
 			status = "okay";
 			L9: interrupt-controller {
@@ -66,6 +70,8 @@
 			mmu-type = "riscv,sv39";
 			reg = <2>;
 			riscv,isa = "rv64imafdc";
+			clocks = <&clkcfg CLK_CPU>;
+			operating-points-v2 = <&mpfs_opp_table>;
 			tlb-split;
 			status = "okay";
 			L13: interrupt-controller {
@@ -90,6 +96,8 @@
 			mmu-type = "riscv,sv39";
 			reg = <3>;
 			riscv,isa = "rv64imafdc";
+			clocks = <&clkcfg CLK_CPU>;
+			operating-points-v2 = <&mpfs_opp_table>;
 			tlb-split;
 			status = "okay";
 			L17: interrupt-controller {
@@ -114,6 +122,8 @@
 			mmu-type = "riscv,sv39";
 			reg = <4>;
 			riscv,isa = "rv64imafdc";
+			clocks = <&clkcfg CLK_CPU>;
+			operating-points-v2 = <&mpfs_opp_table>;
 			tlb-split;
 			status = "okay";
 			L21: interrupt-controller {
@@ -128,6 +138,19 @@
 		#size-cells = <2>;
 		compatible = "microchip,mpfs-soc", "simple-bus";
 		ranges;
+		mpfs_opp_table: opp-table {
+			compatible = "operating-points-v2";
+			opp-shared;
+		        opp-600000000 {
+			        opp-hz = /bits/ 64 <600000000>;
+		        };
+		        opp-300000000 {
+			        opp-hz = /bits/ 64 <300000000>;
+		        };
+		        opp-150000000 {
+			        opp-hz = /bits/ 64 <150000000>;
+		        };
+		};
 		DDRC_CACHE_LO: memory@80000000 {
 			device_type = "memory";
 			reg = <0x0 0x80000000 0x0 0x40000000>;
