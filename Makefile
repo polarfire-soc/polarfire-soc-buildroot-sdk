@@ -12,15 +12,12 @@ wrkdir := $(CURDIR)/work
 
 # target icicle w/ emmc by default
 DEVKIT ?= icicle-kit-es
+ifeq "$(DEVKIT)" "icicle-kit-es-sd"
+override DEVKIT = icicle-kit-es
+endif
 device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 ifeq "$(DEVKIT)" "icicle-kit-es"
-HSS_SUPPORT ?= y
-HSS_TARGET ?= mpfs-icicle-kit-es
-target_die = MPFS250T_ES
-target_package = FCVG484
-mem_file_base_address = 20220000
-else ifeq "$(DEVKIT)" "icicle-kit-es-sd"
 HSS_SUPPORT ?= y
 HSS_TARGET ?= mpfs-icicle-kit-es
 target_die = MPFS250T_ES
@@ -362,10 +359,6 @@ ifeq ($(DEVKIT),icicle-kit-es)
 	for file in $(uboot_s_patchdir)/* ; do \
 			cd $(uboot_s_builddir) && patch -p1 < $${file} ; \
 	done
-else ifeq ($(DEVKIT),icicle-kit-es-sd)	
-	for file in $(uboot_s_patchdir)/* ; do \
-			cd $(uboot_s_builddir) && patch -p1 < $${file} ; \
-	done
 endif
 	touch $@
 
@@ -398,9 +391,6 @@ $(hss_wrkdir_stamp): $(hss_srcdir)
 
 $(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
 ifeq ($(DEVKIT),icicle-kit-es)	
-	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
-	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
-else ifeq ($(DEVKIT),icicle-kit-es-sd)	
 	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
 	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
 endif
@@ -613,8 +603,6 @@ else
 	@exit 1
 endif
 ifeq ($(DEVKIT),icicle-kit-es)
-	dd if=$(rootfs) of=$(PART3) bs=4096
-else ifeq ($(DEVKIT),icicle-kit-es-sd)
 	dd if=$(rootfs) of=$(PART3) bs=4096
 else 
 	dd if=$(rootfs) of=$(PART2) bs=4096

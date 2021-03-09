@@ -39,8 +39,7 @@ The following table details the available targets:
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
 | `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
-| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon, using the eMMC |
-| `DEVKIT=icicle-kit-es-sd` | Icicle Development Kit with engineering sample silicon, using an SD card |
+| `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 
 To boot Linux on your board using this image, see: [Loading the Image onto the Target](#Loading-the-Image-onto-the-Target).
 
@@ -124,7 +123,7 @@ The SD card should have a GUID Partition Table (GPT) rather than a Master Boot R
 #### Programming an Image for the First Time    
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 ```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es-sd format-icicle-image 
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-esd format-icicle-image 
 ```
 
 At this point, your SD card should be ready to boot Linux.         
