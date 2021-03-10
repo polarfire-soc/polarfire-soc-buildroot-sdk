@@ -1,7 +1,7 @@
-From 7d2ebbd9fe54ee391ab203407d39938f628f7f4a Mon Sep 17 00:00:00 2001
+From 11d83f588120bd4ea22661db8407c473d9704cb2 Mon Sep 17 00:00:00 2001
 From: Conor Dooley <conor.dooley@microchip.com>
-Date: Mon, 21 Dec 2020 15:33:25 +0000
-Subject: [PATCH v3 3/5] soc: add polarfire soc system controller
+Date: Mon, 18 Jan 2021 15:29:54 +0000
+Subject: [PATCH v4 5/7] soc: add polarfire soc system controller
 
 This driver provides an interface for other drivers to access the
 functions of the system controller on the Microchip PolarFire SoC.
@@ -12,31 +12,31 @@ Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
  drivers/soc/Makefile                        |   1 +
  drivers/soc/microchip/Kconfig               |  10 ++
  drivers/soc/microchip/Makefile              |   1 +
- drivers/soc/microchip/mpfs-sys-controller.c | 133 ++++++++++++++++++++
- 5 files changed, 146 insertions(+)
+ drivers/soc/microchip/mpfs-sys-controller.c | 127 ++++++++++++++++++++
+ 5 files changed, 140 insertions(+)
  create mode 100644 drivers/soc/microchip/Kconfig
  create mode 100644 drivers/soc/microchip/Makefile
  create mode 100644 drivers/soc/microchip/mpfs-sys-controller.c
 
 diff --git a/drivers/soc/Kconfig b/drivers/soc/Kconfig
-index 425ab6f7e375..22cb097bcbdc 100644
+index e8a30c4c5aec..b33142e020e0 100644
 --- a/drivers/soc/Kconfig
 +++ b/drivers/soc/Kconfig
-@@ -9,6 +9,7 @@ source "drivers/soc/bcm/Kconfig"
- source "drivers/soc/fsl/Kconfig"
- source "drivers/soc/imx/Kconfig"
+@@ -12,6 +12,7 @@ source "drivers/soc/imx/Kconfig"
  source "drivers/soc/ixp4xx/Kconfig"
-+source "drivers/soc/microchip/Kconfig"
+ source "drivers/soc/litex/Kconfig"
  source "drivers/soc/mediatek/Kconfig"
++source "drivers/soc/microchip/Kconfig"
  source "drivers/soc/qcom/Kconfig"
  source "drivers/soc/renesas/Kconfig"
+ source "drivers/soc/rockchip/Kconfig"
 diff --git a/drivers/soc/Makefile b/drivers/soc/Makefile
-index 8b49d782a1ab..d82a7293092d 100644
+index f678e4d9e585..10cfdcd972c7 100644
 --- a/drivers/soc/Makefile
 +++ b/drivers/soc/Makefile
-@@ -15,6 +15,7 @@ obj-$(CONFIG_ARCH_MXC)		+= imx/
- obj-$(CONFIG_ARCH_IXP4XX)	+= ixp4xx/
+@@ -17,6 +17,7 @@ obj-$(CONFIG_ARCH_IXP4XX)	+= ixp4xx/
  obj-$(CONFIG_SOC_XWAY)		+= lantiq/
+ obj-$(CONFIG_LITEX_SOC_CONTROLLER) += litex/
  obj-y				+= mediatek/
 +obj-y				+= microchip/
  obj-y				+= amlogic/
@@ -67,10 +67,10 @@ index 000000000000..14489919fe4b
 +obj-$(CONFIG_POLARFIRE_SOC_SYS_CTRL)	+= mpfs-sys-controller.o
 diff --git a/drivers/soc/microchip/mpfs-sys-controller.c b/drivers/soc/microchip/mpfs-sys-controller.c
 new file mode 100644
-index 000000000000..bf1a7efae223
+index 000000000000..21a1e213d2bd
 --- /dev/null
 +++ b/drivers/soc/microchip/mpfs-sys-controller.c
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,129 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PolarFire SoC (MPFS) system controller driver
@@ -96,17 +96,15 @@ index 000000000000..bf1a7efae223
 +	struct mbox_chan *chan;
 +	struct completion c;
 +	u32 enabled;
-+	void *response;
-+	u16 response_size_bytes;
++	struct mpfs_mss_response *response;
 +};
 +
 +int mpfs_blocking_transaction(struct mpfs_sys_controller *mpfs_client, void *msg,
-+			      void *response, u16 response_size_bytes)
++			      struct mpfs_mss_response *response)
 +{
 +	int ret;
 +
 +	mpfs_client->response = response;
-+	mpfs_client->response_size_bytes = response_size_bytes;
 +
 +	mutex_lock_interruptible(&transaction_lock);
 +
@@ -118,11 +116,11 @@ index 000000000000..bf1a7efae223
 +			ret = 0;
 +		} else {
 +			ret = -ETIMEDOUT;
-+			dev_warn(mpfs_client->client.dev, "MPFS sys controller transaction timeout");
++			dev_warn(mpfs_client->client.dev, "MPFS sys controller transaction timeout\n");
 +		}
 +	} else {
 +		dev_err(mpfs_client->client.dev,
-+			"mpfs sys controller transaction returned %d\r\n", ret);
++			"mpfs sys controller transaction returned %d\n", ret);
 +	}
 +
 +	mutex_unlock(&transaction_lock);
@@ -135,9 +133,11 @@ index 000000000000..bf1a7efae223
 +{
 +	struct mpfs_sys_controller *mpfs_client =
 +		container_of(client, struct mpfs_sys_controller, client);
++	struct mpfs_mss_response *response = (struct mpfs_mss_response *)msg;
 +
-+	memcpy(mpfs_client->response, (u8 *)msg, mpfs_client->response_size_bytes);
-+
++	memcpy(mpfs_client->response->response_msg, response->response_msg,
++	       mpfs_client->response->response_size);
++	mpfs_client->response = response->response_status;
 +	complete(&mpfs_client->c);
 +}
 +
@@ -155,9 +155,6 @@ index 000000000000..bf1a7efae223
 +	mpfs_client->client.tx_block = 1U;
 +
 +	mpfs_client->chan = mbox_request_channel(&mpfs_client->client, 0);
-+	// if (IS_ERR(mpfs_client->chan))
-+	// 	return dev_err_probe(dev, PTR_ERR(mpfs_client->chan),
-+	// 			     "Failed to get mbox channel\n");
 +	if (IS_ERR(mpfs_client->chan)) {
 +		int ret = PTR_ERR(mpfs_client->chan);
 +		if (ret != -EPROBE_DEFER)

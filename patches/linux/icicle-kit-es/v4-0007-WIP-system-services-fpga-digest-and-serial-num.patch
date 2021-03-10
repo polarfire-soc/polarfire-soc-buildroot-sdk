@@ -1,0 +1,714 @@
+From 9fd8d7b2ef991ffe4118229b4b0605bd1afd6fb3 Mon Sep 17 00:00:00 2001
+From: Conor Dooley <conor.dooley@microchip.com>
+Date: Wed, 13 Jan 2021 15:21:42 +0000
+Subject: [PATCH v4 7/7] WIP system services: fpga digest and serial num
+
+---
+ drivers/soc/microchip/Kconfig              |  24 +++
+ drivers/soc/microchip/Makefile             |   4 +
+ drivers/soc/microchip/mpfs-device-cert.c   | 142 +++++++++++++++++
+ drivers/soc/microchip/mpfs-fpga-digest.c   | 167 +++++++++++++++++++
+ drivers/soc/microchip/mpfs-serial-number.c | 142 +++++++++++++++++
+ drivers/soc/microchip/mpfs-signature.c     | 176 +++++++++++++++++++++
+ 6 files changed, 655 insertions(+)
+ create mode 100644 drivers/soc/microchip/mpfs-device-cert.c
+ create mode 100644 drivers/soc/microchip/mpfs-fpga-digest.c
+ create mode 100644 drivers/soc/microchip/mpfs-serial-number.c
+ create mode 100644 drivers/soc/microchip/mpfs-signature.c
+
+diff --git a/drivers/soc/microchip/Kconfig b/drivers/soc/microchip/Kconfig
+index eb656b33156b..2f3518e4e8ec 100644
+--- a/drivers/soc/microchip/Kconfig
++++ b/drivers/soc/microchip/Kconfig
+@@ -8,3 +8,27 @@ config POLARFIRE_SOC_SYS_CTRL
+ 	  module will be called mpfs_system_controller.
+ 
+ 	  If unsure, say N.
++
++config POLARFIRE_SOC_SERIAL_NUMBER
++	tristate "PFSOC Serial Number"
++	depends on POLARFIRE_SOC_SYS_CTRL
++	help
++	  This driver adds support for retrieving the PolarFire SoC's serial number via a char device.
++
++config POLARFIRE_SOC_FPGA_DIGEST
++	tristate "PFSOC FPGA Digest"
++	depends on POLARFIRE_SOC_SYS_CTRL
++	help
++	  This driver adds support for retrieving the PolarFire SoC's fpga digest via a char device.
++
++config POLARFIRE_SOC_SIGNATURE
++	tristate "PFSOC FPGA Signature"
++	depends on POLARFIRE_SOC_SYS_CTRL
++	help
++	  This driver adds support for signing a P-384 hash via a char device.
++
++config POLARFIRE_SOC_FPGA_CERT
++	tristate "PFSOC FPGA Device Cert"
++	depends on POLARFIRE_SOC_SYS_CTRL
++	help
++	  This driver adds support for retrieving the PolarFire SoC's device supply chain x509 certificate via a char device.
+diff --git a/drivers/soc/microchip/Makefile b/drivers/soc/microchip/Makefile
+index 14489919fe4b..8abde1b0ffc7 100644
+--- a/drivers/soc/microchip/Makefile
++++ b/drivers/soc/microchip/Makefile
+@@ -1 +1,5 @@
+ obj-$(CONFIG_POLARFIRE_SOC_SYS_CTRL)	+= mpfs-sys-controller.o
++obj-$(CONFIG_POLARFIRE_SOC_SERIAL_NUMBER) += mpfs-serial-number.o
++obj-$(CONFIG_POLARFIRE_SOC_FPGA_DIGEST)	+= mpfs-fpga-digest.o
++obj-$(CONFIG_POLARFIRE_SOC_FPGA_CERT)	+= mpfs-device-cert.o
++obj-$(CONFIG_POLARFIRE_SOC_SIGNATURE)	+= mpfs-signature.o
+diff --git a/drivers/soc/microchip/mpfs-device-cert.c b/drivers/soc/microchip/mpfs-device-cert.c
+new file mode 100644
+index 000000000000..d2cbec00f68d
+--- /dev/null
++++ b/drivers/soc/microchip/mpfs-device-cert.c
+@@ -0,0 +1,142 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Microchip PFSoC check device cert driver
++ *
++ * Copyright (c) 2020 Microchip Corporation. All rights reserved.
++ *
++ * Author:
++ *
++ */
++
++#include <linux/fs.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/miscdevice.h>
++#include <linux/of_platform.h>
++#include <soc/microchip/mpfs.h>
++
++#define MPFS_CERT_RESP_SIZE_BYTES 1024U
++
++#define CMD_OPCODE 0x3U
++#define CMD_DATA_SIZE 0U
++#define CMD_DATA NULL
++#define MBOX_OFFSET 0U
++#define RESP_OFFSET 0U
++
++static DEFINE_MUTEX(mpfs_device_cert_mutex);
++
++struct mpfs_device_cert_priv {
++	struct mpfs_sys_controller *sys_controller;
++};
++
++struct mpfs_device_cert_priv *device_cert_priv;
++
++static ssize_t mpfs_device_cert_read(struct file *filp, char __user *userbuf,
++				size_t len, loff_t *f_pos)
++{
++	u8 response_msg[MPFS_CERT_RESP_SIZE_BYTES];
++	u8 buffer[2 * MPFS_CERT_RESP_SIZE_BYTES + 3];
++	u8 *bufferp = buffer;
++	u32 i;
++	struct mpfs_mss_msg msg = { .cmd_opcode = CMD_OPCODE,
++				    .cmd_data_size = CMD_DATA_SIZE,
++				    .response_size = MPFS_CERT_RESP_SIZE_BYTES,
++				    .cmd_data = CMD_DATA,
++				    .mailbox_offset = MBOX_OFFSET,
++				    .response_offset = RESP_OFFSET };
++
++	struct mpfs_mss_response response = {
++		.response_status = 0U,
++		.response_msg = (u32 *)response_msg,
++		.response_size = MPFS_CERT_RESP_SIZE_BYTES
++	};
++
++	int ret = mpfs_blocking_transaction(device_cert_priv->sys_controller, &msg,
++					    &response);
++	if (ret)
++		return -EIO;
++	bufferp += sprintf(bufferp, "%02x ", response.response_status);
++	for (i = 0; i < MPFS_CERT_RESP_SIZE_BYTES; i++)
++		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
++
++	return simple_read_from_buffer(userbuf, len, f_pos, buffer,
++				       2 * MPFS_CERT_RESP_SIZE_BYTES + 3);
++}
++
++static int mpfs_device_cert_open(struct inode *inode, struct file *filp)
++{
++	if (!mutex_trylock(&mpfs_device_cert_mutex)) {
++		pr_debug("Device Busy\n");
++		return -EBUSY;
++	}
++	return 0;
++}
++
++static int mpfs_device_cert_release(struct inode *inode, struct file *filp)
++{
++	mutex_unlock(&mpfs_device_cert_mutex);
++	return 0;
++}
++
++static const struct file_operations mpfs_device_cert_fops = {
++	.owner = THIS_MODULE,
++	.read = mpfs_device_cert_read,
++	.open = mpfs_device_cert_open,
++	.release = mpfs_device_cert_release
++};
++
++static struct miscdevice mpfs_device_cert_dev = { .minor = MISC_DYNAMIC_MINOR,
++					     .name = "mpfs_device_cert_num",
++					     .fops = &mpfs_device_cert_fops };
++
++static int mpfs_device_cert_probe(struct platform_device *pdev)
++{
++	struct device_node *sys_controller_np;
++	struct device *dev = &pdev->dev;
++
++	device_cert_priv = devm_kzalloc(dev, sizeof(*device_cert_priv), GFP_KERNEL);
++	if (!device_cert_priv)
++		return -ENOMEM;
++
++	sys_controller_np =
++		of_parse_phandle(pdev->dev.of_node, "syscontroller", 0);
++	if (!sys_controller_np) {
++		dev_err(&pdev->dev,
++			"Failed to find mpfs system controller node\n");
++		return -ENODEV;
++	}
++
++	device_cert_priv->sys_controller =
++		mpfs_sys_controller_get(sys_controller_np);
++	of_node_put(sys_controller_np);
++	if (!device_cert_priv->sys_controller)
++		return -EPROBE_DEFER;
++
++	platform_set_drvdata(pdev, device_cert_priv);
++	misc_register(&mpfs_device_cert_dev);
++	dev_info(&pdev->dev,
++		 "Successfully registered mpfs device cert driver\n");
++
++	return 0;
++}
++
++static const struct of_device_id mpfs_device_cert_of_match[] = {
++	{
++		.compatible = "microchip,polarfire-soc-device-cert",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, mpfs_device_cert_of_match);
++
++static struct platform_driver mpfs_device_cert_driver = {
++	.driver = {
++	.name = "mpfs-device-cert",
++	.of_match_table = mpfs_device_cert_of_match,
++	},
++	.probe = mpfs_device_cert_probe,
++};
++module_platform_driver(mpfs_device_cert_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Conor Dooley <conor.dooley@microchip.com>");
++MODULE_DESCRIPTION("PFSoC device cert driver");
+diff --git a/drivers/soc/microchip/mpfs-fpga-digest.c b/drivers/soc/microchip/mpfs-fpga-digest.c
+new file mode 100644
+index 000000000000..03f31214ca0c
+--- /dev/null
++++ b/drivers/soc/microchip/mpfs-fpga-digest.c
+@@ -0,0 +1,167 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Microchip PFSoC fpga digest driver
++ *
++ * Copyright (c) 2020 Microchip Corporation. All rights reserved.
++ *
++ * Author:
++ *
++ */
++
++#include <linux/fs.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/miscdevice.h>
++#include <linux/of_platform.h>
++#include <soc/microchip/mpfs.h>
++
++#define MPFS_DIGEST_CHECK_FABRIC_OFFSET        (0U)
++#define MPFS_DIGEST_CHECK_CC_OFFSET            (1U)
++#define MPFS_DIGEST_CHECK_SNVM_OFFSET          (2U)
++#define MPFS_DIGEST_CHECK_UL_OFFSET            (3U)
++#define MPFS_DIGEST_CHECK_UKDIGEST0_OFFSET     (4U)
++#define MPFS_DIGEST_CHECK_UKDIGEST1_OFFSET     (5U)
++#define MPFS_DIGEST_CHECK_UKDIGEST2_OFFSET     (6U)
++#define MPFS_DIGEST_CHECK_UKDIGEST3_OFFSET     (7U)
++#define MPFS_DIGEST_CHECK_UKDIGEST4_OFFSET     (8U)
++#define MPFS_DIGEST_CHECK_UKDIGEST5_OFFSET     (9U)
++#define MPFS_DIGEST_CHECK_UKDIGEST6_OFFSET     (10U)
++#define MPFS_DIGEST_CHECK_UPERM_OFFSET         (11U)
++#define MPFS_DIGEST_CHECK_SYS_OFFSET           (12U)
++#define MPFS_DIGEST_CHECK_UKDIGEST7_OFFSET     (13U)
++#define MPFS_DIGEST_CHECK_ENVM_OFFSET          (14U)
++#define MPFS_DIGEST_CHECK_UKDIGEST8_OFFSET     (15U)
++#define MPFS_DIGEST_CHECK_UKDIGEST9_OFFSET     (16U)
++#define MPFS_DIGEST_CHECK_UKDIGEST10_OFFSET (17U)
++#define MPFS_DIGEST_RESP_SIZE_BYTES 576U
++#define MPFS_DIGEST_SECTION_RESP_SIZE_BYTES 32U
++
++#define CMD_OPCODE 0x04U
++#define CMD_DATA_SIZE 0U
++#define CMD_DATA NULL
++#define MBOX_OFFSET 0U
++#define RESP_OFSET 0U
++#define CMD_DATA_SIZE 0U
++
++static DEFINE_MUTEX(mpfs_digest_mutex);
++
++struct mpfs_digest_priv {
++	struct mpfs_sys_controller *sys_controller;
++};
++
++struct mpfs_digest_priv *digest_priv;
++
++static ssize_t mpfs_digest_read(struct file *filp, char __user *userbuf,
++				 size_t len, loff_t *f_pos)
++{
++	u8 response_msg[MPFS_DIGEST_RESP_SIZE_BYTES];
++	u16 buffer_length = 2 * MPFS_DIGEST_RESP_SIZE_BYTES + MPFS_DIGEST_RESP_SIZE_BYTES/32;
++	u8 buffer[buffer_length];
++	u8 *bufferp = buffer;
++	u32 i;
++	struct mpfs_mss_msg msg = {
++		.cmd_opcode = CMD_OPCODE,
++		.cmd_data_size = CMD_DATA_SIZE,
++		.response_size = MPFS_DIGEST_RESP_SIZE_BYTES,
++		.cmd_data = CMD_DATA,
++		.mailbox_offset = MBOX_OFFSET,
++		.response_offset = RESP_OFSET
++		};
++
++	struct mpfs_mss_response response = {
++		.response_status = 0U,
++		.response_msg = (u32 *)response_msg,
++		.response_size = MPFS_DIGEST_RESP_SIZE_BYTES
++	};
++
++	int ret = mpfs_blocking_transaction(digest_priv->sys_controller, &msg,
++					    &response);
++	if (ret)
++		return -EIO;
++
++	for (i = 0; i < MPFS_DIGEST_RESP_SIZE_BYTES; i++) {
++		if (i % 32 == 0 && i != 0)
++			bufferp += sprintf(bufferp, "\r\n");
++
++		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
++	}
++
++	return simple_read_from_buffer(userbuf, len, f_pos, buffer, buffer_length);
++}
++
++static int mpfs_digest_open(struct inode *inode, struct file *filp)
++{
++	if (!mutex_trylock(&mpfs_digest_mutex)) {
++		pr_debug("Device Busy\n");
++		return -EBUSY;
++	}
++	return 0;
++}
++
++static int mpfs_digest_release(struct inode *inode, struct file *filp)
++{
++	mutex_unlock(&mpfs_digest_mutex);
++	return 0;
++}
++
++static const struct file_operations mpfs_digest_fops = {
++	.owner		= THIS_MODULE,
++	.read		= mpfs_digest_read,
++	.open		= mpfs_digest_open,
++	.release	= mpfs_digest_release
++};
++
++static struct miscdevice mpfs_digest_dev = {
++	.minor		= MISC_DYNAMIC_MINOR,
++	.name		= "mpfs_fpga_digest",
++	.fops		= &mpfs_digest_fops
++};
++
++static int mpfs_digest_probe(struct platform_device *pdev)
++{
++	struct device_node *sys_controller_np;
++	struct device *dev = &pdev->dev;
++
++	digest_priv = devm_kzalloc(dev, sizeof(*digest_priv), GFP_KERNEL);
++	if (!digest_priv)
++		return -ENOMEM;
++
++	sys_controller_np =
++		of_parse_phandle(pdev->dev.of_node, "syscontroller", 0);
++	if (!sys_controller_np) {
++		dev_err(&pdev->dev, "Failed to find mpfs system controller node\n");
++		return -ENODEV;
++	}
++
++	digest_priv->sys_controller = mpfs_sys_controller_get(sys_controller_np);
++	of_node_put(sys_controller_np);
++	if (!digest_priv->sys_controller)
++		return -EPROBE_DEFER;
++
++	platform_set_drvdata(pdev, digest_priv);
++	misc_register(&mpfs_digest_dev);
++	dev_info(&pdev->dev, "Successfully registered mpfs fpga digest driver\n");
++
++	return 0;
++}
++
++static const struct of_device_id mpfs_digest_of_match[] = {
++	{
++		.compatible = "microchip,polarfire-soc-digest",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, mpfs_digest_of_match);
++
++static struct platform_driver mpfs_digest_driver = {
++	.driver = {
++		.name = "mpfs-digest",
++		.of_match_table = mpfs_digest_of_match,
++	},
++	.probe = mpfs_digest_probe,
++};
++module_platform_driver(mpfs_digest_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Conor Dooley <conor.dooley@microchip.com>");
++MODULE_DESCRIPTION("PFSoC mailbox client driver");
+diff --git a/drivers/soc/microchip/mpfs-serial-number.c b/drivers/soc/microchip/mpfs-serial-number.c
+new file mode 100644
+index 000000000000..b064afa3cf87
+--- /dev/null
++++ b/drivers/soc/microchip/mpfs-serial-number.c
+@@ -0,0 +1,142 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Microchip PFSoC serial number driver
++ *
++ * Copyright (c) 2020 Microchip Corporation. All rights reserved.
++ *
++ * Author:
++ *
++ */
++
++#include <linux/fs.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/miscdevice.h>
++#include <linux/of_platform.h>
++#include <soc/microchip/mpfs.h>
++
++#define MPFS_SERIAL_RESP_SIZE_BYTES	16U
++
++#define CMD_OPCODE 0U
++#define CMD_DATA_SIZE 0U
++#define CMD_DATA NULL
++#define MBOX_OFFSET 0U
++#define RESP_OFSET 0U
++
++static DEFINE_MUTEX(mpfs_serial_mutex);
++
++struct mpfs_serial_priv {
++	struct mpfs_sys_controller *sys_controller;
++};
++
++struct mpfs_serial_priv *serial_priv;
++
++static ssize_t mpfs_serial_read(struct file *filp, char __user *userbuf, size_t len,
++			loff_t *f_pos)
++{
++	u8 response_msg[MPFS_SERIAL_RESP_SIZE_BYTES];
++	u8 buffer[2 * MPFS_SERIAL_RESP_SIZE_BYTES];
++	u8 *bufferp = buffer;
++	u32 i;
++	struct mpfs_mss_msg msg = {
++		.cmd_opcode = CMD_OPCODE,
++		.cmd_data_size = CMD_DATA_SIZE,
++		.response_size = MPFS_SERIAL_RESP_SIZE_BYTES,
++		.cmd_data = CMD_DATA,
++		.mailbox_offset = MBOX_OFFSET,
++		.response_offset = RESP_OFSET
++		};
++
++	struct mpfs_mss_response response = {
++		.response_status = 0U,
++		.response_msg = (u32 *)response_msg,
++		.response_size = MPFS_SERIAL_RESP_SIZE_BYTES  
++	};
++
++	int ret = mpfs_blocking_transaction(serial_priv->sys_controller, &msg,
++				&response);
++	if (ret)
++		return -EIO;
++
++	for (i = 0; i < MPFS_SERIAL_RESP_SIZE_BYTES; i++)
++		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
++
++	return simple_read_from_buffer(userbuf, len, f_pos, buffer,
++					2 * MPFS_SERIAL_RESP_SIZE_BYTES);
++}
++
++static int mpfs_serial_open(struct inode *inode, struct file *filp)
++{
++	if (!mutex_trylock(&mpfs_serial_mutex)) {
++		pr_debug("Device Busy\n");
++		return -EBUSY;
++	}
++	return 0;
++}
++
++static int mpfs_serial_release(struct inode *inode, struct file *filp)
++{
++	mutex_unlock(&mpfs_serial_mutex);
++	return 0;
++}
++
++static const struct file_operations mpfs_serial_fops = {
++	.owner		= THIS_MODULE,
++	.read		= mpfs_serial_read,
++	.open		= mpfs_serial_open,
++	.release	= mpfs_serial_release
++};
++
++static struct miscdevice mpfs_serial_dev = {
++	.minor		= MISC_DYNAMIC_MINOR,
++	.name		= "mpfs_serial_num",
++	.fops		= &mpfs_serial_fops
++};
++
++static int mpfs_serial_number_probe(struct platform_device *pdev)
++{
++	struct device_node *sys_controller_np;
++	struct device *dev = &pdev->dev;
++
++	serial_priv = devm_kzalloc(dev, sizeof(*serial_priv), GFP_KERNEL);
++	if (!serial_priv)
++		return -ENOMEM;
++
++	sys_controller_np = of_parse_phandle(pdev->dev.of_node, "syscontroller", 0);
++	if (!sys_controller_np) {
++		dev_err(&pdev->dev, "Failed to find mpfs system controller node\n");
++		return -ENODEV;
++	}
++
++	serial_priv->sys_controller = mpfs_sys_controller_get(sys_controller_np);
++	of_node_put(sys_controller_np);
++	if (!serial_priv->sys_controller)
++		return -EPROBE_DEFER;
++
++	platform_set_drvdata(pdev, serial_priv);
++	misc_register(&mpfs_serial_dev);
++	dev_info(&pdev->dev, "Successfully registered mpfs serial number driver\n");
++
++	return 0;
++}
++
++static const struct of_device_id mpfs_serial_number_of_match[] = {
++	{
++		.compatible = "microchip,polarfire-soc-serial-number",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, mpfs_serial_number_of_match);
++
++static struct platform_driver mpfs_serial_number_driver = {
++	.driver = {
++	.name = "mpfs-serial-number",
++	.of_match_table = mpfs_serial_number_of_match,
++	},
++	.probe = mpfs_serial_number_probe,
++};
++module_platform_driver(mpfs_serial_number_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Conor Dooley <conor.dooley@microchip.com>");
++MODULE_DESCRIPTION("PFSoC serial number driver");
+diff --git a/drivers/soc/microchip/mpfs-signature.c b/drivers/soc/microchip/mpfs-signature.c
+new file mode 100644
+index 000000000000..c8c87aa66520
+--- /dev/null
++++ b/drivers/soc/microchip/mpfs-signature.c
+@@ -0,0 +1,176 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Microchip PFSoC check signature driver
++ *
++ * Copyright (c) 2020 Microchip Corporation. All rights reserved.
++ *
++ * Author:
++ *
++ */
++
++#include <linux/fs.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/uaccess.h>
++#include <linux/miscdevice.h>
++#include <linux/of_platform.h>
++#include <soc/microchip/mpfs.h>
++
++#define MPFS_SIG_RESP_SIZE_BYTES 96U //raw format, DER is 104
++#define MPFS_SIG_CMD_SIZE_BYTES 48U
++
++#define CMD_OPCODE 0x19U //raw format, DER is 0x1A
++#define CMD_DATA NULL
++#define MBOX_OFFSET 0U
++#define RESP_OFFSET ALIGN((MPFS_SIG_CMD_SIZE_BYTES), (4U))
++
++static DEFINE_MUTEX(mpfs_signature_mutex);
++
++struct mpfs_signature_priv {
++	struct mpfs_sys_controller *sys_controller;
++	u8 *buffer; //of 48?
++	size_t len;
++};
++
++struct mpfs_signature_priv *signature_priv;
++
++static ssize_t mpfs_signature_write(struct file *filep, const char __user *userbuf,
++				    size_t len, loff_t *offset)
++{
++	u16 len_trun = len > MPFS_SIG_CMD_SIZE_BYTES ? MPFS_SIG_CMD_SIZE_BYTES : len;
++	u8 *cmd_data = signature_priv->buffer;
++
++	cmd_data = kmalloc(MPFS_SIG_CMD_SIZE_BYTES, GFP_KERNEL);
++	if (!cmd_data)
++		return -ENOMEM;
++
++	int ret = copy_from_user(cmd_data, userbuf, len_trun); //TODO ret val check
++	if (ret)
++		return -ret;
++	signature_priv->buffer = cmd_data;
++	signature_priv->len = len_trun;
++
++	return len;
++}
++
++static ssize_t mpfs_signature_read(struct file *filp, char __user *userbuf,
++				     size_t len, loff_t *f_pos)
++{
++	u8 response_msg[MPFS_SIG_RESP_SIZE_BYTES];
++	u8 buffer[2 * MPFS_SIG_RESP_SIZE_BYTES + 3];
++	u8 *cmd_data = signature_priv->buffer;
++	u8 *bufferp = buffer;
++	u32 i;
++
++	struct mpfs_mss_msg msg = { .cmd_opcode = CMD_OPCODE,
++				    .cmd_data_size = MPFS_SIG_CMD_SIZE_BYTES,
++				    .response_size = MPFS_SIG_RESP_SIZE_BYTES,
++				    .cmd_data = cmd_data,
++				    .mailbox_offset = MBOX_OFFSET,
++				    .response_offset = RESP_OFFSET };
++
++	struct mpfs_mss_response response = {
++		.response_status = 0U,
++		.response_msg = (u32 *)response_msg,
++		.response_size = MPFS_SIG_RESP_SIZE_BYTES
++	};
++
++	if (!signature_priv->buffer || signature_priv->len != MPFS_SIG_CMD_SIZE_BYTES)
++		return -EFAULT;
++
++	int ret = mpfs_blocking_transaction(signature_priv->sys_controller,
++					    &msg, &response);
++	kfree(signature_priv->buffer);
++
++	if (ret)
++		return -EIO;
++	bufferp += sprintf(bufferp, "%02x ", response.response_status);
++	for (i = 0; i < MPFS_SIG_RESP_SIZE_BYTES; i++)
++		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
++
++	return simple_read_from_buffer(userbuf, len, f_pos, buffer,
++				       2 * MPFS_SIG_RESP_SIZE_BYTES + 3);
++}
++
++static int mpfs_signature_open(struct inode *inode, struct file *filp)
++{
++	if (!mutex_trylock(&mpfs_signature_mutex)) {
++		pr_debug("Device Busy\n");
++		return -EBUSY;
++	}
++	return 0;
++}
++
++static int mpfs_signature_release(struct inode *inode, struct file *filp)
++{
++	mutex_unlock(&mpfs_signature_mutex);
++	return 0;
++}
++
++static const struct file_operations mpfs_signature_fops = {
++	.owner = THIS_MODULE,
++	.read = mpfs_signature_read,
++	.open = mpfs_signature_open,
++	.write = mpfs_signature_write,
++	.release = mpfs_signature_release
++};
++
++static struct miscdevice mpfs_signature_dev = {
++	.minor = MISC_DYNAMIC_MINOR,
++	.name = "mpfs_signature_num",
++	.fops = &mpfs_signature_fops
++};
++
++static int mpfs_signature_probe(struct platform_device *pdev)
++{
++	struct device_node *sys_controller_np;
++	struct device *dev = &pdev->dev;
++
++	signature_priv =
++		devm_kzalloc(dev, sizeof(*signature_priv), GFP_KERNEL);
++	if (!signature_priv)
++		return -ENOMEM;
++	
++	sys_controller_np =
++		of_parse_phandle(pdev->dev.of_node, "syscontroller", 0);
++	if (!sys_controller_np) {
++		dev_err(&pdev->dev,
++			"Failed to find mpfs system controller node\n");
++		return -ENODEV;
++	}
++
++	signature_priv->sys_controller =
++		mpfs_sys_controller_get(sys_controller_np);
++	of_node_put(sys_controller_np);
++	if (!signature_priv->sys_controller)
++		return -EPROBE_DEFER;
++
++	platform_set_drvdata(pdev, signature_priv);
++	misc_register(&mpfs_signature_dev);
++	dev_info(&pdev->dev,
++		 "Successfully registered mpfs signature driver\n");
++
++	return 0;
++}
++
++static const struct of_device_id mpfs_signature_of_match[] = {
++	{
++		.compatible = "microchip,polarfire-soc-signature",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, mpfs_signature_of_match);
++
++static struct platform_driver mpfs_signature_driver = {
++	.driver = {
++	.name = "mpfs-signature",
++	.of_match_table = mpfs_signature_of_match,
++	},
++	.probe = mpfs_signature_probe,
++};
++module_platform_driver(mpfs_signature_driver);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Conor Dooley <conor.dooley@microchip.com>");
++MODULE_DESCRIPTION("PFSoC signature driver");
+-- 
+2.17.1
+
