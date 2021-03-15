@@ -653,7 +653,7 @@ index 000000000000..c8c87aa66520
 +
 +static struct miscdevice mpfs_signature_dev = {
 +	.minor = MISC_DYNAMIC_MINOR,
-+	.name = "mpfs_signature_num",
++	.name = "mpfs_signature",
 +	.fops = &mpfs_signature_fops
 +};
 +
