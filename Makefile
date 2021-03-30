@@ -64,8 +64,6 @@ linux_defconfig := $(confdir)/$(DEVKIT)/linux_56_defconfig
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
 vmlinux_bin := $(wrkdir)/vmlinux.bin
-uImage := $(wrkdir)/uImage
-uInitramfs := $(wrkdir)/initramfs.ub
 
 kernel-modules-stamp := $(wrkdir)/.modules_stamp
 kernel-modules-install-stamp := $(wrkdir)/.modules_install_stamp
@@ -190,7 +188,7 @@ $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wr
 buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) menuconfig
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) savedefconfig
-	cp $(buildroot_builddir)/defconfig conf/buildroot_initramfs_config
+	cp $(buildroot_initramfs_wrkdir)/defconfig conf/buildroot_initramfs_config
 
 $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 	rm -rf $(dir $@)
@@ -201,11 +199,11 @@ $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 $(buildroot_rootfs_ext): $(buildroot_builddir_stamp) $(buildroot_rootfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_rootfs_config)
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) -j$(num_threads)
 
-.PHONY: buildroot_rootfs-menuconfig
-buildroot_rootfs-menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_builddir_stamp)
-	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_rootfs_wrkdir) menuconfig
-	$(MAKE) -C $(dir $(buildroot_builddir)) O=$(buildroot_rootfs_wrkdir) savedefconfig
-	cp $(dir $(buildroot_builddir))/defconfig conf/buildroot_rootfs_config
+.PHONY: buildroot_rootfs_menuconfig
+buildroot_rootfs_menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_builddir_stamp)
+	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_rootfs_wrkdir) menuconfig
+	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_rootfs_wrkdir) savedefconfig
+	cp $(buildroot_rootfs_wrkdir)/defconfig conf/buildroot_rootfs_config
 
 $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	mkdir -p $(buildroot_initramfs_sysroot)
@@ -259,9 +257,6 @@ $(vmlinux_stripped): $(vmlinux)
 $(vmlinux_bin): $(vmlinux)
 	PATH=$(PATH) $(CROSS_COMPILE)objcopy -O binary $< $@
 	
-$(uImage): $(vmlinux_bin)
-	$(uboot_s_wrkdir)/tools/mkimage -A riscv -O linux -T kernel -C "none" -a 80200000 -e 80200000 -d $< $@
-
 .PHONY: kernel-modules kernel-modules-install
 $(kernel-modules-stamp): $(linux_builddir) $(vmlinux)
 	$(MAKE) -C $< O=$(linux_wrkdir) \
@@ -297,7 +292,7 @@ $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
 	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
-$(fit): $(uboot_s) $(uImage) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
+$(fit): $(uboot_s) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
 	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libfesvr): $(fesvr_srcdir)
