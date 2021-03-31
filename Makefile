@@ -282,14 +282,14 @@ linux-menuconfig: $(linux_wrkdir)/.config
 	$(MAKE) -C $(linux_builddir) O=$(dir $<) ARCH=riscv savedefconfig CROSS_COMPILE=$(CROSS_COMPILE)
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
-$(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts
+$(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts $(vmlinux)
 	rm -rf $(wrkdir)/dts
 	mkdir -p $(wrkdir)/dts
 	cp $(confdir)/dts/* $(wrkdir)/dts
 	cp $< $(wrkdir)/dts
 	(cat $(wrkdir)/dts/$(DEVKIT).dts; ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
 	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
-	dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
+	$(linux_wrkdir)/scripts/dtc/dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
 $(fit): $(uboot_s) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
@@ -423,7 +423,7 @@ clean:
 	rm -rf -- $(wrkdir)
 
 distclean:
-	rm -rf -- $(wrkdir) $(toolchain_dest) arch/ include/ scripts/ .cache.mk
+	rm -rf -- $(wrkdir) $(toolchain_dest) br-dl-dir/ arch/ include/ scripts/ .cache.mk
 
 .PHONY: sim
 sim: $(spike) $(bbl_payload)

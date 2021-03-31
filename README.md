@@ -182,7 +182,7 @@ Before starting, use the `apt` command to install prerequisite packages:
 sudo apt install autoconf automake autotools-dev bc bison build-essential curl \
 flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev \
 libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev \
-libblkid-dev device-tree-compiler libglib2.0-dev libpixman-1-dev mtools  \
+libblkid-dev libglib2.0-dev libpixman-1-dev mtools  \
 linux-firmware rsync python3 libexpat1-dev wget cpio xxd dosfstools \
 python3-pip libyaml-dev libelf-dev zlib1g-dev
 ```
