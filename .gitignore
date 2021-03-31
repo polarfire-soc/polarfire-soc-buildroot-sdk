@@ -8,3 +8,4 @@ scripts/
 /conf/old_configs
 *.orig
 rootfs.tar.gz
+br-dl-dir/
