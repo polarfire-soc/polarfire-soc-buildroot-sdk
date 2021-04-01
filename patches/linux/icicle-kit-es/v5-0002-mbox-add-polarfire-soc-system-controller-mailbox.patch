@@ -1,7 +1,7 @@
-From 7a9745f3ce577c2d36e261b9e6c9fb3fae64d30c Mon Sep 17 00:00:00 2001
+From 02c8f68eaafcd611e7affbae3a75e6aa0965aaf0 Mon Sep 17 00:00:00 2001
 From: Conor Dooley <conor.dooley@microchip.com>
-Date: Wed, 20 Jan 2021 10:21:07 +0000
-Subject: [PATCH v4 3/7] mbox: add polarfire soc system controller mailbox
+Date: Thu, 11 Mar 2021 10:17:54 +0000
+Subject: [PATCH v5 2/5] mbox: add polarfire soc system controller mailbox
 
 This driver adds support for the single mailbox channel of the MSS
 system controller on the Microchip PolarFire SoC.
@@ -10,9 +10,9 @@ Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
 ---
  drivers/mailbox/Kconfig        |  12 ++
  drivers/mailbox/Makefile       |   2 +
- drivers/mailbox/mailbox-mpfs.c | 279 +++++++++++++++++++++++++++++++++
- include/soc/microchip/mpfs.h   |  57 +++++++
- 4 files changed, 350 insertions(+)
+ drivers/mailbox/mailbox-mpfs.c | 272 +++++++++++++++++++++++++++++++++
+ include/soc/microchip/mpfs.h   |  56 +++++++
+ 4 files changed, 342 insertions(+)
  create mode 100644 drivers/mailbox/mailbox-mpfs.c
  create mode 100644 include/soc/microchip/mpfs.h
 
@@ -54,10 +54,10 @@ index 7194fa92c787..c2089f04887e 100644
  obj-$(CONFIG_TEGRA_HSP_MBOX)	+= tegra-hsp.o
 diff --git a/drivers/mailbox/mailbox-mpfs.c b/drivers/mailbox/mailbox-mpfs.c
 new file mode 100644
-index 000000000000..17fc8208dcb8
+index 000000000000..dd51e11d287a
 --- /dev/null
 +++ b/drivers/mailbox/mailbox-mpfs.c
-@@ -0,0 +1,281 @@
+@@ -0,0 +1,274 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PolarFire SoC (MPFS) system controller/mailbox controller driver
@@ -122,18 +122,18 @@ index 000000000000..17fc8208dcb8
 +	struct mbox_controller controller;
 +	struct device *dev;
 +	int irq;
-+	void __iomem *mailbox_base;
++	void __iomem *mbox_base;
 +	void __iomem *int_reg;
-+	struct mbox_chan *chan;
-+	u16 response_size;
-+	u16 response_offset;
++	struct mbox_chan *chans;
++	struct mpfs_mss_response *response;
++	u16 resp_offset;
 +};
 +
 +static bool mpfs_mbox_busy(struct mpfs_mbox *mbox)
 +{
 +	u32 status;
 +
-+	status = readl_relaxed(mbox->mailbox_base + SERVICES_SR_OFFSET);
++	status = readl_relaxed(mbox->mbox_base + SERVICES_SR_OFFSET);
 +
 +	return status & SCB_STATUS_BUSY_MASK;
 +}
@@ -148,14 +148,14 @@ index 000000000000..17fc8208dcb8
 +
 +static int mpfs_mbox_send_data(struct mbox_chan *chan, void *data)
 +{
-+	u32 mailbox_val = 0u;
-+	u16 options_select;
++	u32 val = 0u;
++	u16 opt_sel;
 +	u32 tx_trigger;
 +	struct mpfs_mss_msg *msg = data;
 +	struct mpfs_mbox *mbox = mbox_chan_to_mpfs_mbox(chan);
 +
-+	mbox->response_size = msg->response_size;
-+	mbox->response_offset = msg->response_offset;
++	mbox->response = msg->response;
++	mbox->resp_offset = msg->resp_offset;
 +
 +	if (mpfs_mbox_busy(mbox))
 +		return -EBUSY;
@@ -167,29 +167,29 @@ index 000000000000..17fc8208dcb8
 +
 +		for (index = 0; index < (msg->cmd_data_size / 4); index++)
 +			writel_relaxed(word_buf[index],
-+				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index * 0x4);
++				       mbox->mbox_base + MAILBOX_REG_OFFSET + index * 0x4);
 +		if (extra_bits) {
 +			u8 i;
 +			u8 byte_off = ALIGN_DOWN(msg->cmd_data_size, 4);
 +			u8 *byte_buf = msg->cmd_data + byte_off;
 +
-+			mailbox_val = readl_relaxed(mbox->mailbox_base +
-+						    MAILBOX_REG_OFFSET + index * 0x4);
++			val = readl_relaxed(mbox->mbox_base +
++					    MAILBOX_REG_OFFSET + index * 0x4);
 +
 +			for (i = 0u; i < extra_bits; i++) {
-+				mailbox_val &= ~(0xffu << (i * 8u));
-+				mailbox_val |= (byte_buf[i] << (i * 8u));
++				val &= ~(0xffu << (i * 8u));
++				val |= (byte_buf[i] << (i * 8u));
 +			}
 +
-+			writel_relaxed(mailbox_val,
-+				       mbox->mailbox_base + MAILBOX_REG_OFFSET + index * 0x4);
++			writel_relaxed(val,
++				       mbox->mbox_base + MAILBOX_REG_OFFSET + index * 0x4);
 +		}
 +	}
 +
-+	options_select = ((msg->mailbox_offset << 7u) | (msg->cmd_opcode & 0x7fu));
-+	tx_trigger = (options_select << SCB_CTRL_POS) & SCB_CTRL_MASK;
++	opt_sel = ((msg->mbox_offset << 7u) | (msg->cmd_opcode & 0x7fu));
++	tx_trigger = (opt_sel << SCB_CTRL_POS) & SCB_CTRL_MASK;
 +	tx_trigger |= SCB_CTRL_REQ_MASK | SCB_STATUS_NOTIFY_MASK;
-+	writel_relaxed(tx_trigger, mbox->mailbox_base + SERVICES_CR_OFFSET);
++	writel_relaxed(tx_trigger, mbox->mbox_base + SERVICES_CR_OFFSET);
 +
 +	return 0;
 +}
@@ -198,7 +198,7 @@ index 000000000000..17fc8208dcb8
 +{
 +	u32 status;
 +
-+	status = readl_relaxed(mbox->mailbox_base + SERVICES_SR_OFFSET);
++	status = readl_relaxed(mbox->mbox_base + SERVICES_SR_OFFSET);
 +
 +	return !(status & SCB_STATUS_BUSY_MASK);
 +}
@@ -206,31 +206,24 @@ index 000000000000..17fc8208dcb8
 +static void mpfs_mbox_rx_data(struct mbox_chan *chan)
 +{
 +	struct mpfs_mbox *mbox = mbox_chan_to_mpfs_mbox(chan);
-+	u32 *data;
 +	u32 i;
-+	u16 num_words = ALIGN((mbox->response_size), (4)) / 4U; //TODO better way?
-+	struct mpfs_mss_response *response;
++	u16 num_words = ALIGN((mbox->response->resp_size), (4)) / 4U;
++	struct mpfs_mss_response *response = mbox->response;
 +
-+	response = kmalloc(sizeof(*response), GFP_ATOMIC);
-+	response->response_msg = data;
-+	response->response_size = mbox->response_size;
-+
-+	response->response_msg = kcalloc(num_words, sizeof(response->response_msg), GFP_ATOMIC);
-+
-+	if (!response->response_msg) {
++	if (!response->resp_msg) {
 +		dev_err(mbox->dev, "failed to assign memory for response %d\n", -ENOMEM);
 +		return;
 +	}
 +
 +	if (mpfs_mbox_pending(mbox)) {
 +		for (i = 0; i < num_words; i++) {
-+			response->response_msg[i] = readl_relaxed(mbox->mailbox_base + MAILBOX_REG_OFFSET +
-+						+ mbox->response_offset + i * 0x4);
++			response->resp_msg[i] =
++				readl_relaxed(mbox->mbox_base + MAILBOX_REG_OFFSET
++					      + mbox->resp_offset + i * 0x4);
 +		}
 +	}
 +
 +	mbox_chan_received_data(chan, response);
-+	kfree(response);
 +}
 +
 +static irqreturn_t mpfs_mbox_inbox_isr(int irq, void *data)
@@ -277,21 +270,21 @@ index 000000000000..17fc8208dcb8
 +{
 +	struct mpfs_mbox *mbox;
 +	struct resource *regs;
-+	struct mbox_chan *chans;
 +	int ret;
 +
 +	mbox = devm_kzalloc(&pdev->dev, sizeof(*mbox), GFP_KERNEL);
 +	if (!mbox)
 +		return -ENOMEM;
 +
-+	chans = devm_kzalloc(&pdev->dev, sizeof(*chans), GFP_KERNEL);
-+	if (!chans)
++	mbox->chans =
++		devm_kzalloc(&pdev->dev, sizeof(*mbox->chans), GFP_KERNEL);
++	if (!mbox->chans)
 +		return -ENOMEM;
 +
 +	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	mbox->mailbox_base = devm_ioremap_resource(&pdev->dev, regs);
-+	if (IS_ERR(mbox->mailbox_base))
-+		return PTR_ERR(mbox->mailbox_base);
++	mbox->mbox_base = devm_ioremap_resource(&pdev->dev, regs);
++	if (IS_ERR(mbox->mbox_base))
++		return PTR_ERR(mbox->mbox_base);
 +
 +	regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
 +	mbox->int_reg = devm_ioremap_resource(&pdev->dev, regs);
@@ -304,10 +297,10 @@ index 000000000000..17fc8208dcb8
 +
 +	mbox->dev = &pdev->dev;
 +
-+	chans[0].con_priv = mbox;
++	mbox->chans[0].con_priv = mbox;
 +	mbox->controller.dev = mbox->dev;
 +	mbox->controller.num_chans = 1;
-+	mbox->controller.chans = chans;
++	mbox->controller.chans = mbox->chans;
 +	mbox->controller.ops = &mpfs_mbox_ops;
 +	mbox->controller.txdone_irq = true;
 +
@@ -341,10 +334,10 @@ index 000000000000..17fc8208dcb8
 +MODULE_DESCRIPTION("MPFS mailbox controller driver");
 diff --git a/include/soc/microchip/mpfs.h b/include/soc/microchip/mpfs.h
 new file mode 100644
-index 000000000000..b37258afb3f8
+index 000000000000..16309c5852fb
 --- /dev/null
 +++ b/include/soc/microchip/mpfs.h
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,56 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
 + *
@@ -367,22 +360,21 @@ index 000000000000..b37258afb3f8
 +struct mpfs_mss_msg {
 +	u8 cmd_opcode;
 +	u16 cmd_data_size;
-+	u16 response_size;
++	struct mpfs_mss_response *response;
 +	u8 *cmd_data;
-+	u16 mailbox_offset;
-+	u16 response_offset;
++	u16 mbox_offset;
++	u16 resp_offset;
 +};
 +
 +struct mpfs_mss_response {
-+	u32 response_status;
-+	u32 *response_msg;
-+	u16 response_size;
++	u32 resp_status;
++	u32 *resp_msg;
++	u16 resp_size;
 +};
 +
 +#if IS_ENABLED(CONFIG_POLARFIRE_SOC_SYS_CTRL)
 +
-+int mpfs_blocking_transaction(struct mpfs_sys_controller *mpfs_client, void *msg,
-+			      struct mpfs_mss_response *response);
++int mpfs_blocking_transaction(struct mpfs_sys_controller *mpfs_client, void *msg);
 +
 +struct mpfs_sys_controller *mpfs_sys_controller_get(struct device_node *mailbox_node);
 +

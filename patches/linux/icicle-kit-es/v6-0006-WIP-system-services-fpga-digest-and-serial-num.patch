@@ -1,20 +1,22 @@
-From 9fd8d7b2ef991ffe4118229b4b0605bd1afd6fb3 Mon Sep 17 00:00:00 2001
+From bf0dc2d6d20900c66d52298d554631a824dc2f4e Mon Sep 17 00:00:00 2001
 From: Conor Dooley <conor.dooley@microchip.com>
 Date: Wed, 13 Jan 2021 15:21:42 +0000
-Subject: [PATCH v4 7/7] WIP system services: fpga digest and serial num
+Subject: [PATCH 8/8] WIP system services: fpga digest and serial num
 
 ---
  drivers/soc/microchip/Kconfig              |  24 +++
  drivers/soc/microchip/Makefile             |   4 +
- drivers/soc/microchip/mpfs-device-cert.c   | 142 +++++++++++++++++
- drivers/soc/microchip/mpfs-fpga-digest.c   | 167 +++++++++++++++++++
- drivers/soc/microchip/mpfs-serial-number.c | 142 +++++++++++++++++
- drivers/soc/microchip/mpfs-signature.c     | 176 +++++++++++++++++++++
- 6 files changed, 655 insertions(+)
+ drivers/soc/microchip/mpfs-device-cert.c   | 141 +++++++++++++++++
+ drivers/soc/microchip/mpfs-fpga-digest.c   | 166 ++++++++++++++++++++
+ drivers/soc/microchip/mpfs-serial-number.c | 141 +++++++++++++++++
+ drivers/soc/microchip/mpfs-signature.c     | 174 +++++++++++++++++++++
+ drivers/soc/microchip/tmp                  |  11 ++
+ 7 files changed, 661 insertions(+)
  create mode 100644 drivers/soc/microchip/mpfs-device-cert.c
  create mode 100644 drivers/soc/microchip/mpfs-fpga-digest.c
  create mode 100644 drivers/soc/microchip/mpfs-serial-number.c
  create mode 100644 drivers/soc/microchip/mpfs-signature.c
+ create mode 100644 drivers/soc/microchip/tmp
 
 diff --git a/drivers/soc/microchip/Kconfig b/drivers/soc/microchip/Kconfig
 index eb656b33156b..2f3518e4e8ec 100644
@@ -60,10 +62,10 @@ index 14489919fe4b..8abde1b0ffc7 100644
 +obj-$(CONFIG_POLARFIRE_SOC_SIGNATURE)	+= mpfs-signature.o
 diff --git a/drivers/soc/microchip/mpfs-device-cert.c b/drivers/soc/microchip/mpfs-device-cert.c
 new file mode 100644
-index 000000000000..d2cbec00f68d
+index 000000000000..2e0b3ac30c9a
 --- /dev/null
 +++ b/drivers/soc/microchip/mpfs-device-cert.c
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,141 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PFSoC check device cert driver
@@ -104,24 +106,23 @@ index 000000000000..d2cbec00f68d
 +	u8 buffer[2 * MPFS_CERT_RESP_SIZE_BYTES + 3];
 +	u8 *bufferp = buffer;
 +	u32 i;
-+	struct mpfs_mss_msg msg = { .cmd_opcode = CMD_OPCODE,
-+				    .cmd_data_size = CMD_DATA_SIZE,
-+				    .response_size = MPFS_CERT_RESP_SIZE_BYTES,
-+				    .cmd_data = CMD_DATA,
-+				    .mailbox_offset = MBOX_OFFSET,
-+				    .response_offset = RESP_OFFSET };
 +
 +	struct mpfs_mss_response response = {
-+		.response_status = 0U,
-+		.response_msg = (u32 *)response_msg,
-+		.response_size = MPFS_CERT_RESP_SIZE_BYTES
++		.resp_status = 0U,
++		.resp_msg = (u32 *)response_msg,
++		.resp_size = MPFS_CERT_RESP_SIZE_BYTES
 +	};
++	struct mpfs_mss_msg msg = { .cmd_opcode = CMD_OPCODE,
++				    .cmd_data_size = CMD_DATA_SIZE,
++				    .response = &response,
++				    .cmd_data = CMD_DATA,
++				    .mbox_offset = MBOX_OFFSET,
++				    .resp_offset = RESP_OFFSET };
 +
-+	int ret = mpfs_blocking_transaction(device_cert_priv->sys_controller, &msg,
-+					    &response);
++	int ret = mpfs_blocking_transaction(device_cert_priv->sys_controller, &msg);
 +	if (ret)
 +		return -EIO;
-+	bufferp += sprintf(bufferp, "%02x ", response.response_status);
++	bufferp += sprintf(bufferp, "%02x ", response.resp_status);
 +	for (i = 0; i < MPFS_CERT_RESP_SIZE_BYTES; i++)
 +		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
 +
@@ -208,10 +209,10 @@ index 000000000000..d2cbec00f68d
 +MODULE_DESCRIPTION("PFSoC device cert driver");
 diff --git a/drivers/soc/microchip/mpfs-fpga-digest.c b/drivers/soc/microchip/mpfs-fpga-digest.c
 new file mode 100644
-index 000000000000..03f31214ca0c
+index 000000000000..134e918ebcee
 --- /dev/null
 +++ b/drivers/soc/microchip/mpfs-fpga-digest.c
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,166 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PFSoC fpga digest driver
@@ -273,23 +274,22 @@ index 000000000000..03f31214ca0c
 +	u8 buffer[buffer_length];
 +	u8 *bufferp = buffer;
 +	u32 i;
++
++	struct mpfs_mss_response response = {
++		.resp_status = 0U,
++		.resp_msg = (u32 *)response_msg,
++		.resp_size = MPFS_DIGEST_RESP_SIZE_BYTES
++	};
 +	struct mpfs_mss_msg msg = {
 +		.cmd_opcode = CMD_OPCODE,
 +		.cmd_data_size = CMD_DATA_SIZE,
-+		.response_size = MPFS_DIGEST_RESP_SIZE_BYTES,
++		.response = &response,
 +		.cmd_data = CMD_DATA,
-+		.mailbox_offset = MBOX_OFFSET,
-+		.response_offset = RESP_OFSET
++		.mbox_offset = MBOX_OFFSET,
++		.resp_offset = RESP_OFSET
 +		};
 +
-+	struct mpfs_mss_response response = {
-+		.response_status = 0U,
-+		.response_msg = (u32 *)response_msg,
-+		.response_size = MPFS_DIGEST_RESP_SIZE_BYTES
-+	};
-+
-+	int ret = mpfs_blocking_transaction(digest_priv->sys_controller, &msg,
-+					    &response);
++	int ret = mpfs_blocking_transaction(digest_priv->sys_controller, &msg);
 +	if (ret)
 +		return -EIO;
 +
@@ -381,10 +381,10 @@ index 000000000000..03f31214ca0c
 +MODULE_DESCRIPTION("PFSoC mailbox client driver");
 diff --git a/drivers/soc/microchip/mpfs-serial-number.c b/drivers/soc/microchip/mpfs-serial-number.c
 new file mode 100644
-index 000000000000..b064afa3cf87
+index 000000000000..83de911a3548
 --- /dev/null
 +++ b/drivers/soc/microchip/mpfs-serial-number.c
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,141 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PFSoC serial number driver
@@ -425,23 +425,22 @@ index 000000000000..b064afa3cf87
 +	u8 buffer[2 * MPFS_SERIAL_RESP_SIZE_BYTES];
 +	u8 *bufferp = buffer;
 +	u32 i;
++
++	struct mpfs_mss_response response = {
++		.resp_status = 0U,
++		.resp_msg = (u32 *)response_msg,
++		.resp_size = MPFS_SERIAL_RESP_SIZE_BYTES
++	};
 +	struct mpfs_mss_msg msg = {
 +		.cmd_opcode = CMD_OPCODE,
 +		.cmd_data_size = CMD_DATA_SIZE,
-+		.response_size = MPFS_SERIAL_RESP_SIZE_BYTES,
++		.response = &response,
 +		.cmd_data = CMD_DATA,
-+		.mailbox_offset = MBOX_OFFSET,
-+		.response_offset = RESP_OFSET
++		.mbox_offset = MBOX_OFFSET,
++		.resp_offset = RESP_OFSET
 +		};
 +
-+	struct mpfs_mss_response response = {
-+		.response_status = 0U,
-+		.response_msg = (u32 *)response_msg,
-+		.response_size = MPFS_SERIAL_RESP_SIZE_BYTES  
-+	};
-+
-+	int ret = mpfs_blocking_transaction(serial_priv->sys_controller, &msg,
-+				&response);
++	int ret = mpfs_blocking_transaction(serial_priv->sys_controller, &msg);
 +	if (ret)
 +		return -EIO;
 +
@@ -529,10 +528,10 @@ index 000000000000..b064afa3cf87
 +MODULE_DESCRIPTION("PFSoC serial number driver");
 diff --git a/drivers/soc/microchip/mpfs-signature.c b/drivers/soc/microchip/mpfs-signature.c
 new file mode 100644
-index 000000000000..c8c87aa66520
+index 000000000000..961ec9010ef2
 --- /dev/null
 +++ b/drivers/soc/microchip/mpfs-signature.c
-@@ -0,0 +1,176 @@
+@@ -0,0 +1,174 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Microchip PFSoC check signature driver
@@ -598,29 +597,27 @@ index 000000000000..c8c87aa66520
 +	u8 *bufferp = buffer;
 +	u32 i;
 +
++	struct mpfs_mss_response response = {
++		.resp_status = 0U,
++		.resp_msg = (u32 *)response_msg,
++		.resp_size = MPFS_SIG_RESP_SIZE_BYTES
++	};
 +	struct mpfs_mss_msg msg = { .cmd_opcode = CMD_OPCODE,
 +				    .cmd_data_size = MPFS_SIG_CMD_SIZE_BYTES,
-+				    .response_size = MPFS_SIG_RESP_SIZE_BYTES,
++				    .response = &response,
 +				    .cmd_data = cmd_data,
-+				    .mailbox_offset = MBOX_OFFSET,
-+				    .response_offset = RESP_OFFSET };
-+
-+	struct mpfs_mss_response response = {
-+		.response_status = 0U,
-+		.response_msg = (u32 *)response_msg,
-+		.response_size = MPFS_SIG_RESP_SIZE_BYTES
-+	};
++				    .mbox_offset = MBOX_OFFSET,
++				    .resp_offset = RESP_OFFSET };
 +
 +	if (!signature_priv->buffer || signature_priv->len != MPFS_SIG_CMD_SIZE_BYTES)
 +		return -EFAULT;
 +
-+	int ret = mpfs_blocking_transaction(signature_priv->sys_controller,
-+					    &msg, &response);
++	int ret = mpfs_blocking_transaction(signature_priv->sys_controller, &msg);
 +	kfree(signature_priv->buffer);
 +
 +	if (ret)
 +		return -EIO;
-+	bufferp += sprintf(bufferp, "%02x ", response.response_status);
++	bufferp += sprintf(bufferp, "%02x ", response.resp_status);
 +	for (i = 0; i < MPFS_SIG_RESP_SIZE_BYTES; i++)
 +		bufferp += sprintf(bufferp, "%02x", response_msg[i]);
 +
@@ -709,6 +706,24 @@ index 000000000000..c8c87aa66520
 +MODULE_LICENSE("GPL v2");
 +MODULE_AUTHOR("Conor Dooley <conor.dooley@microchip.com>");
 +MODULE_DESCRIPTION("PFSoC signature driver");
+diff --git a/drivers/soc/microchip/tmp b/drivers/soc/microchip/tmp
+new file mode 100644
+index 000000000000..8d186a82c53b
+--- /dev/null
++++ b/drivers/soc/microchip/tmp
+@@ -0,0 +1,11 @@
++0x47,0xf0,0x5d,0x36,0x7b,0x0c,0x32,0xe4,0x38,0xfb,0x63,0xe6,0xcf,0x4a,0x5f,0x35,0xc2,0xaa,0x2f,0x90,0xdc,0x75,0x43,0xf8,0xa4,0x1a,0x0f,0x95,0xce,0x8a,0x40,0xa3,0x13,0xab,0x5c,0xf3,0x61,0x34,0xa2,0x06,0x8c,0x4c,0x96,0x9c,0xb5,0x0d,0xb7,0x76,
++00 25ef6e13857cecde660ce0c40ad0611c13047390159e10a264c47a8a2bc13394b99c0e067f032b7a8ceb1b7e0f198dcc34efe44909ea76574df534a4761ef16917e66e9c927b167ce1ebd40cfc75e01a6e525b82f44a81f9f352c6d8dcd887a0
++00 47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8a41a0f95ce8a40a313ab5cf36134a2068c4c969cb50db776d5ffb61c032eee014134f5b8b6e84ced83edac4fad45b2d27224ba3a313f827aaaa869ffe3e853e74f07dc70ba817b48[   79.274778] released
++00 
++47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8a41a0f95ce8a40a313ab5cf36134a2068c4c969cb50db776aabade0d195c968ed57728f8b43466080d3af6c9670fc9821afd144fd15a752441b6e8fd224fafd8d7053060ec441415
++47 f0 5d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8a41a0f95ce8a40a313ab5cf36134a2068c4c969cb50db776aabade0d195c968ed57728f8b43466080d3af6c9670fc9821afd144fd15a752441b6e8fd224fafd8d7053060ec441415
++
++printf "47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8a41a0f95ce8a40a313ab5cf36134a2068c4c969cb50db776" > /dev/mpfs_signature_num
++47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8
++printf "47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8" > /dev/mpfs_signature_num
++47f05d367b0c32e438fb63e6cf4a5f35c2aa2f90dc7543f8
+\ No newline at end of file
 -- 
 2.17.1
 

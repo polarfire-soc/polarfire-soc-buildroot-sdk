@@ -1,7 +1,7 @@
-From 21d017d42539aa99111e9767a6ef0d8387c74e67 Mon Sep 17 00:00:00 2001
+From 7deeb29dc341eb6c971a1a98bdd6f64441e48bbb Mon Sep 17 00:00:00 2001
 From: Conor Dooley <conor.dooley@microchip.com>
-Date: Mon, 18 Jan 2021 15:21:54 +0000
-Subject: [PATCH v4 4/7] dt-bindings: add bindings for polarfire soc mailbox
+Date: Thu, 11 Mar 2021 10:17:58 +0000
+Subject: [PATCH v5 1/5] dt-bindings: add bindings for polarfire soc mailbox
 
 Add device tree bindings for the MSS system controller mailbox on
 the Microchip PolarFire SoC.
@@ -14,14 +14,14 @@ Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
 
 diff --git a/Documentation/devicetree/bindings/mailbox/microchip,polarfire-soc-mailbox.yaml b/Documentation/devicetree/bindings/mailbox/microchip,polarfire-soc-mailbox.yaml
 new file mode 100644
-index 000000000000..3df4595ad58a
+index 000000000000..bbb173ea483c
 --- /dev/null
 +++ b/Documentation/devicetree/bindings/mailbox/microchip,polarfire-soc-mailbox.yaml
 @@ -0,0 +1,47 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: "http://devicetree.org/schemas/mailbox/microchip,mailbox-mpfs.yaml#"
++$id: "http://devicetree.org/schemas/mailbox/microchip,polarfire-soc-mailbox.yaml#"
 +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
 +
 +title: Microchip PolarFire SoC (MPFS) MSS (microprocessor subsystem) mailbox controller
