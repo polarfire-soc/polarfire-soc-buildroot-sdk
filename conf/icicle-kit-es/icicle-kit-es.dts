@@ -133,6 +133,26 @@
 			};
 		};
 	};
+	reserved-memory {
+		ranges;
+		#size-cells = <2>;
+		#address-cells = <2>;
+		fabricbuf0: fabricbuf@0 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0xae000000 0x0 0x02000000>;
+			label = "fabricbuf0-ddr-c";
+		};
+		fabricbuf1: fabricbuf@1 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0xc0000000 0x0 0x08000000>;
+			label = "fabricbuf1-ddr-nc";
+		};
+		fabricbuf2: fabricbuf@2 {
+			compatible = "shared-dma-pool";
+			reg = <0x00 0xd8000000 0x0 0x08000000>;
+			label = "fabricbuf2-ddr-nc-wcb";
+		};
+	};
 	L44: soc {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -153,14 +173,15 @@
 		};
 		DDRC_CACHE_LO: memory@80000000 {
 			device_type = "memory";
-			reg = <0x0 0x80000000 0x0 0x40000000>;
+			reg = <0x0 0x80000000 0x0 0x2e000000>;
 			clocks = <&clkcfg CLK_DDRC>;
 			status = "okay";
 		};
 		DDRC_CACHE_HI: memory@1040000000 {
 			device_type = "memory";
-			reg = <0x10 0x40000000 0x0 0x40000000>;
+			reg = <0x10 0x00000000 0x0 0x40000000>;
 			clocks = <&clkcfg CLK_DDRC>;
+			status = "okay";
 		};
 		L0: cache-controller@2010000 {
 			compatible = "sifive,fu540-c000-ccache", "cache";
@@ -181,12 +202,36 @@
 			interrupt-controller;
 			interrupts-extended = <&L4 11 &L9 11 &L9 9 &L13 11 &L13 9 &L17 11 &L17 9 &L21 11 &L21 9>;
 		};
-		L27: dma@3000000 {
-			compatible = "sifive,fu540-c000-pdma";
+		pdma: pdma@3000000 {
+			compatible = "microchip,mpfs-pdma-uio";
 			reg = <0x0 0x3000000 0x0 0x8000>;
 			interrupt-parent = <&L1>;
 			interrupts = <5 6 7 8 9 10 11 12>;
 			#dma-cells = <1>;
+		};
+		udmabuf@0 {
+			compatible = "ikwzm,u-dma-buf";
+			device-name = "udmabuf-ddr-c0";
+			minor-number = <0>;
+			size = <0x0 0x02000000>;
+			memory-region = <&fabricbuf0>;
+			sync-mode = <3>;
+		}; 
+		udmabuf@1 {
+			compatible = "ikwzm,u-dma-buf";
+			device-name = "udmabuf-ddr-nc0";
+			minor-number = <1>;
+			size = <0x0 0x08000000>;
+			memory-region = <&fabricbuf1>;
+			sync-mode = <3>;
+		};
+		udmabuf@2 {
+			compatible = "ikwzm,u-dma-buf";
+			device-name = "udmabuf-ddr-nc-wcb0";
+			minor-number = <2>;
+			size = <0x0 0x08000000>;
+			memory-region = <&fabricbuf2>;
+			sync-mode = <3>;
 		};
 		refclk: refclk {
 			compatible = "fixed-clock";
