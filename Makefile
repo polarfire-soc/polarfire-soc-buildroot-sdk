@@ -25,9 +25,11 @@ HSS_TARGET ?= mpfs-icicle-kit-es
 target_die = MPFS250T_ES
 target_package = FCVG484
 mem_file_base_address = 20220000
+UBOOT_VERSION = 2020.10
 else
 FSBL_SUPPORT ?= y
 OSBI_SUPPORT ?= y
+UBOOT_VERSION = 2020.10
 endif
 
 RISCV ?= $(CURDIR)/toolchain
@@ -76,18 +78,6 @@ initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
 fit := $(wrkdir)/fitImage.fit
 
-fesvr_srcdir := $(srcdir)/riscv-fesvr
-fesvr_wrkdir := $(wrkdir)/riscv-fesvr
-libfesvr := $(fesvr_wrkdir)/prefix/lib/libfesvr.so
-
-spike_srcdir := $(srcdir)/riscv-isa-sim
-spike_wrkdir := $(wrkdir)/riscv-isa-sim
-spike := $(spike_wrkdir)/prefix/bin/spike
-
-qemu_srcdir := $(srcdir)/riscv-qemu
-qemu_wrkdir := $(wrkdir)/riscv-qemu
-qemu := $(qemu_wrkdir)/prefix/bin/qemu-system-riscv64
-
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
 fsbl_wrkdir_stamp := $(wrkdir)/.fsbl_wrkdir
@@ -95,18 +85,9 @@ fsbl_patchdir := $(patchdir)/fsbl/
 libversion := $(fsbl_wrkdir)/lib/version.c
 fsbl := $(wrkdir)/fsbl.bin
 
-uboot_s_srcdir := $(srcdir)/u-boot
-uboot_s_wrkdir := $(wrkdir)/u-boot-smode
-
-# TODO remove below when osbi supports memory reservation
-uboot_s_builddir := $(wrkdir)/u-boot-smode-build 
-uboot_s_builddir_stamp := $(wrkdir)/.uboot_s_builddir
-uboot_s_patchdir := $(patchdir)/u-boot/
-# TODO remove above when osbi supports memory reservation
-
 uboot_s := $(wrkdir)/u-boot-s.bin
-uboot_s_cfg := $(confdir)/$(DEVKIT)/smode_defconfig
-uboot_s_scr := $(confdir)/$(DEVKIT)/uEnv_s-mode.txt
+uboot := $(buildroot_initramfs_wrkdir)/images/u-boot.bin
+uboot_s_scr := $(buildroot_initramfs_wrkdir)/images/boot.scr
 
 opensbi_srcdir := $(srcdir)/opensbi
 opensbi_wrkdir := $(wrkdir)/opensbi
@@ -184,7 +165,7 @@ $(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/in
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
 
 $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
-	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) -j$(num_threads)
+	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) -j$(num_threads) DEVKIT=$(DEVKIT)
 
 .PHONY: buildroot_initramfs_menuconfig
 buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
@@ -294,40 +275,8 @@ $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts $(vmlinux)
 	$(linux_wrkdir)/scripts/dtc/dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
 
-$(fit): $(uboot_s) $(vmlinux_bin) $(rootfs) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
-	$(uboot_s_wrkdir)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
-
-$(libfesvr): $(fesvr_srcdir)
-	rm -rf $(fesvr_wrkdir)
-	mkdir -p $(fesvr_wrkdir)
-	mkdir -p $(dir $@)
-	cd $(fesvr_wrkdir) && $</configure \
-		--prefix=$(dir $(abspath $(dir $@)))
-	$(MAKE) -C $(fesvr_wrkdir)
-	$(MAKE) -C $(fesvr_wrkdir) install
-	touch -c $@
-
-$(spike): $(spike_srcdir) $(libfesvr)
-	rm -rf $(spike_wrkdir)
-	mkdir -p $(spike_wrkdir)
-	mkdir -p $(dir $@)
-	cd $(spike_wrkdir) && PATH=$(PATH) $</configure \
-		--prefix=$(dir $(abspath $(dir $@))) \
-		--with-fesvr=$(dir $(abspath $(dir $(libfesvr))))
-	$(MAKE) PATH=$(PATH) -C $(spike_wrkdir)
-	$(MAKE) -C $(spike_wrkdir) install
-	touch -c $@
-
-$(qemu): $(qemu_srcdir)
-	rm -rf $(qemu_wrkdir)
-	mkdir -p $(qemu_wrkdir)
-	mkdir -p $(dir $@)
-	cd $(qemu_wrkdir) && $</configure \
-		--prefix=$(dir $(abspath $(dir $@))) \
-		--target-list=riscv64-softmmu
-	$(MAKE) -C $(qemu_wrkdir)
-	$(MAKE) -C $(qemu_wrkdir) install
-	touch -c $@
+$(fit): $(uboot_s) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
+	$(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)
@@ -349,23 +298,8 @@ $(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
 	$(MAKE) -C $(fsbl_wrkdir) O=$(fsbl_wrkdir) CROSSCOMPILE=$(CROSS_COMPILE) all -j$(num_threads)
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
-$(uboot_s_builddir_stamp): $(uboot_s_srcdir) $(uboot_s_patchdir)
-	- rm -rf $(uboot_s_builddir)
-	mkdir -p $(uboot_s_builddir) && cd $(uboot_s_builddir) && cp $(uboot_s_srcdir)/* . -r
-ifeq ($(DEVKIT),icicle-kit-es)	
-	for file in $(uboot_s_patchdir)/* ; do \
-			cd $(uboot_s_builddir) && patch -p1 < $${file} ; \
-	done
-endif
-	touch $@
-
-$(uboot_s): $(uboot_s_builddir_stamp) $(CROSS_COMPILE)gcc
-	- rm -rf $(uboot_s_wrkdir)
-	mkdir -p $(uboot_s_wrkdir)
-	cp  $(uboot_s_cfg) $(uboot_s_wrkdir)/.config
-	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv olddefconfig
-	$(MAKE) -C $(uboot_s_builddir) O=$(uboot_s_wrkdir) ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
-	cp -v $(uboot_s_wrkdir)/u-boot.bin $(uboot_s)
+$(uboot_s): $(buildroot_initramfs_sysroot_stamp)
+	cp $(uboot) $(uboot_s)
 
 $(opensbi): $(uboot_s) $(CROSS_COMPILE)gcc 
 	rm -rf $(opensbi_wrkdir)
@@ -427,21 +361,6 @@ clean:
 distclean:
 	rm -rf -- $(wrkdir) $(toolchain_dest) br-dl-dir/ arch/ include/ scripts/ .cache.mk
 
-.PHONY: sim
-sim: $(spike) $(bbl_payload)
-	$(spike) --isa=$(ISA) -p4 $(bbl_payload)
-
-.PHONY: qemu
-qemu: $(qemu) $(bbl) $(vmlinux) $(initramfs)
-	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
-		-netdev user,id=net0 -device virtio-net-device,netdev=net0
-
-.PHONY: qemu-rootfs
-qemu-rootfs: $(qemu) $(bbl) $(vmlinux) $(initramfs) $(rootfs)
-	$(qemu) -nographic -machine virt -bios $(bbl) -kernel $(vmlinux) -initrd $(initramfs) \
-		-drive file=$(rootfs),format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
-		-netdev user,id=net0 -device virtio-net-device,netdev=net0
-
 .PHONY: openocd
 openocd: $(openocd)
 	$(openocd) -f $(confdir)/u540-openocd.cfg
@@ -457,14 +376,14 @@ $(openocd): $(openocd_srcdir)
 .PHONY: gdb
 gdb: $(target_gdb)
 
-$(vfat_image): $(fit) $(uboot_s_scr)
+$(vfat_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
 	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
 		echo "FSBL is too large for partition!!\nReduce fsbl or increase partition size"; \
 		rm $(flash_image); exit 1; fi
 	dd if=/dev/zero of=$(vfat_image) bs=512 count=$(VFAT_SIZE)
 	/sbin/mkfs.vfat $(vfat_image)
 	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(fit) ::fitImage.fit
-	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::uEnv.txt
+	PATH=$(PATH) MTOOLS_SKIP_CHECK=1 mcopy -i $(vfat_image) $(uboot_s_scr) ::boot.scr
 
 ## sd/emmc/envm formatting
 
@@ -480,24 +399,35 @@ UBOOTFIT	= 04ffcafa-cd65-11e8-b974-70b3d592f0fa
 HSS_PAYLOAD = 21686148-6449-6E6F-744E-656564454649
 
 # partition addreses
-VFAT_START=2048
-VFAT_END=126976
-VFAT_SIZE=124928
+UENV_START=100
+UENV_END=1023
 FSBL_START=1024
 FSBL_END=2047
 FSBL_SIZE=1023
-UENV_START=100
-UENV_END=1023
+VFAT_START=2048
+VFAT_END=151976
+VFAT_SIZE=149928
 RESERVED_SIZE=2000
-OSBI_START=129024
-OSBI_END=159024
+OSBI_START=1549024
+OSBI_END=189024
+
+
+FSBL_START=2048
+FSBL_END=4095
+FSBL_SIZE=2048
+VFAT_START=4096
+VFAT_END=154023
+VFAT_SIZE=149928
+RESERVED_SIZE=2000
+OSBI_START=155648
+OSBI_END=189024
 
 # partition addreses for icicle kit
 UBOOT_START=2048
 UBOOT_END=3248
 LINUX_START=4096
-LINUX_END=133120
-ROOT_START=135168
+LINUX_END=163120
+ROOT_START=165168
 
 .PHONY: format-icicle-image
 format-icicle-image: $(fit) $(uboot_s_scr) $(icicle_image_mnt_point)
@@ -534,11 +464,11 @@ format-boot-loader: $(fit) $(vfat_image) $(bootloaders-y)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
 	$(eval ROOT_SIZE := $(shell expr $(SD_SIZE) \- $(RESERVED_SIZE)))
-	/sbin/sgdisk --clear  \
-		--new=1:$(VFAT_START):$(VFAT_END)  --change-name=1:"Vfat Boot"	--typecode=1:$(VFAT)   \
-		--new=2:264192:$(ROOT_SIZE) --change-name=2:root	--typecode=2:$(LINUX) \
+	/sbin/sgdisk -Zo  \
+		--new=1:$(FSBL_START):$(FSBL_END)   --change-name=1:fsbl	--typecode=1:$(FSBL) \
+		--new=2:$(VFAT_START):$(VFAT_END)  --change-name=2:"Vfat Boot"	--typecode=2:$(VFAT)   \
 		--new=3:$(OSBI_START):$(OSBI_END)  --change-name=3:osbi	--typecode=3:$(BBL) \
-		--new=4:$(FSBL_START):$(FSBL_END)   --change-name=4:fsbl	--typecode=4:$(FSBL) \
+		--new=4:264192:$(ROOT_SIZE) --change-name=4:root	--typecode=4:$(LINUX) \
 		$(DISK)
 	-/sbin/partprobe
 	@sleep 1
@@ -562,9 +492,9 @@ else
 	@exit 1
 endif
 
-	dd if=$(fsbl) of=$(PART4) bs=4096
+	dd if=$(fsbl) of=$(PART1) bs=4096
+	dd if=$(vfat_image) of=$(PART2) bs=4096
 	dd if=$(opensbi) of=$(PART3) bs=4096
-	dd if=$(vfat_image) of=$(PART1) bs=4096
 
 # DEB_IMAGE	:= rootfs.tar.gz
 # DEB_URL := 
