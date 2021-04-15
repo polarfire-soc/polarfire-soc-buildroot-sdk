@@ -1,6 +1,8 @@
 ISA ?= rv64imafdc
 ABI ?= lp64d
-LIBERO_PATH ?= /usr/local/microsemi/Libero_SoC_v12.6/Libero/
+
+LIBERO_PATH ?= /usr/local/microsemi/Libero_v2021.1/
+SC_PATH ?= /usr/local/microsemi/SoftConsole-v2021.1/
 fpgenprog := $(LIBERO_PATH)/bin64/fpgenprog
 num_threads = $(shell nproc --ignore=1)
 
@@ -604,13 +606,9 @@ else
 endif
 
 program_envm: $(hss)
-ifeq (,$(shell which $(fpgenprog)))
-	$(error fpgenprog not found - either libero is not installed or LIBERO_PATH does not point to the installation directory)
-endif
-	rm -rf $(wrkdir)/fpgen
-	mkdir -p $(wrkdir)/fpgen
-	$(fpgenprog) new_project --location $(wrkdir)/fpgen --target_die $(target_die) --target_package $(target_package)
-	$(fpgenprog) envm_client --location $(wrkdir)/fpgen  --number_of_bytes $(shell wc -c $(hss) | cut -d ' ' -f 1) --content_file_format intel-hex --content_file $(hss_hex) --start_page 0 --client_name envm1 --mem_file_base_address $(mem_file_base_address)
-	$(fpgenprog) mss_boot_info --location $(wrkdir)/fpgen  --u_mss_bootmode 1 --u_mss_bootcfg $(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)$(mem_file_base_address)
-	$(fpgenprog) generate_bitstream --location $(wrkdir)/fpgen
-	$(fpgenprog) run_action --location $(wrkdir)/fpgen --action PROGRAM
+	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) program \
+	SC_INSTALL_DIR=$(SC_PATH) \
+	FPGENPROG=$(fpgenprog) \
+	DIE=$(target_die) \
+	PACKAGE=$(target_package) \
+	BOOTMODE=1

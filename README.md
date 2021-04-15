@@ -5,7 +5,7 @@ It first will build the GNU cross-compilation toolchain for RISC-V, which will b
 Currently the following development platforms are supported:
 - [MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/mpfs-dev-kit/MPFS-DEV-KIT_user_guide.md) (HiFive Unleashed Expansion Board)
 - [LC-MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
-- Icicle Kit (Engineering Sample) (Requires minimum FPGA design: [v2020.12](https://github.com/polarfire-soc/icicle-kit-reference-design/releases/tag/2020.12))
+- Icicle Kit (Engineering Sample) (Requires minimum FPGA design: [v2021.03](https://github.com/polarfire-soc/icicle-kit-reference-design/releases/tag/2021.03). Designs prior to this release use a different memory map and will fail to boot.)
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
 
@@ -87,7 +87,11 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image
 ```
 
 When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
-To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root`. There is no password required.
+To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root`. There is no password required.        
+Similarly, a root file system can be written to the SD card using
+```
+$ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
+```
 
 ### Preparing an SD Card for the Icicle Kit
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
@@ -129,7 +133,11 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-esd format-icicle-image
 At this point, your SD card should be ready to boot Linux.         
 You can remove it from your PC and insert it into the SD card slot on the Icicle kit, and then power-on the board.
 Connect to UART0 (J11) for the HSS and UART1 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
-When Linux boots, log in with the username `root`. There is no password required.  
+When Linux boots, log in with the username `root`. There is no password required.           
+Similarly, a root file system can be written to the SD card using
+```
+$ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
+```
 
 ### Preparing an SD Card for MPFS or LC-MPFS
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
@@ -170,7 +178,11 @@ $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-boot-loader
 At this point, your SD card should be ready to boot Linux. 
 You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.    
 Connect to UART1 (J7) for the fsbl, U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.       
-When Linux boots, log in with the username `root`. There is no password required.  
+When Linux boots, log in with the username `root`. There is no password required.      
+Similarly, a root file system can be written to the SD card using
+```
+$ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
+```
 
 ## Supported Build Hosts
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.    
