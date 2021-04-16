@@ -161,15 +161,15 @@
 		mpfs_opp_table: opp-table {
 			compatible = "operating-points-v2";
 			opp-shared;
-		        opp-600000000 {
-			        opp-hz = /bits/ 64 <600000000>;
-		        };
-		        opp-300000000 {
-			        opp-hz = /bits/ 64 <300000000>;
-		        };
-		        opp-150000000 {
-			        opp-hz = /bits/ 64 <150000000>;
-		        };
+				opp-600000000 {
+					opp-hz = /bits/ 64 <600000000>;
+				};
+				opp-300000000 {
+					opp-hz = /bits/ 64 <300000000>;
+				};
+				opp-150000000 {
+					opp-hz = /bits/ 64 <150000000>;
+				};
 		};
 		DDRC_CACHE_LO: memory@80000000 {
 			device_type = "memory";
@@ -246,11 +246,11 @@
 			clocks = <&refclk>;
 			#clock-cells = <1>;
 			clock-output-names = "cpu", "axi", "ahb", "envm", "mac0", "mac1", "mmc",
-					     "timer", "uart0", "uart1", "uart2", "uart3", "uart4",
-					     "spi0", "spi1", "i2c0", "i2c1", "can0", "can1", "usb",
-					     "rsvd", "rtc", "qspi", "gpio0", "gpio1", "gpio2",
-					     "ddrc", "fic0", "fic1", "fic2", "fic3", "athena",
-					     "cfm";
+						"timer", "uart0", "uart1", "uart2", "uart3", "uart4",
+						"spi0", "spi1", "i2c0", "i2c1", "can0", "can1", "usb",
+						"rsvd", "rtc", "qspi", "gpio0", "gpio1", "gpio2",
+						"ddrc", "fic0", "fic1", "fic2", "fic3", "athena",
+						"cfm";
 		};
 		rtc: rtc@20124000 {
 			#address-cells = <1>;
@@ -462,53 +462,53 @@
 		};
 	};
 
-    mbox: mailbox@37020000 {
-        compatible = "microchip,polarfire-soc-mailbox";
-        reg = <0x0 0x37020000 0x0 0x1000>, <0x0 0x2000318C 0x0 0x40>;
-        interrupt-parent = <&L1>;
-        interrupts = <96>;		
-        #mbox-cells = <1>;
-    };
-    
-    syscontroller: syscontroller {
-        compatible = "microchip,polarfire-soc-sys-controller";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        mboxes = <&mbox 0>;
-    };
+	mbox: mailbox@37020000 {
+		compatible = "microchip,polarfire-soc-mailbox";
+		reg = <0x0 0x37020000 0x0 0x1000>, <0x0 0x2000318C 0x0 0x40>;
+		interrupt-parent = <&L1>;
+		interrupts = <96>;		
+		#mbox-cells = <1>;
+	};
+	
+	syscontroller: syscontroller {
+		compatible = "microchip,polarfire-soc-sys-controller";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		mboxes = <&mbox 0>;
+	};
 
-    hwrandom: hwrandom {
-        compatible = "microchip,polarfire-soc-rng";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        syscontroller = <&syscontroller>;
-    };
+	hwrandom: hwrandom {
+		compatible = "microchip,polarfire-soc-rng";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		syscontroller = <&syscontroller>;
+	};
 
-    serialnum: serialnum {
-        compatible = "microchip,polarfire-soc-serial-number";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        syscontroller = <&syscontroller>;
-    };
+	serialnum: serialnum {
+		compatible = "microchip,polarfire-soc-serial-number";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		syscontroller = <&syscontroller>;
+	};
 
-    fpgadigest: fpgadigest {
-        compatible = "microchip,polarfire-soc-digest";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        syscontroller = <&syscontroller>;
-    };
+	fpgadigest: fpgadigest {
+		compatible = "microchip,polarfire-soc-digest";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		syscontroller = <&syscontroller>;
+	};
 
-    devicecert: cert {
-        compatible = "microchip,polarfire-soc-device-cert";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        syscontroller = <&syscontroller>;
-    };
+	devicecert: cert {
+		compatible = "microchip,polarfire-soc-device-cert";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		syscontroller = <&syscontroller>;
+	};
 
-    signature: signature {
-        compatible = "microchip,polarfire-soc-signature";
-        #address-cells = <1>;
-        #size-cells = <1>;
-        syscontroller = <&syscontroller>;
-    };
+	signature: signature {
+		compatible = "microchip,polarfire-soc-signature";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		syscontroller = <&syscontroller>;
+	};
 };
