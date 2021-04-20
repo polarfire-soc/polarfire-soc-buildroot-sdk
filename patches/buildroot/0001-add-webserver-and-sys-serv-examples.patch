@@ -39,7 +39,7 @@ index 0000000000..5b19995f6a
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,47 @@
-+MCHP_EXAMPLES_VERSION = 11589185a8654cac682f625e75d0c5d8a29aee73
++MCHP_EXAMPLES_VERSION = 63889d1b0744f9a4e3c1bee275601ce75758d4bf
 +MCHP_EXAMPLES_SITE = https://github.com/polarfire-soc/polarfire-soc-linux-examples.git
 +MCHP_EXAMPLES_SITE_METHOD = git
 +
