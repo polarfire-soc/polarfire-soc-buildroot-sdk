@@ -22,9 +22,6 @@ device_tree_blob := $(wrkdir)/riscvpc.dtb
 ifeq "$(DEVKIT)" "icicle-kit-es"
 HSS_SUPPORT ?= y
 HSS_TARGET ?= mpfs-icicle-kit-es
-target_die = MPFS250T_ES
-target_package = FCVG484
-mem_file_base_address = 20220000
 UBOOT_VERSION = 2020.10
 else
 FSBL_SUPPORT ?= y
@@ -38,7 +35,6 @@ GITID := $(shell git describe --dirty --always)
 
 toolchain_srcdir := $(srcdir)/riscv-gnu-toolchain
 toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
-bm_toolchain_wrkdir := $(wrkdir)/bm_riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
 target := riscv64-unknown-linux-gnu
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
@@ -85,8 +81,9 @@ fsbl_patchdir := $(patchdir)/fsbl/
 libversion := $(fsbl_wrkdir)/lib/version.c
 fsbl := $(wrkdir)/fsbl.bin
 
-uboot_s := $(wrkdir)/u-boot-s.bin
-uboot := $(buildroot_initramfs_wrkdir)/images/u-boot.bin
+uboot_s := $(buildroot_initramfs_wrkdir)/images/u-boot.bin
+uboot_s_cfg := $(confdir)/$(DEVKIT)/smode_defconfig
+uboot_s_txt := $(confdir)/$(DEVKIT)/uEnv_s-mode.txt
 uboot_s_scr := $(buildroot_initramfs_wrkdir)/images/boot.scr
 
 opensbi_srcdir := $(srcdir)/opensbi
@@ -102,8 +99,6 @@ payloadgen_wrkdir := $(wrkdir)/payload_generator
 hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
 hss_srcdir := $(srcdir)/hart-software-services
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
-emmc_image := $(wrkdir)/emmc.img
-icicle_image_mnt_point=/mnt
 
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
@@ -146,7 +141,7 @@ $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patchdir)
 	done
 	touch $@
 
-$(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config)
+$(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config) $(uboot_s_cfg) $(uboot_s_txt)
 	rm -rf $(dir $@)
 	mkdir -p $(dir $@)
 	cp $(buildroot_initramfs_config) $@
@@ -287,7 +282,6 @@ $(fsbl): $(libversion) $(fsbl_wrkdir_stamp) $(device_tree_blob)
 	cp $(fsbl_wrkdir)/fsbl.bin $(fsbl)
 	
 $(uboot_s): $(buildroot_initramfs_sysroot_stamp)
-	cp $(uboot) $(uboot_s)
 
 $(opensbi): $(uboot_s) $(CROSS_COMPILE)gcc 
 	rm -rf $(opensbi_wrkdir)
@@ -307,7 +301,7 @@ $(hss_payload_generator): $(payload_generator_srcdir)
 	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
 
 $(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator)
-	cd $(wrkdir) && $(hss_payload_generator) -c $(confdir)/config.yaml -v $(hss_uboot_payload_bin)
+	cd $(buildroot_initramfs_wrkdir)/images && $(hss_payload_generator) -c $(confdir)/config.yaml -v $(hss_uboot_payload_bin)
 
 .PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
@@ -397,7 +391,7 @@ LINUX_END=163120
 ROOT_START=165168
 
 .PHONY: format-icicle-image
-format-icicle-image: $(fit) $(uboot_s_scr) $(icicle_image_mnt_point)
+format-icicle-image: $(fit) $(uboot_s_scr)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
 	$(eval DEVICE_NAME := $(shell basename $(DISK)))
 	$(eval SD_SIZE := $(shell cat /sys/block/$(DEVICE_NAME)/size))
