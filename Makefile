@@ -100,18 +100,7 @@ openocd := $(openocd_wrkdir)/src/openocd
 payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-generator
 payloadgen_wrkdir := $(wrkdir)/payload_generator
 hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
-
 hss_srcdir := $(srcdir)/hart-software-services
-hss_defconfig := $(confdir)/hss_defconfig
-hss_wrkdir := $(wrkdir)/hart-software-services
-hss := $(hss_wrkdir)/Default/hss.bin
-hss_hex := $(hss_wrkdir)/Default/hss.hex
-hss_config := $(hss_wrkdir)/config.h
-
-xml_config := $(confdir)/$(DEVKIT)/config.xml 
-hss_wrkdir_stamp := $(wrkdir)/.hss_wrkdir
-hss_hw_config_stamp := $(wrkdir)/.hss_hw_config
-
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 emmc_image := $(wrkdir)/emmc.img
 icicle_image_mnt_point=/mnt
@@ -119,7 +108,6 @@ icicle_image_mnt_point=/mnt
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
 bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
-bootloaders-$(HSS_SUPPORT) += $(hss)
 
 all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo
@@ -314,26 +302,6 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-$(hss_wrkdir_stamp): $(hss_srcdir)
-	rm -rf $(hss_wrkdir) $(hss_wrkdir_stamp) $(hss_hw_config_stamp)
-	mkdir -p $(hss_wrkdir)
-	cp -r $(hss_srcdir)/* $(hss_wrkdir)
-	touch $@
-
-$(hss_hw_config_stamp): $(xml_config) $(hss_wrkdir_stamp)
-ifeq ($(DEVKIT),icicle-kit-es)	
-	rm -rf $(hss_wrkdir)/boards/$(HSS_TARGET)/soc_config
-	cd $(hss_srcdir)/tools/polarfire-soc-configuration-generator && python3 mpfs_configuration_generator.py $(xml_config) $(hss_wrkdir)/boards/$(HSS_TARGET)
-endif
-	touch $@
-
-$(hss_config): $(hss_wrkdir_stamp)
-	cp $(confdir)/$(DEVKIT)/hss_def_config $(hss_wrkdir)/.config
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) config.h
-
-$(hss): $(hss_hw_config_stamp) $(hss_config) $(hss_uboot_payload_o) $(CROSS_COMPILE)gcc
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
-
 $(hss_payload_generator): $(payload_generator_srcdir)
 	mkdir -p $(payloadgen_wrkdir)
 	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
@@ -341,7 +309,7 @@ $(hss_payload_generator): $(payload_generator_srcdir)
 $(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator)
 	cd $(wrkdir) && $(hss_payload_generator) -c $(confdir)/config.yaml -v $(hss_uboot_payload_bin)
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot hss bootloaders
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux_bin)
 fit: $(fit)
@@ -351,7 +319,6 @@ flash_image: $(flash_image)
 initrd: $(initramfs)
 opensbi: $(opensbi)
 fsbl: $(fsbl)
-hss: $(hss)
 bootloaders: $(bootloaders-y)
 
 .PHONY: clean distclean
@@ -534,11 +501,3 @@ ifeq ($(DEVKIT),icicle-kit-es)
 else 
 	dd if=$(rootfs) of=$(PART2) bs=4096
 endif
-
-program_envm: $(hss)
-	PATH=$(PATH) $(MAKE) -C $(hss_wrkdir) BOARD=$(HSS_TARGET) CROSS_COMPILE=$(CROSS_COMPILE) program \
-	SC_INSTALL_DIR=$(SC_PATH) \
-	FPGENPROG=$(fpgenprog) \
-	DIE=$(target_die) \
-	PACKAGE=$(target_package) \
-	BOOTMODE=1
