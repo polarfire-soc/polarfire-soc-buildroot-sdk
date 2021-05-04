@@ -51,12 +51,14 @@ buildroot_rootfs_ext := $(buildroot_rootfs_wrkdir)/images/rootfs.ext4
 buildroot_rootfs_config := $(confdir)/buildroot_rootfs_config
 
 buildroot_patchdir := $(patchdir)/buildroot/
+buildroot_patches := $(shell ls $(buildroot_patchdir)/*.patch)
 buildroot_builddir := $(wrkdir)/buildroot_build
 buildroot_builddir_stamp := $(wrkdir)/.buildroot_builddir
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
 linux_patchdir := $(patchdir)/linux/
+linux_patches := $(shell ls $(linux_patchdir)/$(DEVKIT)/*.patch)
 linux_builddir := $(wrkdir)/linux_build
 linux_builddir_stamp := $(wrkdir)/.linux_builddir
 linux_defconfig := $(confdir)/$(DEVKIT)/linux_56_defconfig
@@ -133,10 +135,10 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	$(MAKE) -C $(toolchain_wrkdir) -j$(num_threads)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 
-$(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patchdir)
+$(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patches)
 	- rm -rf $(buildroot_builddir)
 	mkdir -p $(buildroot_builddir) && cd $(buildroot_builddir) && cp $(buildroot_srcdir)/* . -r
-	for file in $(buildroot_patchdir)/* ; do \
+	for file in $(buildroot_patches) ; do \
 			cd $(buildroot_builddir) && patch -p1 < $${file} ; \
 	done
 	touch $@
@@ -176,10 +178,10 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 	tar -xpf $< -C $(buildroot_initramfs_sysroot) --exclude ./dev --exclude ./usr/share/locale
 	touch $@
 
-$(linux_builddir_stamp): $(linux_srcdir) $(linux_patchdir)
+$(linux_builddir_stamp): $(linux_srcdir) $(linux_patches)
 	- rm -rf $(linux_builddir)
 	mkdir -p $(linux_builddir) && cd $(linux_builddir) && cp $(linux_srcdir)/* . -r
-	for file in $(linux_patchdir)/$(DEVKIT)/* ; do \
+	for file in $(linux_patches) ; do \
 			cd $(linux_builddir) && patch -p1 < $${file} ; \
 	done
 	touch $@
