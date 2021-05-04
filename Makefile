@@ -70,8 +70,8 @@ vmlinux_bin := $(wrkdir)/vmlinux.bin
 kernel-modules-stamp := $(wrkdir)/.modules_stamp
 kernel-modules-install-stamp := $(wrkdir)/.modules_install_stamp
 
-flash_image := $(wrkdir)/hifive-unleashed-$(GITID).gpt
-vfat_image := $(wrkdir)/hifive-unleashed-vfat.part
+flash_image := $(wrkdir)/$(DEVKIT)-$(GITID).gpt
+vfat_image := $(wrkdir)/$(DEVKIT)-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
 fit := $(wrkdir)/fitImage.fit
@@ -142,11 +142,13 @@ $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patches)
 			cd $(buildroot_builddir) && patch -p1 < $${file} ; \
 	done
 	touch $@
+	rm -rf $(buildroot_initramfs_wrkdir)
+	mkdir -p $(buildroot_initramfs_wrkdir)
+	rm -rf $(buildroot_rootfs_wrkdir)
+	mkdir -p $(buildroot_rootfs_wrkdir)
 
 $(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/initramfs.txt $(buildroot_rootfs_config) $(buildroot_initramfs_config) $(uboot_s_cfg) $(uboot_s_txt)
-	rm -rf $(dir $@)
-	mkdir -p $(dir $@)
-	cp $(buildroot_initramfs_config) $@
+	cp $(buildroot_initramfs_config) $(buildroot_initramfs_wrkdir)/.config
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) olddefconfig CROSS_COMPILE=$(CROSS_COMPILE) -j$(num_threads)
 
 $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
@@ -159,8 +161,6 @@ buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroo
 	cp $(buildroot_initramfs_wrkdir)/defconfig conf/buildroot_initramfs_config
 
 $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
-	rm -rf $(dir $@)
-	mkdir -p $(dir $@)
 	cp $(buildroot_rootfs_config) $@
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_rootfs_wrkdir) olddefconfig
 
