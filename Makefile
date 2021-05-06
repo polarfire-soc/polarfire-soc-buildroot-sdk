@@ -17,7 +17,6 @@ DEVKIT ?= icicle-kit-es
 ifeq "$(DEVKIT)" "icicle-kit-es-sd"
 override DEVKIT = icicle-kit-es
 endif
-device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 ifeq "$(DEVKIT)" "icicle-kit-es"
 HSS_SUPPORT ?= y
@@ -57,11 +56,7 @@ buildroot_builddir_stamp := $(wrkdir)/.buildroot_builddir
 
 linux_srcdir := $(srcdir)/linux
 linux_wrkdir := $(wrkdir)/linux
-linux_patchdir := $(patchdir)/linux/
-linux_patches := $(shell ls $(linux_patchdir)/$(DEVKIT)/*.patch)
-linux_builddir := $(wrkdir)/linux_build
-linux_builddir_stamp := $(wrkdir)/.linux_builddir
-linux_defconfig := $(confdir)/$(DEVKIT)/linux_56_defconfig
+linux_defconfig := $(confdir)/$(DEVKIT)/linux_defconfig
 
 vmlinux := $(linux_wrkdir)/vmlinux
 vmlinux_stripped := $(linux_wrkdir)/vmlinux-stripped
@@ -75,6 +70,9 @@ vfat_image := $(wrkdir)/$(DEVKIT)-vfat.part
 initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
 fit := $(wrkdir)/fitImage.fit
+
+linux_dtb := $(linux_wrkdir)/arch/riscv/boot/dts/microchip/microchip-mpfs-icicle-kit.dtb
+device_tree_blob := $(wrkdir)/riscvpc.dtb
 
 fsbl_srcdir := $(srcdir)/fsbl
 fsbl_wrkdir := $(wrkdir)/fsbl
@@ -121,8 +119,7 @@ ifneq ($(RISCV),$(toolchain_dest))
 $(CROSS_COMPILE)gcc:
 	ifeq (,$(CROSS_COMPILE)gcc --version 2>/dev/null)
 		$(error The RISCV environment variable was set, but is not pointing at a toolchain install tree)
-endif
-
+else
 $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 	mkdir -p $(toolchain_wrkdir)
 	mkdir -p $(toolchain_wrkdir)/header_workdir
@@ -134,6 +131,7 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 		--enable-linux
 	$(MAKE) -C $(toolchain_wrkdir) -j$(num_threads)
 	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
+endif
 
 $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patches)
 	- rm -rf $(buildroot_builddir)
@@ -154,6 +152,11 @@ $(buildroot_initramfs_wrkdir)/.config: $(buildroot_builddir_stamp) $(confdir)/in
 $(buildroot_initramfs_tar): $(buildroot_builddir_stamp) $(buildroot_initramfs_wrkdir)/.config $(CROSS_COMPILE)gcc $(buildroot_initramfs_config)
 	$(MAKE) -C $(buildroot_builddir) RISCV=$(RISCV) PATH=$(PATH) O=$(buildroot_initramfs_wrkdir) -j$(num_threads) DEVKIT=$(DEVKIT)
 
+$(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
+	mkdir -p $(buildroot_initramfs_sysroot)
+	tar -xpf $< -C $(buildroot_initramfs_sysroot) --exclude ./dev --exclude ./usr/share/locale
+	touch $@
+
 .PHONY: buildroot_initramfs_menuconfig
 buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) menuconfig
@@ -173,47 +176,33 @@ buildroot_rootfs_menuconfig: $(buildroot_rootfs_wrkdir)/.config $(buildroot_buil
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_rootfs_wrkdir) savedefconfig
 	cp $(buildroot_rootfs_wrkdir)/defconfig conf/buildroot_rootfs_config
 
-$(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
-	mkdir -p $(buildroot_initramfs_sysroot)
-	tar -xpf $< -C $(buildroot_initramfs_sysroot) --exclude ./dev --exclude ./usr/share/locale
-	touch $@
-
-$(linux_builddir_stamp): $(linux_srcdir) $(linux_patches)
-	- rm -rf $(linux_builddir)
-	mkdir -p $(linux_builddir) && cd $(linux_builddir) && cp $(linux_srcdir)/* . -r
-	for file in $(linux_patches) ; do \
-			cd $(linux_builddir) && patch -p1 < $${file} ; \
-	done
-	touch $@
-
-.PHONY: cfg
+.PHONY: linux_cfg
 cfg: $(linux_wrkdir)/.config
-$(linux_wrkdir)/.config: $(linux_defconfig) $(linux_builddir_stamp) $(CROSS_COMPILE)gcc
+$(linux_wrkdir)/.config: $(linux_srcdir) $(CROSS_COMPILE)gcc
 	mkdir -p $(dir $@)
-	cp -p $< $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv icicle_kit_defconfig
 ifeq (,$(filter rv%c,$(ISA)))
 	sed 's/^.*CONFIG_RISCV_ISA_C.*$$/CONFIG_RISCV_ISA_C=n/' -i $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv icicle_kit_defconfig
 endif
 ifeq ($(ISA),$(filter rv32%,$(ISA)))
 	sed 's/^.*CONFIG_ARCH_RV32I.*$$/CONFIG_ARCH_RV32I=y/' -i $@
 	sed 's/^.*CONFIG_ARCH_RV64I.*$$/CONFIG_ARCH_RV64I=n/' -i $@
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv olddefconfig
+	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv rv32_defconfig
 endif
 
 $(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
-	cd $(wrkdir) && $(linux_builddir)/usr/gen_initramfs.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
+	cd $(wrkdir) && $(linux_srcdir)/usr/gen_initramfs.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
 
 $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install-stamp)
 	cd $(linux_wrkdir) && \
-		$(linux_builddir)/usr/gen_initramfs.sh \
+		$(linux_srcdir)/usr/gen_initramfs.sh \
 		-o $@ -u $(shell id -u) -g $(shell id -g) \
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
 
 $(vmlinux): $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
-	$(MAKE) -C $(linux_builddir) O=$(linux_wrkdir) \
+	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
 		PATH=$(PATH) \
@@ -226,7 +215,7 @@ $(vmlinux_bin): $(vmlinux)
 	PATH=$(PATH) $(CROSS_COMPILE)objcopy -O binary $< $@
 	
 .PHONY: kernel-modules kernel-modules-install
-$(kernel-modules-stamp): $(linux_builddir) $(vmlinux)
+$(kernel-modules-stamp): $(linux_srcdir) $(vmlinux)
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -234,7 +223,7 @@ $(kernel-modules-stamp): $(linux_builddir) $(vmlinux)
 		modules -j$(num_threads)
 	touch $@
 
-$(kernel-modules-install-stamp): $(linux_builddir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
+$(kernel-modules-install-stamp): $(linux_srcdir) $(buildroot_initramfs_sysroot) $(kernel-modules-stamp)
 	rm -rf $(buildroot_initramfs_sysroot)/lib/modules/
 	$(MAKE) -C $< O=$(linux_wrkdir) \
 		ARCH=riscv \
@@ -246,11 +235,15 @@ $(kernel-modules-install-stamp): $(linux_builddir) $(buildroot_initramfs_sysroot
 	
 .PHONY: linux-menuconfig
 linux-menuconfig: $(linux_wrkdir)/.config
-	$(MAKE) -C $(linux_builddir) O=$(dir $<) ARCH=riscv menuconfig CROSS_COMPILE=$(CROSS_COMPILE)
-	$(MAKE) -C $(linux_builddir) O=$(dir $<) ARCH=riscv savedefconfig CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv menuconfig CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(linux_srcdir) O=$(dir $<) ARCH=riscv savedefconfig CROSS_COMPILE=$(CROSS_COMPILE)
 	cp $(dir $<)/defconfig $(linux_defconfig)
 
-$(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts $(vmlinux)
+$(device_tree_blob): $(vmlinux)
+ifeq "$(DEVKIT)" "icicle-kit-es"
+	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv dtbs
+	cp $(linux_dtb) $(device_tree_blob)
+else
 	rm -rf $(wrkdir)/dts
 	mkdir -p $(wrkdir)/dts
 	cp $(confdir)/dts/* $(wrkdir)/dts
@@ -259,9 +252,10 @@ $(device_tree_blob): $(confdir)/$(DEVKIT)/$(DEVKIT).dts $(vmlinux)
 	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
 	$(linux_wrkdir)/scripts/dtc/dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
 	rm $(wrkdir)/dts/.*.tmp
+endif
 
 $(fit): $(uboot_s) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
-	$(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
+	PATH=$(PATH) $(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
 
 $(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)
@@ -307,12 +301,11 @@ $(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator)
 
 .PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
-vmlinux: $(vmlinux_bin)
+vmlinux: $(vmlinux)
 fit: $(fit)
 initrd: $(initramfs)
 u-boot: $(uboot_s)
 flash_image: $(flash_image)
-initrd: $(initramfs)
 opensbi: $(opensbi)
 fsbl: $(fsbl)
 bootloaders: $(bootloaders-y)

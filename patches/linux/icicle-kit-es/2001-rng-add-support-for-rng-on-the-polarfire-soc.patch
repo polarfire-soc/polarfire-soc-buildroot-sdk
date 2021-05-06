@@ -11,10 +11,10 @@ Subject: [PATCH 6/8] rng: add support for rng on the polarfire soc
  create mode 100644 drivers/char/hw_random/mpfs-rng.c
 
 diff --git a/drivers/char/hw_random/Kconfig b/drivers/char/hw_random/Kconfig
-index e92c4d9469d8..cfc041d06ff5 100644
+index 1fe006f3f12f..4d0b8ac77254 100644
 --- a/drivers/char/hw_random/Kconfig
 +++ b/drivers/char/hw_random/Kconfig
-@@ -411,6 +411,19 @@ config HW_RANDOM_PIC32
+@@ -398,6 +398,19 @@ config HW_RANDOM_PIC32
  
  	  If unsure, say Y.
  
@@ -35,16 +35,14 @@ index e92c4d9469d8..cfc041d06ff5 100644
  	tristate "Amlogic Meson Random Number Generator support"
  	depends on HW_RANDOM
 diff --git a/drivers/char/hw_random/Makefile b/drivers/char/hw_random/Makefile
-index a7801b49ce6c..462ebc254c6a 100644
+index 8933fada74f2..26a46c45eb8c 100644
 --- a/drivers/char/hw_random/Makefile
 +++ b/drivers/char/hw_random/Makefile
-@@ -41,3 +41,5 @@ obj-$(CONFIG_HW_RANDOM_S390) += s390-trng.o
- obj-$(CONFIG_HW_RANDOM_KEYSTONE) += ks-sa-rng.o
- obj-$(CONFIG_HW_RANDOM_OPTEE) += optee-rng.o
+@@ -45,3 +45,4 @@ obj-$(CONFIG_HW_RANDOM_OPTEE) += optee-rng.o
  obj-$(CONFIG_HW_RANDOM_NPCM) += npcm-rng.o
-+
+ obj-$(CONFIG_HW_RANDOM_CCTRNG) += cctrng.o
+ obj-$(CONFIG_HW_RANDOM_XIPHERA) += xiphera-trng.o
 +obj-$(CONFIG_HW_RANDOM_POLARFIRE_SOC) += mpfs-rng.o
-\ No newline at end of file
 diff --git a/drivers/char/hw_random/mpfs-rng.c b/drivers/char/hw_random/mpfs-rng.c
 new file mode 100644
 index 000000000000..cc6a04f310a2
