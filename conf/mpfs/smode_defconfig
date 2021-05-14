@@ -29,4 +29,4 @@ CONFIG_DM_MTD=y
 CONFIG_DM_RESET=y
 CONFIG_SBI_V01=y
 
-CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; load mmc 0:1 ${fileaddr} uEnv.txt; env import -t ${fileaddr} ${filesize}; echo 'Running boot cmd...'; run boot3"
+CONFIG_BOOTCOMMAND="setenv fileaddr 0x90000000; load mmc 0:2 ${fileaddr} boot.scr; source ${fileaddr};"
