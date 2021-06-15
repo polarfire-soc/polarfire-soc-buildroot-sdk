@@ -1,11 +1,11 @@
 /dts-v1/;
 
 / {
-        description = "U-Boot fitImage for OpenEmbedded/5.6.x+gitAUTOINC+c4bbda2100/icicle-kit-es";
+        description = "U-Boot fitImage for the MPFS";
         #address-cells = <1>;
 
         images {
-                kernel@1 {
+                kernel@vmlinux.bin {
                         description = "Linux kernel";
                         data = /incbin/("../work/vmlinux.bin");
                         type = "kernel";
@@ -17,7 +17,7 @@
                         hash@1 {
                                 algo = "sha256";
                         };
-                };              
+                };
                 ramdisk@initramfs.cpio.gz {
                         description = "buildroot initramfs";
                         data = /incbin/("../work/initramfs.cpio.gz");
@@ -29,7 +29,7 @@
                                 algo = "sha256";
                         };
                 };
-                fdt@microchip_icicle-kit-es-a000-microchip.dtb {
+                fdt@riscvpc.dtb {
                         description = "Flattened Device Tree blob";
                         data = /incbin/("../work/riscvpc.dtb");
                         type = "flat_dt";
@@ -43,14 +43,12 @@
 	};
 
         configurations {
-                default = "conf@microchip_icicle-kit-es-a000-microchip.dtb";
-                conf@microchip_icicle-kit-es-a000-microchip.dtb {
-			description = "1 Linux kernel, FDT blob";
-			kernel = "kernel@1";
-            ramdisk = "ramdisk@initramfs.cpio.gz";
-			fdt = "fdt@microchip_icicle-kit-es-a000-microchip.dtb";
-			
-			
+                default = "conf@riscvpc.dtb";
+                conf@riscvpc.dtb {
+                        description = "1 Linux kernel, initramfs, FDT blob";
+                        kernel = "kernel@vmlinux.bin";
+                ramdisk = "ramdisk@initramfs.cpio.gz";
+                        fdt = "fdt@riscvpc.dtb";
                         hash@1 {
                                 algo = "sha256";
                         };
