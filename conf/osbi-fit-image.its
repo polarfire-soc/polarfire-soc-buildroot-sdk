@@ -5,7 +5,7 @@
         #address-cells = <1>;
 
         images {
-                kernel@vmlinux.bin {
+                vmlinux.bin {
                         description = "Linux kernel";
                         data = /incbin/("../work/vmlinux.bin");
                         type = "kernel";
@@ -18,7 +18,7 @@
                                 algo = "sha256";
                         };
                 };
-                ramdisk@initramfs.cpio.gz {
+                initramfs.cpio.gz {
                         description = "buildroot initramfs";
                         data = /incbin/("../work/initramfs.cpio.gz");
                         type = "ramdisk";
@@ -29,7 +29,7 @@
                                 algo = "sha256";
                         };
                 };
-                fdt@riscvpc.dtb {
+                riscvpc.dtb {
                         description = "Flattened Device Tree blob";
                         data = /incbin/("../work/riscvpc.dtb");
                         type = "flat_dt";
@@ -46,9 +46,9 @@
                 default = "conf@riscvpc.dtb";
                 conf@riscvpc.dtb {
                         description = "1 Linux kernel, initramfs, FDT blob";
-                        kernel = "kernel@vmlinux.bin";
-                ramdisk = "ramdisk@initramfs.cpio.gz";
-                        fdt = "fdt@riscvpc.dtb";
+                        kernel = "vmlinux.bin";
+                ramdisk = "initramfs.cpio.gz";
+                        fdt = "riscvpc.dtb";
                         hash@1 {
                                 algo = "sha256";
                         };

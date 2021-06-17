@@ -21,7 +21,7 @@ endif
 ifeq "$(DEVKIT)" "icicle-kit-es"
 HSS_SUPPORT ?= y
 HSS_TARGET ?= mpfs-icicle-kit-es
-UBOOT_VERSION = 2020.10
+UBOOT_VERSION = 2021.04
 else
 FSBL_SUPPORT ?= y
 OSBI_SUPPORT ?= y
@@ -42,7 +42,7 @@ target_gdb := $(CROSS_COMPILE)gdb
 buildroot_srcdir := $(srcdir)/buildroot
 buildroot_initramfs_wrkdir := $(wrkdir)/buildroot_initramfs
 buildroot_initramfs_tar := $(buildroot_initramfs_wrkdir)/images/rootfs.tar
-buildroot_initramfs_config := $(confdir)/buildroot_initramfs_config
+buildroot_initramfs_config := $(confdir)/$(DEVKIT)/buildroot_initramfs_config
 buildroot_initramfs_sysroot_stamp := $(wrkdir)/.buildroot_initramfs_sysroot
 buildroot_initramfs_sysroot := $(wrkdir)/buildroot_initramfs_sysroot
 buildroot_rootfs_wrkdir := $(wrkdir)/buildroot_rootfs
@@ -247,7 +247,7 @@ else
 	rm -rf $(wrkdir)/dts
 	mkdir -p $(wrkdir)/dts
 	cp $(confdir)/dts/* $(wrkdir)/dts
-	cp $< $(wrkdir)/dts
+	cp $(confdir)/$(DEVKIT)/$(DEVKIT).dts $(wrkdir)/dts
 	(cat $(wrkdir)/dts/$(DEVKIT).dts; ) > $(wrkdir)/dts/.riscvpc.dtb.pre.tmp;
 	$(CROSS_COMPILE)gcc -E -Wp,-MD,$(wrkdir)/dts/.riscvpc.dtb.d.pre.tmp -nostdinc -I$(wrkdir)/dts/ -D__ASSEMBLY__ -undef -D__DTS__ -x assembler-with-cpp -o $(wrkdir)/dts/.riscvpc.dtb.dts.tmp $(wrkdir)/dts/.riscvpc.dtb.pre.tmp 
 	$(linux_wrkdir)/scripts/dtc/dtc -O dtb -o $(device_tree_blob) -b 0 -i $(wrkdir)/dts/ -R 4 -p 0x1000 -d $(wrkdir)/dts/.riscvpc.dtb.d.dtc.tmp $(wrkdir)/dts/.riscvpc.dtb.dts.tmp 
