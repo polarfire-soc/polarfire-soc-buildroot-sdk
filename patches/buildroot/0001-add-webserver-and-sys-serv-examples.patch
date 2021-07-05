@@ -39,13 +39,13 @@ index 0000000000..5b19995f6a
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,47 @@
-+MCHP_EXAMPLES_VERSION = a6a6ddb437b6de24ddd195d60713a78c1c5dd8e3
-+MCHP_EXAMPLES_SITE = https://github.com/polarfire-soc/polarfire-soc-linux-examples.git
++MCHP_EXAMPLES_VERSION = 36245b90d4c5fb9d9c7be2a512ea0d377d5be2e1
++MCHP_EXAMPLES_SITE = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/polarfire-soc-linux-examples.git
 +MCHP_EXAMPLES_SITE_METHOD = git
 +
 +
 +EXAMPLE_DIRS += can gpio system-services ethernet fpga-fabric-interfaces dma pdma
-+EXAMPLE_FILES += can/uio-can-example gpio/led-blinky system-services/system-services-example fpga-fabric-interfaces/lsram/uio-lsram-read-write dma/uio-dma-interrupt pdma/pdma-ex
++EXAMPLE_FILES += can/uio-can-example gpio/led-blinky system-services/system-services-example system-services/signature-verification-demo fpga-fabric-interfaces/lsram/uio-lsram-read-write dma/uio-dma-interrupt pdma/pdma-ex
 +EXAMPLE_TARGET_DIR = /opt/microchip/
 +
 +define MCHP_EXAMPLES_INSTALL_DIRS
