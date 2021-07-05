@@ -343,7 +343,7 @@ $(vfat_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
 
 ## sd/emmc/envm formatting
 
-# partition addreses for {lc-,}mpfs
+# partition addreses for mpfs
 BBL			= 2E54B353-1271-4842-806F-E436D6AF6985
 VFAT		= EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
 LINUX		= 0FC63DAF-8483-4772-8E79-3D69D8477DE4
@@ -413,7 +413,7 @@ endif
 	dd if=$(hss_uboot_payload_bin) of=$(DISK)$(partition_prefix)1
 	dd if=$(vfat_image) of=$(DISK)$(partition_prefix)2
 
-# {lc-,}mpfs
+# mpfs
 .PHONY: format-boot-loader
 format-boot-loader: $(fit) $(vfat_image) $(bootloaders-y)
 	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)

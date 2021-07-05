@@ -4,7 +4,6 @@ It first will build the GNU cross-compilation toolchain for RISC-V, which will b
 
 Currently the following development platforms are supported:
 - [MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/mpfs-dev-kit/MPFS-DEV-KIT_user_guide.md) (HiFive Unleashed Expansion Board)
-- [LC-MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/lc-mpfs-dev-kit/LC-MPFS-DEV-KIT_user_guide.md)
 - Icicle Kit (Engineering Sample) (Requires minimum FPGA design: [v2021.04](https://github.com/polarfire-soc/icicle-kit-reference-design/releases/tag/2021.04). Designs prior to this release use a different memory map and will fail to boot.)
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation). 
@@ -38,7 +37,6 @@ The following table details the available targets:
 | `DEVKIT` | Board Name |
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
-| `DEVKIT=lc-mpfs` | LC-MPFS-DEV-KIT |
 | `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 
 To boot Linux on your board using this image, see: [Loading the Image onto the Target](#Loading-the-Image-onto-the-Target).
@@ -57,7 +55,7 @@ $ make all DEVKIT=<devkit>
 ```
 
 ## Loading the Image onto the Target
-The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS/LC-MPFS here](#Preparing-an-SD-Card-for-MPFS-or-LC-MPFS).
+The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS here](#Preparing-an-SD-Card-for-MPFS).
 
 ### Preparing the eMMC for the Icicle Kit
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.      
@@ -139,7 +137,7 @@ Similarly, a root file system can be written to the SD card using
 $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
 ```
 
-### Preparing an SD Card for MPFS or LC-MPFS
+### Preparing an SD Card for MPFS
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.               
 The following steps will allow you to check and unmount the card if required:
 
@@ -226,5 +224,4 @@ If you encounter this problem, simply rerun the `format-icicle-image` make comma
 [Buildroot User Manual](https://buildroot.org/docs.html)    
 [PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)    
 [MPFS-DEV-KIT User Guide](doc/MPFS-DEV-KIT_user_guide.md)    
-[LC-MPFS-DEV-KIT User Guide](doc/LC-MPFS-DEV-KIT_user_guide.md) 
 [Kernel Documentation for Linux](https://www.kernel.org/doc/html/v5.4/)
