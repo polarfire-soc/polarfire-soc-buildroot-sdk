@@ -90,12 +90,23 @@ hss_srcdir := $(srcdir)/hart-software-services
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 payload_config := $(confdir)/$(DEVKIT)/config.yaml
 
+amp_example := $(buildroot_initramfs_wrkdir)/images/amp-application.elf
+amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-amp-freertos
+amp_example_wrkdir := $(wrkdir)/amp/mpfs-amp-freertos
+
 ifeq "$(DEVKIT)" "mpfs"
 FSBL_SUPPORT ?= y
 OSBI_SUPPORT ?= y
 UBOOT_VERSION = 2020.10
 linux_defconfig := mpfs_devkit_defconfig
 linux_dtb := $(riscv_dtbdir)/sifive/hifive-unleashed-a00.dtb
+else ifeq "$(DEVKIT)" "icicle-kit-es-amp"
+HSS_SUPPORT ?= y
+HSS_TARGET ?= mpfs-icicle-kit-es
+AMP_SUPPORT ?= y
+UBOOT_VERSION = 2021.04
+linux_defconfig := icicle_kit_amp_defconfig
+linux_dtb := $(riscv_dtbdir)/microchip/microchip-mpfs-icicle-kit-context-a.dtb
 else
 HSS_SUPPORT ?= y
 HSS_TARGET ?= mpfs-icicle-kit-es
@@ -107,6 +118,7 @@ endif
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
 bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
+bootloaders-$(AMP_SUPPORT) += $(amp_example)
 
 all: $(fit) $(vfat_image) $(bootloaders-y)
 	@echo
@@ -289,7 +301,7 @@ $(hss_payload_generator): $(payload_generator_srcdir)
 	mkdir -p $(payloadgen_wrkdir)
 	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
 
-$(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator)
+$(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator) $(bootloaders-y)
 	cd $(buildroot_initramfs_wrkdir)/images && $(hss_payload_generator) -c $(payload_config) -v $(hss_uboot_payload_bin)
 
 .PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders
@@ -324,6 +336,15 @@ $(openocd): $(openocd_srcdir)
 
 .PHONY: gdb
 gdb: $(target_gdb)
+
+EXT_CFLAGS := -DMPFS_HAL_FIRST_HART=3 -DMPFS_HAL_LAST_HART=3
+export EXT_CFLAGS
+.PHONY: amp
+amp: $(amp_example)
+$(amp_example): $(amp_example_srcdir) $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
+	rm -rf $(amp_example_srcdir)/Default
+	$(MAKE) -C $(amp_example_srcdir) O=$(amp_example_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
+	cp $(amp_example_srcdir)/Default/mpfs-amp-freertos.elf $(amp_example)
 
 $(vfat_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
 	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
@@ -373,10 +394,10 @@ OSBI_END=189024
 
 # partition addreses for icicle kit
 UBOOT_START=2048
-UBOOT_END=3248
-LINUX_START=4096
-LINUX_END=163120
-ROOT_START=165168
+UBOOT_END=23248
+LINUX_START=24096
+LINUX_END=193120
+ROOT_START=195168
 
 .PHONY: format-icicle-image
 format-icicle-image: $(fit) $(uboot_s_scr)
