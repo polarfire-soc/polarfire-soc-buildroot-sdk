@@ -314,6 +314,7 @@ flash_image: $(flash_image)
 opensbi: $(opensbi)
 fsbl: $(fsbl)
 bootloaders: $(bootloaders-y)
+root-fs: $(rootfs)
 
 .PHONY: clean distclean
 clean:
@@ -321,6 +322,9 @@ clean:
 
 distclean:
 	rm -rf -- $(wrkdir) $(toolchain_dest) br-dl-dir/ arch/ include/ scripts/ .cache.mk
+
+.PHONY: gdb
+gdb: $(target_gdb)
 
 .PHONY: openocd
 openocd: $(openocd)
@@ -333,9 +337,6 @@ $(openocd): $(openocd_srcdir)
 	cd $(openocd_srcdir) && ./bootstrap
 	cd $(openocd_wrkdir) && $</configure --enable-maintainer-mode --disable-werror --enable-ft2232_libftdi
 	$(MAKE) -C $(openocd_wrkdir)
-
-.PHONY: gdb
-gdb: $(target_gdb)
 
 EXT_CFLAGS := -DMPFS_HAL_FIRST_HART=3 -DMPFS_HAL_LAST_HART=3
 export EXT_CFLAGS
@@ -473,7 +474,7 @@ endif
 # 	wget $(DEB_URL)$(DEB_IMAGE)
 
 # format-deb-image: $(DEB_IMAGE) format-boot-loader
-# 	/sbin/mke2fs -L ROOTFS -t ext4 $(PART2)
+# 	/sbin/mke2fs -L ROOTFS -t ext4 $(PART4)
 # 	-mkdir tmp-mnt
 # 	-sudo mount $(PART2) tmp-mnt && cd tmp-mnt && \
 # 		sudo tar -zxf ../$(DEB_IMAGE) -C .
@@ -499,8 +500,8 @@ else
 	@echo Error: Could not find bootloader partition for $(DISK)
 	@exit 1
 endif
-ifeq ($(DEVKIT),icicle-kit-es)
-	dd if=$(rootfs) of=$(PART3) bs=4096
+ifeq ($(DEVKIT),mpfs)
+	dd if=$(rootfs) of=$(PART4) bs=4096
 else 
-	dd if=$(rootfs) of=$(PART2) bs=4096
+	dd if=$(rootfs) of=$(PART3) bs=4096
 endif
