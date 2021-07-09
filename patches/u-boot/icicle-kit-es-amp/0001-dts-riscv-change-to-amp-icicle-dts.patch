@@ -1,0 +1,139 @@
+From d4fb3f9e367f7eb79d7af43a11e236fdd709e3b9 Mon Sep 17 00:00:00 2001
+From: Conor Dooley <conor.dooley@microchip.com>
+Date: Tue, 13 Jul 2021 12:55:20 +0100
+Subject: [PATCH] dts: riscv: change to amp icicle dts
+
+---
+ arch/riscv/dts/microchip-mpfs-icicle-kit.dts | 47 ++++++--------------
+ 1 file changed, 13 insertions(+), 34 deletions(-)
+
+diff --git a/arch/riscv/dts/microchip-mpfs-icicle-kit.dts b/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
+index e2b9decc94..5cbae8d325 100644
+--- a/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
++++ b/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
+@@ -1,6 +1,5 @@
+ // SPDX-License-Identifier: (GPL-2.0 OR MIT)
+ /* Copyright (c) 2020 Microchip Technology Inc */
+-
+ /dts-v1/;
+ #include "dt-bindings/clock/microchip-mpfs-clock.h"
+ 
+@@ -14,23 +13,23 @@
+ 	compatible = "microchip,mpfs-icicle-kit";
+ 
+ 	aliases {
+-		serial0 = &uart0;
++		serial1 = &uart1;
+ 		ethernet0 = &emac1;
+ 	};
+ 
+ 	chosen {
+-		stdout-path = "serial0";
++		stdout-path = "serial1";
+ 	};
+ 
+ 	cpucomplex: cpus {
+ 		#address-cells = <1>;
+-		#size-cells = <0>;
++	#size-cells = <0>;
+ 		timebase-frequency = <RTCCLK_FREQ>;
+ 		cpu0: cpu@0 {
+ 			clocks = <&clkcfg CLK_CPU>;
+ 			compatible = "sifive,e51", "sifive,rocket0", "riscv";
+ 			device_type = "cpu";
+-			i-cache-block-size = <64>;
++		i-cache-block-size = <64>;
+ 			i-cache-sets = <128>;
+ 			i-cache-size = <16384>;
+ 			reg = <0>;
+@@ -128,7 +127,7 @@
+ 			reg = <3>;
+ 			riscv,isa = "rv64imafdc";
+ 			tlb-split;
+-			status = "okay";
++			status = "disabled";
+ 			operating-points = <
+ 				/* kHz	uV */
+ 				600000  1100000
+@@ -174,14 +173,14 @@
+ 		};
+ 	};
+ 	refclk: refclk {
+-		compatible = "fixed-clock";
++	compatible = "fixed-clock";
+ 		#clock-cells = <0>;
+ 		clock-frequency = <600000000>;
+ 		clock-output-names = "msspllclk";
+ 	};
+ 	ddr: memory@80000000 {
+ 		device_type = "memory";
+-		reg = <0x0 0x80000000 0x0 0x40000000>;
++		reg = <0x0 0x80000000 0x0 0x40000000>,<0x10 0x40000000 0x0 0x40000000>;
+ 		clocks = <&clkcfg CLK_DDRC>;
+ 	};
+ 	soc: soc {
+@@ -234,7 +233,7 @@
+ 			interrupts = <90>;
+ 			clock-frequency = <150000000>;
+ 			clocks = <&clkcfg CLK_MMUART0>;
+-			status = "okay";
++			status = "disabled"; /* Reserved for the HSS */
+ 		};
+ 		clkcfg: clkcfg@20002000 {
+ 			compatible = "microchip,mpfs-clkcfg";
+@@ -261,31 +260,11 @@
+ 			clocks = <&clkcfg CLK_MMC>;
+ 			bus-width = <4>;
+ 			cap-mmc-highspeed;
+-			mmc-ddr-3_3v;
+-			max-frequency = <200000000>;
+-			non-removable;
+-			no-sd;
+-			no-sdio;
+-			voltage-ranges = <3300 3300>;
+-			status = "okay";
+-		};
+-		sdcard: sd@20008000 {
+-			compatible = "cdns,sd4hc";
+-			reg = <0x0 0x20008000 0x0 0x1000>;
+-			interrupt-parent = <&plic>;
+-			interrupts = <88>;
+-			pinctrl-names = "default";
+-			clocks = <&clkcfg CLK_MMC>;
+-			bus-width = <4>;
+-			disable-wp;
+ 			cap-sd-highspeed;
+-			card-detect-delay = <200>;
+-			sd-uhs-sdr12;
+-			sd-uhs-sdr25;
+-			sd-uhs-sdr50;
+-			sd-uhs-sdr104;
++			/*no-1-8-v;*/
++			disable-wp;
+ 			max-frequency = <200000000>;
+-			status = "disabled";
++			status = "okay";
+ 		};
+ 		uart1: serial@20100000 {
+ 			compatible = "ns16550a";
+@@ -310,7 +289,7 @@
+ 			status = "okay";
+ 		};
+ 		uart3: serial@20104000 {
+-			compatible = "ns16550a";
++		compatible = "ns16550a";
+ 			reg = <0x0 0x20104000 0x0 0x400>;
+ 			reg-io-width = <4>;
+ 			reg-shift = <2>;
+@@ -318,7 +297,7 @@
+ 			interrupts = <93>;
+ 			clock-frequency = <150000000>;
+ 			clocks = <&clkcfg CLK_MMUART3>;
+-			status = "okay";
++			status = "disabled";
+ 		};
+ 		i2c0: i2c@2010a000 {
+ 			#address-cells = <1>;
+-- 
+2.31.1
+
