@@ -83,9 +83,11 @@ openocd_srcdir := $(srcdir)/riscv-openocd
 openocd_wrkdir := $(wrkdir)/riscv-openocd
 openocd := $(openocd_wrkdir)/src/openocd
 
-payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-generator
-payloadgen_wrkdir := $(wrkdir)/payload_generator
-hss_payload_generator := $(payloadgen_wrkdir)/hss-payload-generator
+payload_generator_url := https://github.com/polarfire-soc/hart-software-services/releases/download/2021.04/hss-payload-generator-0.99.16-linux-x86_64.tar.gz
+payload_generator_tarball := $(srcdir)/br-dl-dir/payload_generator.tar.gz
+# payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-generator
+# payloadgen_wrkdir := $(wrkdir)/payload_generator
+hss_payload_generator := $(wrkdir)/hss-payload-generator
 hss_srcdir := $(srcdir)/hart-software-services
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 payload_config := $(confdir)/$(DEVKIT)/config.yaml
@@ -297,9 +299,12 @@ $(rootfs): $(buildroot_rootfs_ext)
 
 $(buildroot_initramfs_sysroot): $(buildroot_initramfs_sysroot_stamp)
 
-$(hss_payload_generator): $(payload_generator_srcdir)
-	mkdir -p $(payloadgen_wrkdir)
-	$(MAKE) -C $(payload_generator_srcdir) O=$(payloadgen_wrkdir)
+$(payload_generator_tarball): 
+	mkdir -p  $(srcdir)/br-dl-dir/
+	wget $(payload_generator_url) -O $(payload_generator_tarball) --show-progress
+
+$(hss_payload_generator): $(payload_generator_tarball)
+	tar -xzf $(payload_generator_tarball) -C $(wrkdir)
 
 $(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator) $(bootloaders-y)
 	cd $(buildroot_initramfs_wrkdir)/images && $(hss_payload_generator) -c $(payload_config) -v $(hss_uboot_payload_bin)
