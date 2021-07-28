@@ -130,7 +130,7 @@ $(CROSS_COMPILE)gcc: $(toolchain_srcdir)
 		--with-abi=$(ABI) \
 		--enable-linux
 	$(MAKE) -C $(toolchain_wrkdir) -j$(num_threads)
-	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 329232/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
+	sed 's/^#define LINUX_VERSION_CODE.*/#define LINUX_VERSION_CODE 330752/' -i $(toolchain_dest)/sysroot/usr/include/linux/version.h
 endif
 
 $(buildroot_builddir_stamp): $(buildroot_srcdir) $(buildroot_patches)
