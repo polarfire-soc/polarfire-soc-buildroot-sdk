@@ -38,6 +38,9 @@ The following table details the available targets:
 | --- | --- |
 | `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
 | `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
+| `DEVKIT=icicle-kit-es-amp` | Icicle Development Kit with engineering sample silicon running in AMP mode |
+
+The `icicle-kit-es-amp` target can be used to build the Icicle Development using a Linux + FreeRTOS AMP configuration demo. Please see the [Asymmetric Multiprocessing (AMP)](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/asymmetric-multiprocessing/amp.md) documentation for further information.
 
 To boot Linux on your board using this image, see: [Loading the Image onto the Target](#Loading-the-Image-onto-the-Target).
 
@@ -79,14 +82,17 @@ For these examples the identifier `sdX` is used.
         DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.       
         Check that the size of the card matches the dmesg output before continuing.     
 
-Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X as appropriate:
+Once sure of the drive identifier, use the following command to copy your Linux image to the board, replacing the X and `<devkit>` as appropriate:
 ```
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image 
+$ sudo make DISK=/dev/sdX DEVKIT=<devkit> format-icicle-image 
 ```
 
 When the transfer has completed, press `CTRL+C` in the HSS serial console to return to the HSS console.                 
-To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root`. There is no password required.        
-Similarly, a root file system can be written to the SD card using
+To boot into Linux, type `boot` in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username `root`. There is no password required.      
+
+If you are using the `icicle-kit-es-amp` machine, attach to UART3 to observe its output.
+
+Similarly, a root file system can be written to the eMMC using
 ```
 $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
 ```
@@ -131,7 +137,10 @@ $ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-esd format-icicle-image
 At this point, your SD card should be ready to boot Linux.         
 You can remove it from your PC and insert it into the SD card slot on the Icicle kit, and then power-on the board.
 Connect to UART0 (J11) for the HSS and UART1 (also J11) for U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.            
-When Linux boots, log in with the username `root`. There is no password required.           
+When Linux boots, log in with the username `root`. There is no password required.   
+
+If you are using the `icicle-kit-es-amp` machine, attach to UART3 to observe its output.
+
 Similarly, a root file system can be written to the SD card using
 ```
 $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image 
@@ -194,7 +203,7 @@ flex gawk gdisk git gperf libgmp-dev libmpc-dev libmpfr-dev libncurses-dev \
 libssl-dev libtool patchutils python screen texinfo unzip zlib1g-dev \
 libblkid-dev device-tree-compiler libglib2.0-dev libpixman-1-dev mtools \
 linux-firmware rsync python3 libexpat1-dev wget cpio xxd dosfstools \
-python3-pip libyaml-dev libelf-dev zlib1g-dev
+python3-pip libyaml-dev libelf-dev zlib1g-dev xutils-dev
 ```
 Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
 ```
@@ -224,4 +233,5 @@ If you encounter this problem, simply rerun the `format-icicle-image` make comma
 [Buildroot User Manual](https://buildroot.org/docs.html)    
 [PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)    
 [MPFS-DEV-KIT User Guide](doc/MPFS-DEV-KIT_user_guide.md)    
-[Kernel Documentation for Linux](https://www.kernel.org/doc/html/v5.4/)
+[Kernel Documentation for Linux](https://www.kernel.org/doc/html/v5.4/)    
+[Asymmetric Multiprocessing Documentation](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/asymmetric-multiprocessing/amp.md)
