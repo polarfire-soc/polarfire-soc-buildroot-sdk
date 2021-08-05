@@ -1,6 +1,6 @@
 [submodule "linux"]
 	path = linux
-	url = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/linux.git 
+	url = https://github.com/polarfire-soc/linux.git
 [submodule "buildroot"]
 	path = buildroot
 	url = https://github.com/buildroot/buildroot.git
@@ -21,7 +21,7 @@
 	url = https://github.com/polarfire-soc/hart-software-services.git
 [submodule "polarfire-soc-examples/polarfire-soc-linux-examples"]
 	path = polarfire-soc-examples/polarfire-soc-linux-examples
-	url = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/polarfire-soc-linux-examples.git
+	url = https://github.com/polarfire-soc/polarfire-soc-linux-examples.git
 [submodule "polarfire-soc-examples/polarfire-soc-amp-examples"]
 	path = polarfire-soc-examples/polarfire-soc-amp-examples
-	url = https://bitbucket.microchip.com/scm/fpga_pfsoc_es/polarfire-soc-amp-examples.git
+	url = https://github.com/polarfire-soc/polarfire-soc-amp-examples.git
