@@ -1,4 +1,4 @@
-linux-*.tar.xz
+*.tar.xz
 work/
 toolchain
 arch/

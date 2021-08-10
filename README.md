@@ -196,6 +196,7 @@ This document assumes you are running on a modern Linux system. The process docu
 It should also work with other Linux distributions if the equivalent prerequisite packages are installed.        
 
 ### Prerequisite Packages
+#### Ubuntu
 Before starting, use the `apt` command to install prerequisite packages:
 ```
 sudo apt install autoconf automake autotools-dev bc bison build-essential curl \
@@ -208,6 +209,31 @@ python3-pip libyaml-dev libelf-dev zlib1g-dev xutils-dev
 Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
 ```
 sudo pip3 install kconfiglib
+```
+
+#### Centos 8
+Before starting, use the `yum` command to install prerequisite packages:
+```
+sudo yum install autoconf bc bison curl flex gawk gdisk gperf git gmp-devel \
+libmpc-devel mpfr-devel ncurses-devel openssl-devel libtool patchutils \
+python2 screen texinfo unzip zlib-devel libblkid-devel dtc glib2-devel \
+pixman-devel mtools linux-firmware rsync python3 expat-devel wget cpio \
+vim-common dosfstools python3-pip libyaml-devel elfutils-libelf-devel \
+perl-ExtUtils-MakeMaker
+```
+Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
+```
+sudo pip3 install kconfiglib
+```
+You may need to run the following commands before installing the prerequisites so that the packages can be located:
+```
+sudo yum groups mark install "Development Tools"  -y
+sudo yum install yum-utils -y
+sudo yum groupinstall "Development Tools" -y
+sudo yum install epel-release -y
+sudo yum install dnf-plugins-core -y
+sudo yum update -y
+sudo yum config-manager --set-enabled powertools
 ```
 
 ## Known Issues
