@@ -219,7 +219,7 @@ $(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
 
-$(vmlinux): $(linux_wrkdir)/.config $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
+$(vmlinux): $(linux_wrkdir)/.config $(CROSS_COMPILE)gcc
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) \
 		ARCH=riscv \
 		CROSS_COMPILE=$(CROSS_COMPILE) \
@@ -309,7 +309,7 @@ $(hss_payload_generator): $(payload_generator_tarball)
 $(hss_uboot_payload_bin): $(uboot_s) $(hss_payload_generator) $(bootloaders-y)
 	cd $(buildroot_initramfs_wrkdir)/images && $(hss_payload_generator) -c $(payload_config) -v $(hss_uboot_payload_bin)
 
-.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders
+.PHONY: buildroot_initramfs_sysroot vmlinux bbl fit flash_image initrd opensbi u-boot bootloaders dtbs
 buildroot_initramfs_sysroot: $(buildroot_initramfs_sysroot)
 vmlinux: $(vmlinux)
 fit: $(fit)
@@ -320,6 +320,7 @@ opensbi: $(opensbi)
 fsbl: $(fsbl)
 bootloaders: $(bootloaders-y)
 root-fs: $(rootfs)
+dtbs: ${device_tree_blob}
 
 .PHONY: clean distclean
 clean:
