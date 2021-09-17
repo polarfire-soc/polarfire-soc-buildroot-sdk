@@ -92,9 +92,9 @@ hss_srcdir := $(srcdir)/hart-software-services
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 payload_config := $(confdir)/$(DEVKIT)/config.yaml
 
-amp_example := $(buildroot_initramfs_wrkdir)/images/amp-application.elf
-amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-amp-freertos
-amp_example_wrkdir := $(wrkdir)/amp/mpfs-amp-freertos
+amp_example := $(buildroot_initramfs_wrkdir)/images/mpfs-rpmsg-remote.elf
+amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-freertos
+amp_example_wrkdir := $(wrkdir)/amp/mpfs-rpmsg-freertos
 
 ifeq "$(DEVKIT)" "mpfs"
 FSBL_SUPPORT ?= y
@@ -344,14 +344,14 @@ $(openocd): $(openocd_srcdir)
 	cd $(openocd_wrkdir) && $</configure --enable-maintainer-mode --disable-werror --enable-ft2232_libftdi
 	$(MAKE) -C $(openocd_wrkdir)
 
-EXT_CFLAGS := -DMPFS_HAL_FIRST_HART=3 -DMPFS_HAL_LAST_HART=3
+EXT_CFLAGS := -DMPFS_HAL_FIRST_HART=4 -DMPFS_HAL_LAST_HART=4
 export EXT_CFLAGS
 .PHONY: amp
 amp: $(amp_example)
 $(amp_example): $(amp_example_srcdir) $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
 	rm -rf $(amp_example_srcdir)/Default
-	$(MAKE) -C $(amp_example_srcdir) O=$(amp_example_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE)
-	cp $(amp_example_srcdir)/Default/mpfs-amp-freertos.elf $(amp_example)
+	$(MAKE) -C $(amp_example_srcdir) O=$(amp_example_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) REMOTE=1
+	cp $(amp_example_srcdir)/Remote-Default/mpfs-rpmsg-remote.elf $(amp_example)
 
 $(vfat_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
 	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \
