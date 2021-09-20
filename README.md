@@ -47,8 +47,10 @@ To boot Linux on your board using this image, see: [Loading the Image onto the T
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain. 
 
 The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader.           
-The source for the device tree for boards are in `conf/<devkit>/<devkit>.dts`.            
-The configuration options used for the Linux kernel are in `conf/<devkit>/linux_<kernel-version>_defconfig`.
+The source for the device tree for the MPFS DEV-KIT (HiFive Unleashed Expansion Board) board is available in `conf/mpfs/mpfs.dts`.       
+For other boards, the source is located in `linux/arch/riscv/boot/dts/microchip`.                  
+The configuration options used for the Linux kernel are in `linux/arch/riscv/configs/<devkit>_defconfig`.     
+`conf/<devkit>` contains the U-Boot and buildroot initramfs config files.
 
 ### Rebuilding the Linux Image
 If you need to rebuild your image or change the board being targeted, type the following from the top level directory of the polarfire-soc-buildroot-sdk:
