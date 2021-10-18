@@ -1,18 +1,18 @@
-From 1c0a04433b7ce1cf1bd5c905386931781ea3d06e Mon Sep 17 00:00:00 2001
-From: Conor Dooley <conor.dooley@microchip.com>
-Date: Thu, 14 Jan 2021 12:03:32 +0000
-Subject: [PATCH] add webserver and sys serv examples
+From b8cfd8cac3efb990c5cb4236a20caf633217c342 Mon Sep 17 00:00:00 2001
+From: conor dooley <conor.dooley@microchip.com>
+Date: Mon, 25 Oct 2021 16:01:27 +0100
+Subject: [PATCH] test
 
 ---
- package/Config.in              |  1 +
- package/mchp_examples/Config.in    |  4 ++++
- package/mchp_examples/mchp_examples.mk | 34 ++++++++++++++++++++++++++++++++++
- 3 files changed, 39 insertions(+)
+ package/Config.in                      |  1 +
+ package/mchp_examples/Config.in        |  4 +++
+ package/mchp_examples/mchp_examples.mk | 47 ++++++++++++++++++++++++++
+ 3 files changed, 52 insertions(+)
  create mode 100644 package/mchp_examples/Config.in
  create mode 100644 package/mchp_examples/mchp_examples.mk
 
 diff --git a/package/Config.in b/package/Config.in
-index 17d2bd4f92..936bceb416 100644
+index 4d323d440f..76520e13ba 100644
 --- a/package/Config.in
 +++ b/package/Config.in
 @@ -8,6 +8,7 @@ menu "Target packages"
@@ -25,7 +25,7 @@ index 17d2bd4f92..936bceb416 100644
  	source "package/alsa-utils/Config.in"
 diff --git a/package/mchp_examples/Config.in b/package/mchp_examples/Config.in
 new file mode 100644
-index 0000000000..ef74da98b8
+index 0000000000..c6ad9a7068
 --- /dev/null
 +++ b/package/mchp_examples/Config.in
 @@ -0,0 +1,4 @@
@@ -35,13 +35,13 @@ index 0000000000..ef74da98b8
 +	  blah blah blah
 diff --git a/package/mchp_examples/mchp_examples.mk b/package/mchp_examples/mchp_examples.mk
 new file mode 100644
-index 0000000000..5b19995f6a
+index 0000000000..a8857ca806
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,47 @@
-+MCHP_EXAMPLES_VERSION = 80f94a018f53e9dee8e41cd104496b71174326c0
-+MCHP_EXAMPLES_SITE = ../../../polarfire-soc-examples/polarfire-soc-linux-examples
-+MCHP_EXAMPLES_SITE_METHOD = git
++MCHP_EXAMPLES_VERSION = cbbe97f310c064ba71c300971f1876b2bd878255
++MCHP_EXAMPLES_SITE = ../../polarfire-soc-examples
++MCHP_EXAMPLES_SITE_METHOD = local
 +
 +
 +EXAMPLE_DIRS += can gpio system-services ethernet fpga-fabric-interfaces dma pdma
@@ -51,32 +51,32 @@ index 0000000000..5b19995f6a
 +define MCHP_EXAMPLES_INSTALL_DIRS
 +	$(foreach d,$(EXAMPLE_DIRS), \
 +		rm -rf $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d); \
-+		cp -a $(@D)/$(d) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d)$(sep))
++		cp -a $(@D)/polarfire-soc-linux-examples/$(d) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d)$(sep))
 +endef
 +
 +define MCHP_EXAMPLES_INSTALL_TARGET_CMDS
 +        $(INSTALL) -d $(TARGET_DIR)$(EXAMPLE_TARGET_DIR) 
 +	$(foreach d,$(EXAMPLE_DIRS), \
 +		rm -rf $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d); \
-+		cp -a $(@D)/$(d) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d)$(sep))
++		cp -a $(@D)/polarfire-soc-linux-examples/$(d) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)$(d)$(sep))
 +
 +        echo $(EXAMPLE_FILES)
 +	$(foreach example_file,$(EXAMPLE_FILES), \
-+		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/$(dir $(example_file)) $(notdir $(example_file)) CC=$(TARGET_CC); \
-+                $(INSTALL) -D -m 775 $(@D)/$(example_file) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/$(dir $(example_file));)
++		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/polarfire-soc-linux-examples/$(dir $(example_file)) $(notdir $(example_file)) CC=$(TARGET_CC); \
++                $(INSTALL) -D -m 775 $(@D)/polarfire-soc-linux-examples/$(example_file) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/$(dir $(example_file));)
 +
 +	ln -s $(EXAMPLE_TARGET_DIR)/ethernet/iio-http-server  $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/iiohttpserver
 +
 +endef
 +
 +define MCHP_EXAMPLES_INSTALL_INIT_SYSTEMD
-+$(INSTALL) -D -m 644 $(@D)/ethernet/iio-http-server/collection/collectdiio.service \
++$(INSTALL) -D -m 644 $(@D)/polarfire-soc-linux-examples/ethernet/iio-http-server/collection/collectdiio.service \
 +        $(TARGET_DIR)/usr/lib/systemd/system/collectdiio.service
 +endef
 +
 +define MCHP_EXAMPLES_INSTALL_INIT_SYSV
 +# iiohttp server
-+$(INSTALL) -D -m 775 $(@D)/ethernet/iio-http-server/collection/collectdiio.busybox \
++$(INSTALL) -D -m 775 $(@D)/polarfire-soc-linux-examples/ethernet/iio-http-server/collection/collectdiio.busybox \
 +        $(TARGET_DIR)/etc/init.d/collectdiio
 +# busy box init requires script renames
 +mv $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)ethernet/iio-http-server/run.{sh,systemd}
@@ -87,5 +87,5 @@ index 0000000000..5b19995f6a
 +
 +$(eval $(generic-package))
 -- 
-2.17.1
+2.23.0.windows.1
 
