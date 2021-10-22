@@ -14,7 +14,7 @@
                         compression = "none";
                         load = <0x80200000>;
                         entry = <0x80200000>;
-                        hash@1 {
+                        hash-1 {
                                 algo = "sha256";
                         };
                 };
@@ -36,20 +36,20 @@
                         arch = "riscv";
                         compression = "none";
                         load = <0x82200000>;
-                        hash@1 {
+                        hash-1 {
                                 algo = "sha256";
                         };
                 };
 	};
 
         configurations {
-                default = "conf@riscvpc.dtb";
-                conf@riscvpc.dtb {
+                default = "conf-riscvpc.dtb";
+                conf-riscvpc.dtb {
                         description = "1 Linux kernel, initramfs, FDT blob";
                         kernel = "vmlinux.bin";
                 ramdisk = "initramfs.cpio.gz";
                         fdt = "riscvpc.dtb";
-                        hash@1 {
+                        hash-1 {
                                 algo = "sha256";
                         };
                 };
