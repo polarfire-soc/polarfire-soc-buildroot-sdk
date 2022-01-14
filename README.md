@@ -163,7 +163,7 @@ The SD card should have a GUID Partition Table (GPT) rather than a Master Boot R
 To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
 
 ```bash
-$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-esd format-icicle-image
+$ sudo make DISK=/dev/sdX DEVKIT=icicle-kit-es format-icicle-image
 ```
 
 At this point, your SD card should be ready to boot Linux.  
