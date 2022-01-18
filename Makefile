@@ -85,12 +85,11 @@ openocd := $(openocd_wrkdir)/src/openocd
 
 payload_generator_url := https://github.com/polarfire-soc/hart-software-services/releases/download/2021.11/hss-payload-generator.zip
 payload_generator_tarball := $(srcdir)/br-dl-dir/payload_generator.zip
-# payload_generator_srcdir := $(srcdir)/hart-software-services/tools/hss-payload-generator
-# payloadgen_wrkdir := $(wrkdir)/payload_generator
 hss_payload_generator := $(wrkdir)/hss-payload-generator
 hss_srcdir := $(srcdir)/hart-software-services
 hss_uboot_payload_bin := $(wrkdir)/payload.bin
 payload_config := $(confdir)/$(DEVKIT)/config.yaml
+its := $(confdir)/$(DEVKIT)/osbi-fit-image.its
 
 amp_example := $(buildroot_initramfs_wrkdir)/images/mpfs-rpmsg-remote.elf
 amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-freertos
@@ -261,8 +260,8 @@ $(device_tree_blob): $(vmlinux)
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv dtbs
 	cp $(linux_dtb) $(device_tree_blob)
 
-$(fit): $(uboot_s) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(confdir)/osbi-fit-image.its $(kernel-modules-install-stamp)
-	PATH=$(PATH) $(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(confdir)/osbi-fit-image.its -A riscv -O linux -T flat_dt $@
+$(fit): $(uboot_s) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(its) $(kernel-modules-install-stamp)
+	PATH=$(PATH) $(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(its) -A riscv -O linux -T flat_dt $@
 
 $(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)

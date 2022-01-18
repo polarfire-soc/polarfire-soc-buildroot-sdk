@@ -2,40 +2,40 @@
 
 / {
         description = "U-Boot fitImage for the MPFS";
-        #address-cells = <1>;
+        #address-cells = <2>;
 
         images {
                 vmlinux.bin {
                         description = "Linux kernel";
-                        data = /incbin/("../work/vmlinux.bin");
+                        data = /incbin/("../../work/vmlinux.bin");
                         type = "kernel";
                         arch = "riscv";
                         os = "linux";
                         compression = "none";
-                        load = <0x80200000>;
-                        entry = <0x80200000>;
+                        load = <0x10 0x0200000>;
+                        entry = <0x10 0x0200000>;
                         hash-1 {
                                 algo = "sha256";
                         };
                 };
                 initramfs.cpio.gz {
                         description = "buildroot initramfs";
-                        data = /incbin/("../work/initramfs.cpio.gz");
+                        data = /incbin/("../../work/initramfs.cpio.gz");
                         type = "ramdisk";
                         arch = "riscv";
                         os = "linux";
-                        load = <0x84000000>;
+                        load = <0x10 0x40000000>;
                         hash-1 {
                                 algo = "sha256";
                         };
                 };
                 riscvpc.dtb {
                         description = "Flattened Device Tree blob";
-                        data = /incbin/("../work/riscvpc.dtb");
+                        data = /incbin/("../../work/riscvpc.dtb");
                         type = "flat_dt";
                         arch = "riscv";
                         compression = "none";
-                        load = <0x82200000>;
+                        load = <0x10 0x2200000>;
                         hash-1 {
                                 algo = "sha256";
                         };

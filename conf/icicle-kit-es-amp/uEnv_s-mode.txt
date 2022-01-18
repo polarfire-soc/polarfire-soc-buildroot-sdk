@@ -3,11 +3,10 @@
 # this assumes ${fileaddr} is already set!!
 
 load mmc 0:2 ${fileaddr} fitImage.fit;
-bootm start 0x90000000;
-bootm loados 0x90000000;
+bootm start 0x1030000000;
+bootm loados 0x1030000000;
 bootm ramdisk;
 bootm fdt;
-fdt addr 0x82200000;
 bootm prep;
 fdt set /soc/ethernet@20112000 mac-address ${icicle_mac_addr0};
 fdt set /soc/ethernet@20110000 mac-address ${icicle_mac_addr1}

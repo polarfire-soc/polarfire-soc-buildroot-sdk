@@ -1,0 +1,57 @@
+/dts-v1/;
+
+/ {
+        description = "U-Boot fitImage for the MPFS";
+        #address-cells = <1>;
+
+        images {
+                vmlinux.bin {
+                        description = "Linux kernel";
+                        data = /incbin/("../../work/vmlinux.bin");
+                        type = "kernel";
+                        arch = "riscv";
+                        os = "linux";
+                        compression = "none";
+                        load = <0x80200000>;
+                        entry = <0x80200000>;
+                        hash-1 {
+                                algo = "sha256";
+                        };
+                };
+                initramfs.cpio.gz {
+                        description = "buildroot initramfs";
+                        data = /incbin/("../../work/initramfs.cpio.gz");
+                        type = "ramdisk";
+                        arch = "riscv";
+                        os = "linux";
+                        load = <0x84000000>;
+                        hash-1 {
+                                algo = "sha256";
+                        };
+                };
+                riscvpc.dtb {
+                        description = "Flattened Device Tree blob";
+                        data = /incbin/("../../work/riscvpc.dtb");
+                        type = "flat_dt";
+                        arch = "riscv";
+                        compression = "none";
+                        load = <0x82200000>;
+                        hash-1 {
+                                algo = "sha256";
+                        };
+                };
+	};
+
+        configurations {
+                default = "conf-riscvpc.dtb";
+                conf-riscvpc.dtb {
+                        description = "1 Linux kernel, initramfs, FDT blob";
+                        kernel = "vmlinux.bin";
+                ramdisk = "initramfs.cpio.gz";
+                        fdt = "riscvpc.dtb";
+                        hash-1 {
+                                algo = "sha256";
+                        };
+                };
+	};
+};
