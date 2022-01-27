@@ -39,7 +39,7 @@ index 0000000000..74ec2fa481
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,50 @@
-+MCHP_EXAMPLES_VERSION = 91aa8b53f3a50c5dfd85a48feff36a5815fe5f49
++MCHP_EXAMPLES_VERSION = cd454bc064c68106c00097f6f556aabb6fa03a6d
 +MCHP_EXAMPLES_SITE = ../../polarfire-soc-examples
 +MCHP_EXAMPLES_SITE_METHOD = local
 +
