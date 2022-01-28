@@ -328,6 +328,9 @@ dtbs: ${device_tree_blob}
 clean:
 	rm -rf -- $(wrkdir)
 
+clean-linux:
+	rm -rf -- $(fit) $(device_tree_blob) $(vfat_image) $(kernel-modules-stamp)  $(kernel-modules-install-stamp) $(vmlinux_bin) $(linux_wrkdir) $(hss_uboot_payload_bin)
+
 distclean:
 	rm -rf -- $(wrkdir) $(toolchain_dest) br-dl-dir/ arch/ include/ scripts/ .cache.mk
 
@@ -474,6 +477,7 @@ endif
 	dd if=$(fsbl) of=$(PART1) bs=4096
 	dd if=$(vfat_image) of=$(PART2) bs=4096
 	dd if=$(opensbi) of=$(PART3) bs=4096
+	sync
 
 # DEB_IMAGE	:= rootfs.tar.gz
 # DEB_URL := 
@@ -513,3 +517,4 @@ ifeq ($(DEVKIT),mpfs)
 else 
 	dd if=$(rootfs) of=$(PART3) bs=4096
 endif
+	sync
