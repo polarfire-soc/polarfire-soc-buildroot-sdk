@@ -296,7 +296,7 @@ sudo yum config-manager --set-enabled powertools
 
 ## Known Issues
 
-### U-Boot Error: "boot3 not defined" or "Error: Partition(s) 1, 2, 3 on /dev/sdX have been written, but we have been unable to inform the kernel of the change"
+### U-Boot Error: "Can't set block device" or Linux "Error: Partition(s) 1, 2, 3 on /dev/sdX have been written, but we have been unable to inform the kernel of the change"
 
 This error is caused by auto mounting of the SD/onboard eMMC, preventing the image being written correctly to the disk. To fix this, install dconf-editor and disable automounting of the SD card.
 
