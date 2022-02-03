@@ -95,26 +95,7 @@ amp_example := $(buildroot_initramfs_wrkdir)/images/mpfs-rpmsg-remote.elf
 amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-freertos
 amp_example_wrkdir := $(wrkdir)/amp/mpfs-rpmsg-freertos
 
-ifeq "$(DEVKIT)" "mpfs"
-FSBL_SUPPORT ?= y
-OSBI_SUPPORT ?= y
-UBOOT_VERSION = 2020.10
-linux_defconfig := mpfs_devkit_defconfig
-linux_dtb := $(riscv_dtbdir)/sifive/hifive-unleashed-a00.dtb
-else ifeq "$(DEVKIT)" "icicle-kit-es-amp"
-HSS_SUPPORT ?= y
-HSS_TARGET ?= mpfs-icicle-kit-es
-AMP_SUPPORT ?= y
-UBOOT_VERSION = 2022.01
-linux_defconfig := icicle_kit_amp_defconfig
-linux_dtb := $(riscv_dtbdir)/microchip/microchip-mpfs-icicle-kit-context-a.dtb
-else
-HSS_SUPPORT ?= y
-HSS_TARGET ?= mpfs-icicle-kit-es
-UBOOT_VERSION = 2022.01
-linux_defconfig := icicle_kit_defconfig
-linux_dtb := $(riscv_dtbdir)/microchip/microchip-mpfs-icicle-kit.dtb
-endif
+include conf/$(DEVKIT)/board.mk
 
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
