@@ -1,23 +1,25 @@
-From 0fb0934a02682083ad4d2605abd2a9fefd438109 Mon Sep 17 00:00:00 2001
+From 5dd4682e0cb5a47a0c3c22c50c3c2e6de4062a2a Mon Sep 17 00:00:00 2001
 From: Padmarao Begari <padmarao.begari@microchip.com>
 Date: Tue, 18 Jan 2022 12:04:43 +0530
-Subject: [PATCH v1 1/1] U-Boot v2022.01 with high memory 0x1000000000
+Subject: [PATCH v2 1/2] U-Boot v2022.01 with high memory 0x1000000000
 
 Enable the DDR 1GB high memory(0x1000000000), the MMC 64-bit DMA,
 Host Controller version 4 and update ADMA descriptor table for
 64-bit address.
 
 Signed-off-by: Padmarao Begari <padmarao.begari@microchip.com>
+Fixed DDR size &
+Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
 ---
  arch/riscv/cpu/generic/dram.c                |  3 ++-
- arch/riscv/dts/microchip-mpfs-icicle-kit.dts |  4 ++--
+ arch/riscv/dts/microchip-mpfs-icicle-kit.dts | 12 ++----------
  board/microchip/mpfs_icicle/Kconfig          |  4 ++--
  configs/microchip_mpfs_icicle_defconfig      |  2 +-
  drivers/mmc/sdhci-adma.c                     |  1 +
  drivers/mmc/sdhci.c                          |  7 ++++++-
  include/configs/microchip_mpfs_icicle.h      | 14 +++++++-------
  include/sdhci.h                              |  2 ++
- 8 files changed, 23 insertions(+), 14 deletions(-)
+ 8 files changed, 23 insertions(+), 22 deletions(-)
 
 diff --git a/arch/riscv/cpu/generic/dram.c b/arch/riscv/cpu/generic/dram.c
 index 1fdc7837b8..584e656169 100644
@@ -40,24 +42,36 @@ index 1fdc7837b8..584e656169 100644
  	return gd->ram_top;
  }
 diff --git a/arch/riscv/dts/microchip-mpfs-icicle-kit.dts b/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
-index 287ef3d23b..0cf9836639 100644
+index 287ef3d23b..1da1d5139a 100644
 --- a/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
 +++ b/arch/riscv/dts/microchip-mpfs-icicle-kit.dts
-@@ -79,12 +79,12 @@
+@@ -79,16 +79,9 @@
  		sync-mode = <3>;
  	};
  
 -	ddrc_cache_lo: memory@80000000 {
-+/*	ddrc_cache_lo: memory@80000000 {
++	ddrc_cache: memory@1000000000 {
  		device_type = "memory";
- 		reg = <0x0 0x80000000 0x0 0x2e000000>;
+-		reg = <0x0 0x80000000 0x0 0x2e000000>;
+-		clocks = <&clkcfg CLK_DDRC>;
+-		status = "okay";
+-	};
+-
+-	ddrc_cache_hi: memory@1000000000 {
+-		device_type = "memory";
+-		reg = <0x10 0x0 0x0 0x40000000>;
++		reg = <0x10 0x0 0x0 0x76000000>;
  		clocks = <&clkcfg CLK_DDRC>;
  		status = "okay";
--	};
-+	}; */
+ 	};
+@@ -100,7 +93,6 @@
  
- 	ddrc_cache_hi: memory@1000000000 {
- 		device_type = "memory";
+ &mmc {
+ 	status = "okay";
+-
+ 	bus-width = <4>;
+ 	disable-wp;
+ 	cap-mmc-highspeed;
 diff --git a/board/microchip/mpfs_icicle/Kconfig b/board/microchip/mpfs_icicle/Kconfig
 index 092e411215..4f2a236fbb 100644
 --- a/board/microchip/mpfs_icicle/Kconfig
@@ -181,5 +195,5 @@ index c718dd7206..8312ce3b75 100644
  } __packed;
  
 -- 
-2.17.1
+2.35.1
 
