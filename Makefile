@@ -18,6 +18,11 @@ ifeq "$(DEVKIT)" "icicle-kit-es-sd"
 override DEVKIT = icicle-kit-es
 endif
 
+AMP_DEMO ?= freertos
+ifneq ($(AMP_DEMO),$(filter $(AMP_DEMO),freertos bm))
+$(error AMP_DEMO variable should be freertos or bm)
+endif
+
 RISCV ?= $(CURDIR)/toolchain
 PATH := $(RISCV)/bin:$(PATH)
 GITID := $(shell git describe --dirty --always)
@@ -92,8 +97,8 @@ payload_config := $(confdir)/$(DEVKIT)/config.yaml
 its := $(confdir)/$(DEVKIT)/osbi-fit-image.its
 
 amp_example := $(buildroot_initramfs_wrkdir)/images/mpfs-rpmsg-remote.elf
-amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-freertos
-amp_example_wrkdir := $(wrkdir)/amp/mpfs-rpmsg-freertos
+amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-$(AMP_DEMO)
+amp_example_wrkdir := $(wrkdir)/amp/mpfs-rpmsg-$(AMP_DEMO)
 
 include conf/$(DEVKIT)/board.mk
 
