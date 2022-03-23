@@ -62,6 +62,7 @@ kernel-modules-install-stamp := $(wrkdir)/.modules_install_stamp
 
 flash_image := $(wrkdir)/$(DEVKIT)-$(GITID).gpt
 vfat_image := $(wrkdir)/$(DEVKIT)-vfat.part
+initramfs_uc := $(wrkdir)/initramfs.cpio
 initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
 fit := $(wrkdir)/fitImage.fit
@@ -197,12 +198,15 @@ endif
 $(initramfs).d: $(buildroot_initramfs_sysroot) $(kernel-modules-install-stamp)
 	cd $(wrkdir) && $(linux_srcdir)/usr/gen_initramfs.sh -l $(confdir)/initramfs.txt $(buildroot_initramfs_sysroot) > $@
 
-$(initramfs): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install-stamp)
+$(initramfs_uc): $(buildroot_initramfs_sysroot) $(vmlinux) $(kernel-modules-install-stamp)
 	cd $(linux_wrkdir) && \
 		$(linux_srcdir)/usr/gen_initramfs.sh \
 		-o $@ -u $(shell id -u) -g $(shell id -g) \
 		$(confdir)/initramfs.txt \
 		$(buildroot_initramfs_sysroot)
+
+$(initramfs): $(initramfs_uc)
+	gzip $(initramfs_uc) --keep -q
 
 $(vmlinux): $(linux_wrkdir)/.config $(CROSS_COMPILE)gcc
 	$(MAKE) -C $(linux_srcdir) O=$(linux_wrkdir) \
