@@ -318,7 +318,7 @@ clean:
 	rm -rf -- $(wrkdir)
 
 clean-linux:
-	rm -rf -- $(fit) $(device_tree_blob) $(vfat_image) $(kernel-modules-stamp)  $(kernel-modules-install-stamp) $(vmlinux_bin) $(linux_wrkdir) $(hss_uboot_payload_bin)
+	rm -rf -- $(initramfs) $(fit) $(device_tree_blob) $(vfat_image) $(kernel-modules-stamp)  $(kernel-modules-install-stamp) $(vmlinux_bin) $(linux_wrkdir) $(hss_uboot_payload_bin)
 
 distclean:
 	rm -rf -- $(wrkdir) $(toolchain_dest) br-dl-dir/ arch/ include/ scripts/ .cache.mk
