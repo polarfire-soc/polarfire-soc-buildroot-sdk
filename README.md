@@ -311,24 +311,7 @@ Install the python library `kconfiglib`. Without this the Hart Software Services
 sudo pip3 install kconfiglib
 ```
 
-#### Centos 8
 
-Before starting, use the `yum` command to install prerequisite packages:
-
-```bash
-sudo yum install autoconf bc bison curl flex gawk gdisk gperf git gmp-devel \
-libmpc-devel mpfr-devel ncurses-devel openssl-devel libtool patchutils \
-python2 screen texinfo unzip zlib-devel libblkid-devel dtc glib2-devel \
-pixman-devel mtools linux-firmware rsync python3 expat-devel wget cpio \
-vim-common dosfstools python3-pip libyaml-devel elfutils-libelf-devel \
-perl-ExtUtils-MakeMaker
-```
-
-Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
-
-```bash
-sudo pip3 install kconfiglib
-```
 
 You may need to run the following commands before installing the prerequisites so that the packages can be located:
 
