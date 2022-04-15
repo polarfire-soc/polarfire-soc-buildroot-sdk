@@ -183,7 +183,9 @@ $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image
 
 This section explains how to prepare the Icicle Kit to boot from an external flash memory device using QSPI.
 
-The Icicle Kit supports booting Linux from QSPI with a [Flash 5 click](https://www.mikroe.com/flash-5-click) connected to the Raspberry Pi 4 Interface (J26) through a [Pi 3 click shield](https://www.mikroe.com/pi-3-click-shield).
+The Icicle Kit supports booting Linux from an external QSPI flash memory connected to the Raspberry Pi 4 Interface (J26) on an Icicle Kit.
+
+For more information on QSPI support on the Icicle Kit, please refer to the [booting from QSPI](https://github.com/polarfire-soc/polarfire-soc-documentation/tree/master/boards/mpfs-icicle-kit-es/booting-from-qspi/booting-from-qspi.md) documentation.
 
 Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.
 
