@@ -1,0 +1,1 @@
+CONFIG_CMDLINE="earlyprintk debug clk_ignore_unused uio_pdrv_genirq.of_id=generic-uio"
