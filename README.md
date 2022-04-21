@@ -12,7 +12,7 @@ The complete User Guides for each development platform, containing board and boo
 
 ## Building Linux Using Buildroot
 
-This section describes the procedure to build the Linux boot image and load it onto an SD card or eMMC using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
+This section describes the procedure to build the Linux boot image and load it onto an SD card, eMMC or external QSPI flash memory using Buildroot. Please check the [Supported Build Hosts](#supported-build-hosts) and the [Prerequisite Packages](#prerequisite-packages) before continuing.
 
 ### Build instructions
 
@@ -71,7 +71,7 @@ $ make all DEVKIT=<devkit>
 
 ## Loading the Image onto the Target
 
-The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit), for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit) and for the [the MPFS here](#Preparing-an-SD-Card-for-MPFS).
+The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit),for the [QSPI on the Icicle Kit here](#Preparing-an-external-QSPI-flash-memory-for-the-Icicle-Kit),for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit), and for the [the MPFS here](#Preparing-an-SD-Card-for-MPFS).
 
 ### Preparing the eMMC for the Icicle Kit
 
@@ -179,6 +179,54 @@ Similarly, a root file system can be written to the SD card using
 $ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image
 ```
 
+### Preparing an external QSPI flash memory for the Icicle Kit
+
+This section explains how to prepare the Icicle Kit to boot from an external flash memory device using QSPI.
+
+The Icicle Kit supports booting Linux from an external QSPI flash memory connected to the Raspberry Pi 4 Interface (J26) on an Icicle Kit.
+
+For more information on QSPI support on the Icicle Kit, please refer to the [booting from QSPI](https://github.com/polarfire-soc/polarfire-soc-documentation/tree/master/boards/mpfs-icicle-kit-es/booting-from-qspi/booting-from-qspi.md) documentation.
+
+Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.
+
+Press a key to stop automatic boot. In the HSS console, type `qspi` to select the QSPI interface and then type `usbdmsc` to expose the QSPI flash memory device as a block device.
+
+Connect the board to your host PC using J16, located beside the SD card slot.
+
+Once this is complete, on the host PC, use `dmesg` to check what the drive identifier for the QSPI flash memory device is.
+
+```bash
+$ dmesg | egrep "sd"
+```
+
+The output should contain a line similar to one of the following lines:
+
+```bash
+[114353.477108] sd 11:0:0:0: [sdX] 65536 2048-byte logical blocks: (134 MB/128 MiB)
+[114353.477111] sd 11:0:0:0: [sdX] Write Protect is off
+[114353.477471] sd 11:0:0:0: [sdX] Mode Sense: 00 00 00 00
+```
+
+`sdX` is the drive identifier that should be used in the following commands, where `X` should be replaced with the specific character from the output of the previous command.
+
+**WARNING:**
+        The drive with the identifier `sda` is the default location for your operating system.  
+        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.    
+
+Once sure of the drive identifier, use the following command to copy your Linux image to the external QSPI flash memory device, replacing the X and <devkit> as appropriate:
+
+```bash
+$ sudo make DISK=/dev/sdX DEVKIT=<devkit> format-icicle-image-flash
+```
+
+When the transfer has completed, press CTRL+C in the HSS serial console to return to the HSS console.
+
+Wait for the image transfer to complete. A progress bar will be shown in the HSS serial console.
+
+To boot into Linux, type boot in the HSS console. U-Boot and Linux will use UART1. When Linux boots, log in with the username root. There is no password required.
+
+If you are using the icicle-kit-es-amp machine, attach to UART3 to observe its output.
+
 ### Preparing an SD Card for MPFS
 
 Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.  
@@ -263,24 +311,7 @@ Install the python library `kconfiglib`. Without this the Hart Software Services
 sudo pip3 install kconfiglib
 ```
 
-#### Centos 8
 
-Before starting, use the `yum` command to install prerequisite packages:
-
-```bash
-sudo yum install autoconf bc bison curl flex gawk gdisk gperf git gmp-devel \
-libmpc-devel mpfr-devel ncurses-devel openssl-devel libtool patchutils \
-python2 screen texinfo unzip zlib-devel libblkid-devel dtc glib2-devel \
-pixman-devel mtools linux-firmware rsync python3 expat-devel wget cpio \
-vim-common dosfstools python3-pip libyaml-devel elfutils-libelf-devel \
-perl-ExtUtils-MakeMaker
-```
-
-Install the python library `kconfiglib`. Without this the Hart Software Services (HSS) will fail to build with a genconfig error.
-
-```bash
-sudo pip3 install kconfiglib
-```
 
 You may need to run the following commands before installing the prerequisites so that the packages can be located:
 

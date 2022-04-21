@@ -62,6 +62,7 @@ kernel-modules-install-stamp := $(wrkdir)/.modules_install_stamp
 
 flash_image := $(wrkdir)/$(DEVKIT)-$(GITID).gpt
 vfat_image := $(wrkdir)/$(DEVKIT)-vfat.part
+mtd_image := $(wrkdir)/$(DEVKIT).mtd
 initramfs_uc := $(wrkdir)/initramfs.cpio
 initramfs := $(wrkdir)/initramfs.cpio.gz
 rootfs := $(wrkdir)/rootfs.bin
@@ -108,7 +109,7 @@ bootloaders-$(OSBI_SUPPORT) += $(opensbi)
 bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
 bootloaders-$(AMP_SUPPORT) += $(amp_example)
 
-all: $(fit) $(vfat_image) $(bootloaders-y)
+all: $(fit) $(vfat_image) $(mtd_image) $(bootloaders-y)
 	@echo
 	@echo "GPT (for SPI flash or SDcard) and U-boot Image files have"
 	@echo "been generated for an ISA of $(ISA) and an ABI of $(ABI)"
@@ -388,6 +389,26 @@ UBOOT_END=23248
 LINUX_START=24096
 LINUX_END=208119
 ROOT_START=209119
+
+## nand flash layout
+## spi-nand0:8m(payload),128k(env),48m(fitimage)
+PAYLOAD_SIZE=8192
+PAYLOAD_OFFSET=0
+UENV_SIZE =128
+UENV_OFFSET=8192
+LINUX_SIZE=49152
+LINUX_OFFSET=8320
+
+.PHONY: mtd_image
+$(mtd_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
+	dd if=$(uboot_s_scr) of=$(mtd_image) bs=1024 count=$(UENV_SIZE) seek=$(UENV_OFFSET) conv=notrunc
+	dd if=$(fit) of=$(mtd_image) bs=1024 count=$(LINUX_SIZE) seek=$(LINUX_OFFSET) conv=notrunc	
+
+.PHONY: format-icicle-image-flash
+format-icicle-image-flash: $(fit) $(uboot_s_scr)
+	@test -b $(DISK) || (echo "$(DISK): is not a block device"; exit 1)
+	dd if=$(hss_uboot_payload_bin) of=$(mtd_image) bs=1024 count=$(PAYLOAD_SIZE) seek=$(PAYLOAD_OFFSET) conv=notrunc
+	dd if=$(mtd_image) of=$(DISK) bs=1024 conv=notrunc
 
 .PHONY: format-icicle-image
 format-icicle-image: $(fit) $(uboot_s_scr)
