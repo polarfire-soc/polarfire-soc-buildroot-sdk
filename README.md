@@ -313,20 +313,6 @@ Install the python library `kconfiglib`. Without this the Hart Software Services
 sudo pip3 install kconfiglib
 ```
 
-
-
-You may need to run the following commands before installing the prerequisites so that the packages can be located:
-
-```bash
-sudo yum groups mark install "Development Tools"  -y
-sudo yum install yum-utils -y
-sudo yum groupinstall "Development Tools" -y
-sudo yum install epel-release -y
-sudo yum install dnf-plugins-core -y
-sudo yum update -y
-sudo yum config-manager --set-enabled powertools
-```
-
 ## Known Issues
 
 ### U-Boot Error: "Can't set block device" or Linux "Error: Partition(s) 1, 2, 3 on /dev/sdX have been written, but we have been unable to inform the kernel of the change"
