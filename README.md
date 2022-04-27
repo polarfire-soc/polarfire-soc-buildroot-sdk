@@ -77,7 +77,7 @@ The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-t
 
 If the HSS is not present in eNVM, using the y-modem loader, transfer the HSS to eNVM on the Icicle kit.  
 Connect to UART0 (J11), and power on the board. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.  
-Press a key to stop automatic boot. In the HSS console, type `usbdmsc` to expose the eMMC as a block device.  
+Press a key to stop automatic boot. In the HSS console, type `mmc` to select the interface and type `usbdmsc` to expose the eMMC as a block device.  
 Connect the board to your host PC using J16, located beside the SD card slot.
 
 Once this is complete, on the host PC, use `dmesg` to check what the drive identifier for the onboard eMMC is.
