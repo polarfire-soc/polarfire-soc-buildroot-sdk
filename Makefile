@@ -166,7 +166,7 @@ $(buildroot_initramfs_sysroot_stamp): $(buildroot_initramfs_tar)
 buildroot_initramfs_menuconfig: $(buildroot_initramfs_wrkdir)/.config $(buildroot_builddir_stamp)
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) menuconfig
 	$(MAKE) -C $(buildroot_builddir) O=$(buildroot_initramfs_wrkdir) savedefconfig
-	cp $(buildroot_initramfs_wrkdir)/defconfig conf/buildroot_initramfs_config
+	cp $(buildroot_initramfs_wrkdir)/defconfig $(buildroot_initramfs_config)
 
 $(buildroot_rootfs_wrkdir)/.config: $(buildroot_builddir_stamp)
 	cp $(buildroot_rootfs_config) $@
