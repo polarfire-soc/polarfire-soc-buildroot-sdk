@@ -39,13 +39,13 @@ index 0000000000..74ec2fa481
 --- /dev/null
 +++ b/package/mchp_examples/mchp_examples.mk
 @@ -0,0 +1,50 @@
-+MCHP_EXAMPLES_VERSION = 52028e4523137fb6d893a79691a7de23f151c817
++MCHP_EXAMPLES_VERSION = 1ae82e779341c17f31dbb83aa8a0558d8eac1af4
 +MCHP_EXAMPLES_SITE = ../../polarfire-soc-examples
 +MCHP_EXAMPLES_SITE_METHOD = local
 +
 +
-+EXAMPLE_DIRS += amp can gpio system-services ethernet fpga-fabric-interfaces dma pdma
-+EXAMPLE_FILES += amp/rpmsg-pingpong/rpmsg-pingpong amp/rpmsg-tty-example/rpmsg-tty can/uio-can-example gpio/gpiod-test gpio/gpio-event system-services/system-services-example system-services/signature-verification-demo fpga-fabric-interfaces/lsram/uio-lsram-read-write dma/uio-dma-interrupt pdma/pdma-ex
++EXAMPLE_DIRS += amp can gpio system-services ethernet fpga-fabric-interfaces dma
++EXAMPLE_FILES += amp/rpmsg-pingpong/rpmsg-pingpong amp/rpmsg-tty-example/rpmsg-tty can/uio-can-example gpio/gpiod-test gpio/gpiod-event system-services/system-services-example system-services/signature-verification-demo fpga-fabric-interfaces/lsram/uio-lsram-read-write dma/uio-dma-interrupt
 +EXAMPLE_TARGET_DIR = /opt/microchip/
 +
 +define MCHP_EXAMPLES_INSTALL_DIRS
@@ -68,7 +68,7 @@ index 0000000000..74ec2fa481
 +		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/polarfire-soc-linux-examples/$(dir $(example_file)) $(notdir $(example_file)) CC=$(TARGET_CC); \
 +                $(INSTALL) -D -m 775 $(@D)/polarfire-soc-linux-examples/$(example_file) $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/$(dir $(example_file));)
 +
-+	ln -s $(EXAMPLE_TARGET_DIR)/ethernet/iio-http-server  $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/iiohttpserver
++	ln -s $(EXAMPLE_TARGET_DIR)/ethernet/iio-http-server $(TARGET_DIR)$(EXAMPLE_TARGET_DIR)/iiohttpserver
 +
 +endef
 +
