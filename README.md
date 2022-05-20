@@ -5,7 +5,6 @@ It first will build the GNU cross-compilation toolchain for RISC-V, which will b
 
 Currently the following development platforms are supported:
 
-- [MPFS-DEV-KIT](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/boards/mpfs-dev-kit/MPFS-DEV-KIT_user_guide.md) (HiFive Unleashed Expansion Board)
 - Icicle Kit (Engineering Sample) (Requires minimum FPGA design: [v2021.08](https://github.com/polarfire-soc/icicle-kit-reference-design/releases/tag/2021.08). Designs prior to this release use a different memory map and will fail to boot.)
 
 The complete User Guides for each development platform, containing board and boot instructions, are available in the [polarfire-soc documentation repository](https://github.com/polarfire-soc/polarfire-soc-documentation).
@@ -44,7 +43,6 @@ The following table details the available targets:
 
 | `DEVKIT` | Board Name |
 | --- | --- |
-| `DEVKIT=mpfs` | MPFS-DEV-KIT (HiFive Unleashed Expansion Board) |
 | `DEVKIT=icicle-kit-es` | Icicle Development Kit with engineering sample silicon |
 | `DEVKIT=icicle-kit-es-amp` | Icicle Development Kit with engineering sample silicon running in AMP mode |
 
@@ -55,7 +53,7 @@ To boot Linux on your board using this image, see: [Loading the Image onto the T
 Note: The first time the build is run it can take a long time, as it also builds the RISC-V cross compiler toolchain.
 
 The output file contains the first stage bootloader, the root file system and an image containing the linux kernel, device tree blob & second stage bootloader.  
-The source for the device tree for the MPFS DEV-KIT (HiFive Unleashed Expansion Board) board is available in `conf/mpfs/mpfs.dts`.  
+
 For other boards, the source is located in `linux/arch/riscv/boot/dts/microchip`.  
 The configuration options used for the Linux kernel are in `linux/arch/riscv/configs/<devkit>_defconfig`.  
 `conf/<devkit>` contains the U-Boot and buildroot initramfs config files.  
@@ -71,7 +69,7 @@ $ make all DEVKIT=<devkit>
 
 ## Loading the Image onto the Target
 
-The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit),for the [QSPI on the Icicle Kit here](#Preparing-an-external-QSPI-flash-memory-for-the-Icicle-Kit),for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit), and for the [the MPFS here](#Preparing-an-SD-Card-for-MPFS).
+The instructions for the [eMMC on the Icicle Kit can be found here](#Preparing-the-eMMC-for-the-Icicle-Kit),for the [QSPI on the Icicle Kit here](#Preparing-an-external-QSPI-flash-memory-for-the-Icicle-Kit),for the [SD card on the Icicle Kit here](#Preparing-an-SD-Card-for-the-Icicle-Kit).
 
 ### Preparing the eMMC for the Icicle Kit
 
@@ -227,64 +225,6 @@ To boot into Linux, type boot in the HSS console. U-Boot and Linux will use UART
 
 If you are using the icicle-kit-es-amp machine, attach to UART3 to observe its output.
 
-### Preparing an SD Card for MPFS
-
-Insert an SD Card (16 GB or 32 GB) into the card reader of your host PC. If the SD card is auto-mounted, first unmount it manually.  
-The following steps will allow you to check and unmount the card if required:
-
-After inserting your SD card, on the host PC, use `dmesg` to check what your card's identifier is.
-
-```bash
-$ dmesg | egrep "sd|mmcblk"
-```
-
-The output should contain a line similar to one of the following lines:
-
-```bash
-[85089.431896] sd 6:0:0:2: [sdX] 31116288 512-byte logical blocks: (15.9 GB/14.8 GiB)
-[51273.539768] mmcblkX: mmc0:0001 EB1QT 29.8 GiB
-```
-
-`sdX` or `mmcblkX` is the drive identifier that should be used in the following commands, where `X` should be replaced with the specific character from the previous command.  
-For these examples the identifier `sdX` is used.
-
-**WARNING:**
-        The drive with the identifier `sda` is the default location for your operating system.  
-        DO NOT pass this identifier to any of the commands listed here without being absolutely sure that your OS is not located here.  
-        Check that the size of the card matches the dmesg output before continuing.  
-
-Next check if this card is mounted:
-
-```bash
-$ mount | grep sdX
-```
-
-If any entries are present, then run the following. If not then skip this command:
-
-```bash
-$ sudo umount /dev/sdX
-```
-
-The SD card should have a GUID Partition Table (GPT) rather than a Master Boot Record (MBR) without any partitions defined.
-
-#### Programming an Image for the First Time (MPFS)
-
-To automatically partition and format your SD card, in the top level of polarfire-soc-buildroot-sdk, type:
-
-```bash
-$ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-boot-loader
-```
-
-At this point, your SD card should be ready to boot Linux.  
-You can remove it from your PC and insert it into the SD card slot on the HiFive Unleashed board, and then power-on the DEV-KIT.  
-Connect to UART1 (J7) for the fsbl, U-Boot and Linux. Settings are 115200 baud, 8 data bits, 1 stop bit, no parity, and no flow control.  
-When Linux boots, log in with the username `root`. There is no password required.  
-Similarly, a root file system can be written to the SD card using:
-
-```bash
-$ sudo make DISK=/dev/sdX DEVKIT=<DEVKIT> format-rootfs-image
-```
-
 ## Supported Build Hosts
 
 This document assumes you are running on a modern Linux system. The process documented here was tested using Ubuntu 20.04/18.04 LTS.  
@@ -343,6 +283,5 @@ If you encounter this problem, simply rerun the `format-icicle-image` make comma
 
 [Buildroot User Manual](https://buildroot.org/docs.html)  
 [PolarFire SoC Yocto BSP](https://github.com/polarfire-soc/meta-polarfire-soc-yocto-bsp)  
-[MPFS-DEV-KIT User Guide](doc/MPFS-DEV-KIT_user_guide.md)  
 [Kernel Documentation for Linux](https://www.kernel.org/doc/html/v5.12/)  
 [Asymmetric Multiprocessing Documentation](https://github.com/polarfire-soc/polarfire-soc-documentation/blob/master/asymmetric-multiprocessing/amp.md)  
