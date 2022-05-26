@@ -1,6 +1,6 @@
 [submodule "linux"]
 	path = linux
-	url = https://github.com/polarfire-soc/linux.git
+	url = https://github.com/linux4microchip/linux.git
 [submodule "buildroot"]
 	path = buildroot
 	url = https://github.com/buildroot/buildroot.git

@@ -1,5 +1,0 @@
-# This is the s-mode U-Boot script for the {,lc-}mpfs development kits.
-
-# this assumes ${fileaddr} is already set!!
-load mmc 0:2 ${fileaddr} fitImage.fit;
-bootm ${fileaddr};
