@@ -252,7 +252,7 @@ $(device_tree_blob): $(vmlinux)
 	cp $(linux_dtb) $(device_tree_blob)
 
 $(fit): $(uboot_s) $(vmlinux_bin) $(initramfs) $(device_tree_blob) $(its) $(kernel-modules-install-stamp)
-	PATH=$(PATH) $(buildroot_initramfs_wrkdir)/build/uboot-$(UBOOT_VERSION)/tools/mkimage -f $(its) -A riscv -O linux -T flat_dt $@
+	PATH=$(PATH) mkimage -f $(its) -A riscv -O linux -T flat_dt $@
 
 $(libversion): $(fsbl_wrkdir_stamp)
 	- rm -rf $(libversion)
