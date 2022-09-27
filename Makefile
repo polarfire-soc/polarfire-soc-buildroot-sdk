@@ -32,6 +32,7 @@ toolchain_wrkdir := $(wrkdir)/riscv-gnu-toolchain
 toolchain_dest := $(CURDIR)/toolchain
 target := riscv64-unknown-linux-gnu
 CROSS_COMPILE := $(RISCV)/bin/$(target)-
+export CROSS_COMPILE
 target_gdb := $(CROSS_COMPILE)gdb
 
 buildroot_srcdir := $(srcdir)/buildroot
@@ -99,15 +100,12 @@ payload_config := $(confdir)/$(DEVKIT)/config.yaml
 its := $(confdir)/$(DEVKIT)/osbi-fit-image.its
 
 amp_example := $(buildroot_initramfs_wrkdir)/images/mpfs-rpmsg-remote.elf
-amp_example_srcdir := $(srcdir)/polarfire-soc-examples/polarfire-soc-amp-examples/mpfs-rpmsg-$(AMP_DEMO)
-amp_example_wrkdir := $(wrkdir)/amp/mpfs-rpmsg-$(AMP_DEMO)
 
 include conf/$(DEVKIT)/board.mk
 
 bootloaders-$(FSBL_SUPPORT) += $(fsbl)
 bootloaders-$(OSBI_SUPPORT) += $(opensbi)
 bootloaders-$(HSS_SUPPORT) += $(hss_uboot_payload_bin)
-bootloaders-$(AMP_SUPPORT) += $(amp_example)
 
 all: $(fit) $(vfat_image) $(mtd_image) $(bootloaders-y)
 	@echo
@@ -338,15 +336,6 @@ $(openocd): $(openocd_srcdir)
 	cd $(openocd_srcdir) && ./bootstrap
 	cd $(openocd_wrkdir) && $</configure --enable-maintainer-mode --disable-werror --enable-ft2232_libftdi
 	$(MAKE) -C $(openocd_wrkdir)
-
-EXT_CFLAGS := -DMPFS_HAL_FIRST_HART=4 -DMPFS_HAL_LAST_HART=4
-export EXT_CFLAGS
-.PHONY: amp
-amp: $(amp_example)
-$(amp_example): $(amp_example_srcdir) $(buildroot_initramfs_sysroot_stamp) $(CROSS_COMPILE)gcc
-	rm -rf $(amp_example_srcdir)/Default
-	$(MAKE) -C $(amp_example_srcdir) O=$(amp_example_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) REMOTE=1
-	cp $(amp_example_srcdir)/Remote-Default/mpfs-rpmsg-remote.elf $(amp_example)
 
 $(vfat_image): $(fit) $(uboot_s_scr) $(bootloaders-y)
 	@if [ `du --apparent-size --block-size=512 $(fsbl) | cut -f 1` -ge $(FSBL_SIZE) ]; then \

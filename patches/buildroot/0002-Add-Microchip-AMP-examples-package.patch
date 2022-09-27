@@ -1,0 +1,67 @@
+From 2867f1d1231ba7ad7028b0f5bcd2e05bbe3c6e67 Mon Sep 17 00:00:00 2001
+From: Valentina Fernandez <valentina.fernandezalanis@microchip.com>
+Date: Wed, 21 Sep 2022 20:40:07 +0100
+Subject: [PATCH] Add Microchip AMP examples package
+
+---
+ package/Config.in                              |  1 +
+ package/mchp_amp_examples/Config.in            |  9 +++++++++
+ package/mchp_amp_examples/mchp_amp_examples.mk | 17 +++++++++++++++++
+ 3 files changed, 27 insertions(+)
+ create mode 100644 package/mchp_amp_examples/Config.in
+ create mode 100644 package/mchp_amp_examples/mchp_amp_examples.mk
+
+diff --git a/package/Config.in b/package/Config.in
+index ea1fc9edcb..1350e1862d 100644
+--- a/package/Config.in
++++ b/package/Config.in
+@@ -9,6 +9,7 @@ menu "Target packages"
+ 	source "package/skeleton-init-systemd/Config.in"
+ 	source "package/skeleton-init-sysv/Config.in"
+ 	source "package/mchp_examples/Config.in"
++	source "package/mchp_amp_examples/Config.in"
+ 
+ menu "Audio and video applications"
+ 	source "package/alsa-utils/Config.in"
+diff --git a/package/mchp_amp_examples/Config.in b/package/mchp_amp_examples/Config.in
+new file mode 100644
+index 0000000000..a38e901d6c
+--- /dev/null
++++ b/package/mchp_amp_examples/Config.in
+@@ -0,0 +1,9 @@
++config BR2_PACKAGE_MCHP_AMP_EXAMPLES
++	bool "mchp_examples"
++	help
++	  Microchip PolarFire SoC AMP Examples
++
++config BR2_PACKAGE_MCHP_AMP_CONTEXT_B
++	string "context_b_binary_name"
++	help
++	  Microchip PolarFire SoC AMP example project to run as context b
+\ No newline at end of file
+diff --git a/package/mchp_amp_examples/mchp_amp_examples.mk b/package/mchp_amp_examples/mchp_amp_examples.mk
+new file mode 100644
+index 0000000000..ac39ad6a32
+--- /dev/null
++++ b/package/mchp_amp_examples/mchp_amp_examples.mk
+@@ -0,0 +1,17 @@
++MCHP_AMP_EXAMPLES_VERSION = 7ad7f5ec3a064b6e8f06cf7e81596b8ef0753679
++MCHP_AMP_EXAMPLES_SITE = ../../polarfire-soc-examples/polarfire-soc-amp-examples
++MCHP_AMP_EXAMPLES_SITE_METHOD = local
++
++MCHP_AMP_EXAMPLES_DIRS += $(BR2_PACKAGE_MCHP_AMP_CONTEXT_B)
++MCHP_AMP_EXAMPLES_TARGET_DIR = /lib/firmware
++
++define MCHP_AMP_EXAMPLES_INSTALL_TARGET_CMDS
++
++	$(INSTALL) -d $(TARGET_DIR)$(MCHP_AMP_EXAMPLES_TARGET_DIR) 
++	$(foreach project,$(MCHP_AMP_EXAMPLES_DIRS), \
++		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)/$(project) CROSS_COMPILE=$(CROSS_COMPILE) REMOTE=1 REMOTEPROC=1 EXT_CFLAGS='-DMPFS_HAL_FIRST_HART=4 -DMPFS_HAL_LAST_HART=4'; \
++		$(INSTALL) -D -m 775 $(@D)/$(project)/Remote-Default/mpfs-rpmsg-remote.elf $(TARGET_DIR)$(MCHP_AMP_EXAMPLES_TARGET_DIR)/rproc-miv-rproc-fw;
++		cp $(@D)/$(project)/Remote-Default/mpfs-rpmsg-remote.elf $(BINARIES_DIR);)
++endef
++
++$(eval $(generic-package))
+-- 
+2.37.3
+
