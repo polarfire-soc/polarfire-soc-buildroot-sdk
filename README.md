@@ -1,3 +1,5 @@
+This repository is archived, please see: https://github.com/linux4microchip/buildroot-external-microchip
+
 # Microchip PolarFire SoC Linux Software Development Kit
 
 This repository builds a command line only RISC-V Linux image for the Microchip PolarFire SoC Development Boards.
